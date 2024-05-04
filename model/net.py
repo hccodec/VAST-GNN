@@ -106,40 +106,26 @@ def compute_loss(
 
 # 定义 GNN+LSTM 模型
 class GNNLSTM(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim):
+    def __init__(self, input_size, hidden_size, num_layers, num_nodes, num_heads):
         super(GNNLSTM, self).__init__()
-        
-        # GNN 层
-        self.gcn_conv = GCNConv(input_dim, hidden_dim)
-        
-        # LSTM 层
-        self.lstm = nn.LSTM(hidden_dim, hidden_dim, batch_first=True)
-        
-        # 输出层
-        self.fc = nn.Linear(hidden_dim, output_dim)
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.num_nodes = num_nodes
+        self.num_heads = num_heads
 
-        self.bn1 = nn.BatchNorm1d(hidden_dim)
-        self.dropout = nn.Dropout(0.5)
-        self.relu = nn.ReLU()
-        
-    def forward(self, edge_index: torch.Tensor, x: torch.Tensor):
+        self.gnn = GCNConv(input_size, hidden_size, heads=num_heads)
+        self.lstm = nn.LSTM(hidden_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, num_nodes * num_nodes)
+    
+    def forward(self, x, edge_index, batch):
 
         weight = edge_index.coalesce().values()
-        adj = edge_index.coalesce().indices()
+        edge_index = edge_index.coalesce().indices()
 
-        # GNN 前向传播
-        x = self.gcn_conv(x, adj, edge_weight=weight)
-        x = self.relu(x)
-        x = self.bn1(x)
-        x = self.dropout(x)
-        
-        # LSTM 前向传播
-        x = x.unsqueeze(0)  # 添加时间维度
-        x, _ = self.lstm(x)
-        x = x.squeeze(0)  # 移除时间维度
-        
-        # 输出层前向传播
-        x = self.fc(x)
-        x = self.relu(x)
-        x = self.dropout(x)
-        return x
+        x = self.gnn(x, edge_index)
+        x = torch.split(x, self.num_nodes, dim=0)
+        lstm_out, _ = self.lstm(x)
+        lstm_out_last = lstm_out[:, -1, :]
+        output = self.fc(lstm_out_last)
+        return output

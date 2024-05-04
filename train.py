@@ -54,39 +54,46 @@ def run_model(graphs: list,
     # gnn_optimizer = torch.optim.Adam(gnn_model.parameters(), lr=1e-3)
     # lstm_optimizer = torch.optim.Adam(lstm_model.parameters(), lr=1e-3)
 
-    num_nodes, input_dim = features_train[0].shape
-    hidden_dim, num_heads = 64, 4
-    encoder = GraphEncoder(num_nodes, input_dim, hidden_dim, num_heads).cuda()
-    decoder = GraphReconstruction(input_dim, hidden_dim, num_nodes).cuda()
-    # decoder = GraphReconstruction(hidden_dim * num_heads, hidden_dim, num_nodes).cuda()
-    encoder_optimizer = torch.optim.Adam(encoder.parameters(), lr=1e-3)
-    decoder_optimizer = torch.optim.Adam(decoder.parameters(), lr=1e-3)
-    criterion_encoder = nn.MSELoss()
-    criterion_decoder = nn.MSELoss()
-    
+    # num_nodes, input_dim = features_train[0].shape
+    # hidden_dim, num_heads = 64, 4
+    # encoder = GraphEncoder(num_nodes, input_dim, hidden_dim, num_heads).cuda()
+    # decoder = GraphReconstruction(input_dim, hidden_dim, num_nodes).cuda()
+    # # decoder = GraphReconstruction(hidden_dim * num_heads, hidden_dim, num_nodes).cuda()
+    # encoder_optimizer = torch.optim.Adam(encoder.parameters(), lr=1e-3)
+    # decoder_optimizer = torch.optim.Adam(decoder.parameters(), lr=1e-3)
+    # criterion_encoder = nn.MSELoss()
+    # criterion_decoder = nn.MSELoss()
+
+    num_nodes, input_size = features_train[0].shape
+    hidden_size, num_layers, num_heads = 64, 2, 4
+    model = GNNLSTM(input_size, hidden_size, num_layers, num_nodes, num_heads)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
     ############################################# 定义模型 FINISH
     
     n_train_batches = ceil(len(idx_train)/batch_size)
 
     val_among_epochs, train_among_epochs = [], []
 
+    model = model.cuda()
+
 
     for epoch in range(1000):
         start = time.time()
         
-        encoder.train()
-        decoder.train()
+        model.train()
 
         train_loss = AverageMeter()
 
         for batch in range(n_train_batches):
-            encoder_optimizer.zero_grad()
-            decoder_optimizer.zero_grad()
-
-            # output = model(
-            #     adj_train[batch],
-            #     features_train[batch])
+            optimizer.zero_grad()
             
+            x, edge_index = features_train[batch], adj_train[batch]            
+
+            output = model(x, edge_index, batch)
+            loss = criterion(output, edge_index)
+
             # loss = torch.nn.functional.mse_loss(
             #     output, y_train[batch].reshape(output.shape)
             #     )
@@ -98,42 +105,31 @@ def run_model(graphs: list,
             #     graph_representation, adj_train[batch],
             #     predicted_links, adj_train[batch])
 
-            x, edge_index = features_train[batch], adj_train[batch]            
 
-            encoded_features = encoder(x, edge_index)
-            reconstructed_features = decoder(encoded_features)
+            # encoded_features = encoder(x, edge_index)
+            # reconstructed_features = decoder(encoded_features)
 
-            edge_index = edge_index.to_dense()
+            # edge_index = edge_index.to_dense()
 
-            encoder_loss = criterion_encoder(encoded_features, x)
-            decoder_loss = criterion_decoder(reconstructed_features, edge_index)
-            lambda_value = 0.5
-            loss = encoder_loss + lambda_value * decoder_loss
+            # loss = compute_loss(
+            #                 encoded_features, adj_train[batch],
+            #                 reconstructed_features, adj_train[batch])
 
             
             loss.backward()
 
-            encoder_optimizer.step()
-            decoder_optimizer.step()
+            optimizer.step()
 
-            train_loss.update(loss.data.item(), reconstructed_features.size(0))
+            train_loss.update(loss.data.item(), output.size(0))
         
-        encoder.eval()
-        decoder.eval()
+        model.eval()
 
 
         x, edge_index = features_val[batch], adj_val[batch]            
 
-        encoded_features = encoder(x, edge_index)
-        reconstructed_features = decoder(encoded_features)
-        
-        edge_index = edge_index.to_dense()
-
-        encoder_loss = criterion_encoder(encoded_features, x)
-        decoder_loss = criterion_decoder(reconstructed_features, edge_index)
-        lambda_value = 0.5
-        val_loss = encoder_loss + lambda_value * decoder_loss
-        
+        output = model(x, edge_index, batch)
+        val_loss = criterion(output, edge_index)
+    
         # graph_representation = gnn_model(adj_val[0], features_val[0])
         # predicted_links = lstm_model(graph_representation)
         # # 创建目标链路张量，1表示链路存在，0表示链路不存在
