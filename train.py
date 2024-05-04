@@ -48,11 +48,21 @@ def run_model(graphs: list,
     # optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10)
 
-    num_nodes = adj_train[0].shape[0]
-    gnn_model = GNN(input_dim=num_nodes, hidden_dim=64, output_dim=num_nodes).cuda()
-    lstm_model = LSTM(input_dim=num_nodes, hidden_dim=64, output_dim=1).cuda()
-    gnn_optimizer = torch.optim.Adam(gnn_model.parameters(), lr=1e-3)
-    lstm_optimizer = torch.optim.Adam(lstm_model.parameters(), lr=1e-3)
+    # num_nodes = adj_train[0].shape[0]
+    # gnn_model = GNN(input_dim=num_nodes, hidden_dim=64, output_dim=num_nodes).cuda()
+    # lstm_model = LSTM(input_dim=num_nodes, hidden_dim=64, output_dim=1).cuda()
+    # gnn_optimizer = torch.optim.Adam(gnn_model.parameters(), lr=1e-3)
+    # lstm_optimizer = torch.optim.Adam(lstm_model.parameters(), lr=1e-3)
+
+    num_nodes, input_dim = features_train[0].shape
+    hidden_dim, num_heads = 64, 4
+    encoder = GraphEncoder(num_nodes, input_dim, hidden_dim, num_heads).cuda()
+    decoder = GraphReconstruction(input_dim, hidden_dim, num_nodes).cuda()
+    # decoder = GraphReconstruction(hidden_dim * num_heads, hidden_dim, num_nodes).cuda()
+    encoder_optimizer = torch.optim.Adam(encoder.parameters(), lr=1e-3)
+    decoder_optimizer = torch.optim.Adam(decoder.parameters(), lr=1e-3)
+    criterion_encoder = nn.MSELoss()
+    criterion_decoder = nn.MSELoss()
     
     ############################################# 定义模型 FINISH
     
@@ -63,14 +73,15 @@ def run_model(graphs: list,
 
     for epoch in range(1000):
         start = time.time()
-        gnn_model.train()
-        lstm_model.train()
+        
+        encoder.train()
+        decoder.train()
 
         train_loss = AverageMeter()
 
         for batch in range(n_train_batches):
-            gnn_optimizer.zero_grad()
-            lstm_optimizer.zero_grad()
+            encoder_optimizer.zero_grad()
+            decoder_optimizer.zero_grad()
 
             # output = model(
             #     adj_train[batch],
@@ -80,34 +91,57 @@ def run_model(graphs: list,
             #     output, y_train[batch].reshape(output.shape)
             #     )
 
-            graph_representation = gnn_model(adj_train[batch], features_train[batch])
-            predicted_links = lstm_model(graph_representation)
+            # graph_representation = gnn_model(adj_train[batch], features_train[batch])
+            # predicted_links = lstm_model(graph_representation)
 
-            loss = compute_loss(
-                graph_representation, adj_train[batch],
-                predicted_links, adj_train[batch])
+            # loss = compute_loss(
+            #     graph_representation, adj_train[batch],
+            #     predicted_links, adj_train[batch])
+
+            x, edge_index = features_train[batch], adj_train[batch]            
+
+            encoded_features = encoder(x, edge_index)
+            reconstructed_features = decoder(encoded_features)
+
+            edge_index = edge_index.to_dense()
+
+            encoder_loss = criterion_encoder(encoded_features, x)
+            decoder_loss = criterion_decoder(reconstructed_features, edge_index)
+            lambda_value = 0.5
+            loss = encoder_loss + lambda_value * decoder_loss
+
             
             loss.backward()
 
-            gnn_optimizer.step()
-            lstm_optimizer.step()
+            encoder_optimizer.step()
+            decoder_optimizer.step()
 
-            train_loss.update(loss.data.item(), predicted_links.size(0))
+            train_loss.update(loss.data.item(), reconstructed_features.size(0))
         
-        gnn_model.eval()
-        lstm_model.eval()
+        encoder.eval()
+        decoder.eval()
 
+
+        x, edge_index = features_val[batch], adj_val[batch]            
+
+        encoded_features = encoder(x, edge_index)
+        reconstructed_features = decoder(encoded_features)
         
-        graph_representation = gnn_model(adj_val[0], features_val[0])
-        predicted_links = lstm_model(graph_representation)
+        edge_index = edge_index.to_dense()
 
-        # 创建目标链路张量，1表示链路存在，0表示链路不存在
-        target_links = generate_known_links(adj_train[batch])
-
-        val_loss = compute_loss(
-            graph_representation, adj_train[batch],
-            predicted_links, target_links)
-        val_loss = float(val_loss.cpu().numpy())
+        encoder_loss = criterion_encoder(encoded_features, x)
+        decoder_loss = criterion_decoder(reconstructed_features, edge_index)
+        lambda_value = 0.5
+        val_loss = encoder_loss + lambda_value * decoder_loss
+        
+        # graph_representation = gnn_model(adj_val[0], features_val[0])
+        # predicted_links = lstm_model(graph_representation)
+        # # 创建目标链路张量，1表示链路存在，0表示链路不存在
+        # target_links = generate_known_links(adj_train[batch])
+        # val_loss = compute_loss(
+        #     graph_representation, adj_train[batch],
+        #     predicted_links, target_links)
+        # val_loss = float(val_loss.cpu().numpy())
 
         # output = model(adj_val[0], features_val[0])
         # val_loss = torch.nn.functional.mse_loss(

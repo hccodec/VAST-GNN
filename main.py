@@ -3,6 +3,13 @@ import preprocess_tgnn
 from train import *
 import torch
 
+import random, numpy as np, time
+
+seed = 42
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)
+
 def make_results_dirs():
 
     results_dir = "results"
