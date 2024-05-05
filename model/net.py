@@ -162,7 +162,7 @@ class SpecGCN(nn.Module):
         
     def compute_D_n_A_D_n(self, adjs):
         N =  adjs.size()[0]   
-        tilde_A = adjs + torch.eye(N)
+        tilde_A = adjs + torch.eye(N).cuda()
         tilde_D_n = torch.diag(torch.pow(tilde_A.sum(-1).float(), -0.5))
         D_n_A_D_n = torch.mm(tilde_D_n, torch.mm(tilde_A, tilde_D_n))
         return D_n_A_D_n 
@@ -187,7 +187,7 @@ class MULTIWAVE_SpecGCN_LSTM(nn.Module):
         self.N = N
         self.x_days = x_days
         self.y_days = y_days
-        self.specGCN = SpecGCN(input_dim_1, hidden_dim_1, out_dim_1, dropout_1)
+        self.specGCN = SpecGCN(input_dim_1, hidden_dim_1, out_dim_1, dropout_1).to(device)
         
         self.lstm = nn.LSTM(batch_first=True, input_size=out_dim_1+1, hidden_size=hidden_dim_2,num_layers=2, bidirectional=False)
         #self.lstm = nn.LSTM(batch_first=True, input_size=N*out_dim_1+N, hidden_size=N*hidden_dim_2,num_layers=1, bidirectional=False)     
@@ -205,7 +205,7 @@ class MULTIWAVE_SpecGCN_LSTM(nn.Module):
         
         #Step1: calculate the SpecGCN output        
         #lstm_input_batch = torch.zeros((N, n_batch, self.x_days, self.out_dim_1+1))  
-        lstm_input_batch = torch.zeros((N, n_batch, self.x_days, self.out_dim_1+1))
+        lstm_input_batch = torch.zeros((N, n_batch, self.x_days, self.out_dim_1+1), device=self.device)
         for batch in range(n_batch):
             #mobility
             #torch.tensor(input_record[batch][0][2*i]).float()     #(N,N)
@@ -219,6 +219,9 @@ class MULTIWAVE_SpecGCN_LSTM(nn.Module):
                 x_infection = torch.tensor(input_record[batch][2][i]).float() #N
                 x_infection = x_infection.reshape((x_infection.size()[0],1)) #(N, 1)
                 day_order =  input_record[batch][3]                           #v6
+                x = x.to(self.device)
+                adj = adj.to(self.device)
+                x_infection = x_infection.to(self.device)
                 specGCN_out = self.specGCN(x, adj)                        #(N, out_dim1)
                 specGCN_out = specGCN_out.mul(torch.unsqueeze(torch.exp(self.v*self.v*float(day_order)),dim=1).repeat(1,self.out_dim_1))
                 
@@ -238,7 +241,7 @@ class MULTIWAVE_SpecGCN_LSTM(nn.Module):
             lstm_input_x1_output, (hc,cn) = self.lstm(lstm_input_x1)          #[batch, x_days, hidden_dim_2]
             lstm_output, (hc1,cn1) = self.lstm(lstm_input_x2, (hc,cn))        #[batch, y_days, hidden_dim_2]
             
-            infection_tensor = torch.tensor([[input_record[batch][2][x_day_c][j] for x_day_c in range(x_days)] for batch in range(n_batch)]).float()
+            infection_tensor = torch.tensor([[input_record[batch][2][x_day_c][j] for x_day_c in range(x_days)] for batch in range(n_batch)]).float().to(self.device)
             infection_tensor = infection_tensor.view((infection_tensor.size()[0], 1, infection_tensor.size()[1]))
             infection_tensor = infection_tensor.repeat(1, y_days, 1)  #[batch, y_days, x_days]
             

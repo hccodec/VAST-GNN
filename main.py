@@ -84,7 +84,22 @@ def experiment_multiwave():
     from preprocess_multiwave import read_data, device
     #4.1
     #read the data
-    train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list =read_data()
+    # train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list =read_data()
+    tokyo_datafile = 'dataset_tokyo.bin'
+    if not os.path.exists(tokyo_datafile):
+        with open(tokyo_datafile, 'wb') as f:
+            print('正在将数据存入二进制文件 %s 中' % tokyo_datafile)
+            pickle.dump(read_data(), f)
+
+    print('从 bin 文件中读取数据集')
+    with open(tokyo_datafile, 'rb') as f:
+        try:
+            train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list = pickle.load(f)
+        except EOFError as e:
+            os.remove(tokyo_datafile)
+            print('bin 文件异常，重新读取')
+            return experiment_multiwave()
+
     #train_x_y, validate_x_y, test_x_y = normalize(train_x_y, validate_x_y, test_x_y)
 
     #train_x_y = train_x_y[0:30]

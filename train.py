@@ -189,7 +189,7 @@ def run_tokyo_model(train_x_y, vali_data, test_data, device):
     def validate_test_process(trained_model, vali_test_data):
         criterion = nn.MSELoss()
         vali_test_y = [vali_test_data[i][1] for i in range(len(vali_test_data))]
-        y_real = torch.tensor(vali_test_y)
+        y_real = torch.tensor(vali_test_y).to(device)
         vali_test_x = [vali_test_data[i] for i in range(len(vali_test_data))]
         vali_test_x = convertAdj(vali_test_x)
         y_hat = trained_model.run_specGCN_lstm(vali_test_x)                                  ###Attention              
@@ -205,7 +205,7 @@ def run_tokyo_model(train_x_y, vali_data, test_data, device):
             if batch_num % 16 ==0:
                 print ("batch_num: ", batch_num, "total batch number: ", int(len(trainX_c)/batch_size))
             x_batch = trainX_c[beg_i:beg_i+batch_size]        
-            y_batch = torch.tensor(trainY_c[beg_i:beg_i+batch_size])   
+            y_batch = torch.tensor(trainY_c[beg_i:beg_i+batch_size], device=device)   
             opt.zero_grad()
             x_batch = convertAdj(x_batch)   #conduct the column normalization
             y_hat = model.run_specGCN_lstm(x_batch)                          ###Attention
@@ -213,7 +213,7 @@ def run_tokyo_model(train_x_y, vali_data, test_data, device):
             #opt.zero_grad()
             loss.backward()
             opt.step()
-            losses.append(loss.data.numpy())
+            losses.append(loss.data.cpu().numpy())
         return sum(losses)/float(len(losses)), model
     
     def train_process(train_data, lr, num_epochs, net, criterion, bs, vali_data, test_data):
@@ -264,7 +264,7 @@ def run_tokyo_model(train_x_y, vali_data, test_data, device):
     #3.2.1 define the model
     input_dim_1, hidden_dim_1, out_dim_1, hidden_dim_2 = len(train_x_y[0][0][1][1]),    HIDDEN_DIM_1, OUT_DIM_1, HIDDEN_DIM_2 
     dropout_1, alpha_1, N = DROPOUT, ALPHA, len(train_x_y[0][0][1])
-    G_L_Model = MULTIWAVE_SpecGCN_LSTM(X_day, Y_day, input_dim_1, hidden_dim_1, out_dim_1, hidden_dim_2, dropout_1,N, device)         ###Attention
+    G_L_Model = MULTIWAVE_SpecGCN_LSTM(X_day, Y_day, input_dim_1, hidden_dim_1, out_dim_1, hidden_dim_2, dropout_1,N, device).to(device)         ###Attention
     #3.2.2 train the model
     num_epochs, batch_size, learning_rate = NUM_EPOCHS, BATCH_SIZE, LEARNING_RATE                                                 #model train
     criterion = nn.MSELoss() 
