@@ -1,4 +1,4 @@
-import torch
+import torch, math
 import torch.nn as nn
 from torch_geometric.nn import GCNConv, GATConv
 import torch.nn.functional as F
@@ -123,9 +123,11 @@ class GNNLSTM(nn.Module):
         weight = edge_index.coalesce().values()
         edge_index = edge_index.coalesce().indices()
 
-        x = self.gnn(x, edge_index)
+        x = self.gnn(x, edge_index, weight)
         x = torch.split(x, self.num_nodes, dim=0)
+        x = torch.stack(x, dim=00)
         lstm_out, _ = self.lstm(x)
         lstm_out_last = lstm_out[:, -1, :]
         output = self.fc(lstm_out_last)
-        return output
+        n = int(math.sqrt(output.shape[1]))
+        return output.reshape(n, -1)

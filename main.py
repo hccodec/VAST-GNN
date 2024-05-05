@@ -1,7 +1,7 @@
 import argparse, json, os, datetime
 import preprocess_tgnn
 from train import *
-import torch
+import torch, pickle
 
 import random, numpy as np, time
 
@@ -67,7 +67,19 @@ def experiment(args, config):
                             
             idx_train = idx_train+list(range(test_sample-sep+1, test_sample, 2))
 
-            err = run_model(gs_adj, features, y, idx_train, idx_val, 1, shift, batch_size, device, test_sample, fw)
+            train_among_epochs, val_among_epochs, model = \
+                run_model(gs_adj, features, y, idx_train, idx_val, 1, shift,
+                          batch_size, device, test_sample, fw)
+            
+        torch.save(model.state_dict(), os.path.join(results_dir, 'model.pth'))
+        # 存到文件中
+        with open(os.path.join(results_dir, 'losses.bin'), 'wb') as f:
+            pickle.dump((train_among_epochs, val_among_epochs), f)
+
+        print('Training completed. Best model save in {}/:\n[best_train_loss {}, best_val_loss {}]'.format(
+            results_dir, train_among_epochs[-1], val_among_epochs[-1]
+        ))
+
 
 def main():
     parser = argparse.ArgumentParser()

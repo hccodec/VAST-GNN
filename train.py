@@ -65,10 +65,10 @@ def run_model(graphs: list,
     # criterion_decoder = nn.MSELoss()
 
     num_nodes, input_size = features_train[0].shape
-    hidden_size, num_layers, num_heads = 64, 2, 4
+    hidden_size, num_layers, num_heads = 32, 2, 4
     model = GNNLSTM(input_size, hidden_size, num_layers, num_nodes, num_heads)
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=3e-3)
 
     ############################################# 定义模型 FINISH
     
@@ -79,7 +79,7 @@ def run_model(graphs: list,
     model = model.cuda()
 
 
-    for epoch in range(1000):
+    for epoch in range(10000):
         start = time.time()
         
         model.train()
@@ -92,7 +92,9 @@ def run_model(graphs: list,
             x, edge_index = features_train[batch], adj_train[batch]            
 
             output = model(x, edge_index, batch)
-            loss = criterion(output, edge_index)
+
+            edge_index = edge_index.to_dense()
+            loss = criterion(output, edge_index.reshape(output.shape))
 
             # loss = torch.nn.functional.mse_loss(
             #     output, y_train[batch].reshape(output.shape)
@@ -150,8 +152,14 @@ def run_model(graphs: list,
         if not epoch % 50:
             print(msg)
 
+        if len(train_among_epochs) and abs(train_among_epochs[-1] - train_loss.avg) < 1e-3:
+            print('Little improvement by further training, early stop.')
+            break
+
         train_among_epochs.append(train_loss.avg)    
         val_among_epochs.append(val_loss)
+
+    return train_among_epochs, val_among_epochs, model
 
 def train():
     pass
