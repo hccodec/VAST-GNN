@@ -5,10 +5,9 @@
 @Author  :   HCCODEC
 '''
 
-import torch
+import torch, random
 from torch import nn
-from preprocess_tgnn import generate_new_batches, AverageMeter
-import time
+import time, copy, numpy as np
 from math import *
 from model.net import *
 
@@ -23,7 +22,7 @@ def generate_known_links(adjacency_matrix):
 
     return known_links
 
-def run_model(graphs: list,
+def run_tgnn_model(graphs: list,
                 features: list,
                 y: list,
                 idx_train: list,
@@ -33,6 +32,9 @@ def run_model(graphs: list,
                 batch_size: int,
                 device: torch.device,
                 test_sample: int, fw):
+    
+    from preprocess_tgnn import generate_new_batches, AverageMeter
+
     adj_train, features_train, y_train = generate_new_batches(
         graphs, features, y, idx_train, graph_window, shift, batch_size, device, test_sample)
     adj_val, features_val, y_val = generate_new_batches(graphs, features, y, idx_val, 1, shift, batch_size, device, test_sample)
@@ -160,6 +162,114 @@ def run_model(graphs: list,
         val_among_epochs.append(val_loss)
 
     return train_among_epochs, val_among_epochs, model
+
+def run_tokyo_model(train_x_y, vali_data, test_data, device):
+
+    r = random.random
+
+    def normalize_column_one(input_matrix):
+        column_sum = np.sum(input_matrix, axis=0)
+        row_num, column_num = len(input_matrix), len(input_matrix[0])
+        for i in range(row_num):
+            for j in range(column_num):
+                input_matrix[i][j] = input_matrix[i][j]*1.0/column_sum[j]
+        return input_matrix
+
+    def convertAdj(x_batch):
+        #x_batch：(n_batch, 0/1, 2*i+1)
+        x_batch_new = copy.copy(x_batch)
+        n_batch = len(x_batch)
+        days = round(len(x_batch[0][0])/2)
+        for i in range(n_batch):
+            for j in range(days):
+                mobility_matrix = x_batch[i][0][2*j]
+                x_batch_new[i][0][2*j] = normalize_column_one(mobility_matrix)   #20210818
+        return x_batch_new
+
+    def validate_test_process(trained_model, vali_test_data):
+        criterion = nn.MSELoss()
+        vali_test_y = [vali_test_data[i][1] for i in range(len(vali_test_data))]
+        y_real = torch.tensor(vali_test_y)
+        vali_test_x = [vali_test_data[i] for i in range(len(vali_test_data))]
+        vali_test_x = convertAdj(vali_test_x)
+        y_hat = trained_model.run_specGCN_lstm(vali_test_x)                                  ###Attention              
+        loss = criterion(y_hat.float(), y_real.float())
+        return loss, y_hat, y_real 
+    
+    def train_epoch_option(model, opt, criterion, trainX_c, trainY_c, batch_size):  
+        model.train()
+        losses = []
+        batch_num = 0
+        for beg_i in range(0, len(trainX_c), batch_size):
+            batch_num += 1
+            if batch_num % 16 ==0:
+                print ("batch_num: ", batch_num, "total batch number: ", int(len(trainX_c)/batch_size))
+            x_batch = trainX_c[beg_i:beg_i+batch_size]        
+            y_batch = torch.tensor(trainY_c[beg_i:beg_i+batch_size])   
+            opt.zero_grad()
+            x_batch = convertAdj(x_batch)   #conduct the column normalization
+            y_hat = model.run_specGCN_lstm(x_batch)                          ###Attention
+            loss = criterion(y_hat.float(), y_batch.float()) #MSE loss
+            #opt.zero_grad()
+            loss.backward()
+            opt.step()
+            losses.append(loss.data.numpy())
+        return sum(losses)/float(len(losses)), model
+    
+    def train_process(train_data, lr, num_epochs, net, criterion, bs, vali_data, test_data):
+        opt = torch.optim.Adam(net.parameters(), lr, betas = (0.9,0.999), weight_decay=0) 
+        train_y = [train_data[i][1] for i in range(len(train_data))]
+        e_losses = list()
+        e_losses_vali = list()
+        e_losses_test = list()
+        time00 = time.time()
+        for e in range(num_epochs):
+            time1 = time.time()
+            print ("current epoch: ",e, "total epoch: ", num_epochs)
+            number_list = list(range(len(train_data)))       
+            random.shuffle(number_list, random = r)
+            trainX_sample = [train_data[number_list[j]] for j in range(len(number_list))]
+            trainY_sample = [train_y[number_list[j]] for j in range(len(number_list))]
+            loss, net =  train_epoch_option(net, opt, criterion, trainX_sample, trainY_sample, bs)  
+            print ("train loss", loss*infection_normalize_ratio*infection_normalize_ratio)
+            e_losses.append(loss*infection_normalize_ratio*infection_normalize_ratio)
+            
+            loss_vali, y_hat_vali, y_real_vali = validate_test_process(net, vali_data) 
+            loss_test, y_hat_test, y_real_test = validate_test_process(net, test_data)
+            e_losses_vali.append(float(loss_vali)*infection_normalize_ratio*infection_normalize_ratio)
+            e_losses_test.append(float(loss_test)*infection_normalize_ratio*infection_normalize_ratio)
+            
+            print ("validate loss", float(loss_vali)*infection_normalize_ratio*infection_normalize_ratio)
+            print ("test loss", float(loss_test)*infection_normalize_ratio*infection_normalize_ratio)
+            # if e>=2 and (e+1)%10 ==0:
+            #     visual_loss(e_losses, e_losses_vali, e_losses_test)     
+            #     visual_loss_train(e_losses) 
+            time2 = time.time()
+            print ("running time for this epoch:", time2 - time1)
+            time01 = time.time()
+            print ("---------------------------------------------------------------")
+            print ("---------------------------------------------------------------")
+        return e_losses, net
+
+    X_day, Y_day = 21,21
+    #hyperparameter for the learning
+    DROPOUT, ALPHA = 0.50, 0.20
+    NUM_EPOCHS, BATCH_SIZE, LEARNING_RATE = 100, 8, 0.0001
+    HIDDEN_DIM_1, OUT_DIM_1, HIDDEN_DIM_2 = 6,4,3
+    infection_normalize_ratio = 100.0
+    web_search_normalize_ratio = 100.0
+    train_ratio = 0.7
+    validate_ratio = 0.1
+
+    #3.2.1 define the model
+    input_dim_1, hidden_dim_1, out_dim_1, hidden_dim_2 = len(train_x_y[0][0][1][1]),    HIDDEN_DIM_1, OUT_DIM_1, HIDDEN_DIM_2 
+    dropout_1, alpha_1, N = DROPOUT, ALPHA, len(train_x_y[0][0][1])
+    G_L_Model = MULTIWAVE_SpecGCN_LSTM(X_day, Y_day, input_dim_1, hidden_dim_1, out_dim_1, hidden_dim_2, dropout_1,N, device)         ###Attention
+    #3.2.2 train the model
+    num_epochs, batch_size, learning_rate = NUM_EPOCHS, BATCH_SIZE, LEARNING_RATE                                                 #model train
+    criterion = nn.MSELoss() 
+    e_losses, trained_model = train_process(train_x_y, learning_rate, num_epochs, G_L_Model, criterion, batch_size,                          vali_data, test_data)
+    return e_losses, trained_model
 
 def train():
     pass

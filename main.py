@@ -1,5 +1,4 @@
 import argparse, json, os, datetime
-import preprocess_tgnn
 from train import *
 import torch, pickle
 
@@ -26,7 +25,8 @@ def make_results_dirs():
     
     return results_dir
 
-def experiment(args, config):
+def experiment_tgnn(args, config):
+    import preprocess_tgnn
 
     results_dir = make_results_dirs()
 
@@ -68,7 +68,7 @@ def experiment(args, config):
             idx_train = idx_train+list(range(test_sample-sep+1, test_sample, 2))
 
             train_among_epochs, val_among_epochs, model = \
-                run_model(gs_adj, features, y, idx_train, idx_val, 1, shift,
+                run_tgnn_model(gs_adj, features, y, idx_train, idx_val, 1, shift,
                           batch_size, device, test_sample, fw)
             
         torch.save(model.state_dict(), os.path.join(results_dir, 'model.pth'))
@@ -79,6 +79,20 @@ def experiment(args, config):
         print('Training completed. Best model save in {}/:\n[best_train_loss {}, best_val_loss {}]'.format(
             results_dir, train_among_epochs[-1], val_among_epochs[-1]
         ))
+
+def experiment_multiwave():
+    from preprocess_multiwave import read_data, device
+    #4.1
+    #read the data
+    train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list =read_data()
+    #train_x_y, validate_x_y, test_x_y = normalize(train_x_y, validate_x_y, test_x_y)
+
+    #train_x_y = train_x_y[0:30]
+    print (len(train_x_y))
+    print ("---------------------------------finish data preparation------------------------------------")
+
+    e_losses, trained_model = run_tokyo_model(train_x_y, validate_x_y, test_x_y, device)
+
 
 
 def main():
@@ -111,7 +125,8 @@ def main():
     with open('config.json', 'r') as config_file:
         config = json.load(config_file)
     args = parser.parse_args()
-    experiment(args, config)
+    # experiment_tgnn(args, config)
+    experiment_multiwave()
 
 if __name__ == '__main__':
     main()
