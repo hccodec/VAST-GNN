@@ -4,12 +4,23 @@ import os, shutil
 from datetime import datetime
 
 os.chdir('results')
-fs = os.listdir('.')
+fs = [item for item in os.listdir('.') if not item.startswith('[')]
 
 def cond(f):
-    if len(os.listdir(f)) > 3: return False # 已有4个文件
-    if (datetime.now() - datetime.strptime(f, '%Y%m%d%H%M%S')).total_seconds() < 6 * 3600:
-        return False # 时间差小于 h
+    # print(f'正在检查 {f}')
+    if len(os.listdir(f)) > 3:
+        # print('已有4个文件')
+        return False # 已有4个文件
+    if (datetime.now() - datetime.strptime(f, '%Y%m%d%H%M%S')).total_seconds() < 1 * 3600:
+        # print('时间差小于 3h')
+        return False # 时间差小于 6h
     return True
 
-[shutil.rmtree(f) for i,f in enumerate(fs) if cond(f)]
+if not any([cond(f) for f in fs]):
+    print('无符合条件的项')
+    exit(0)
+
+for i,f in enumerate(fs):
+    if cond(f):
+        print(f'删除 {f}')
+        shutil.rmtree(f)

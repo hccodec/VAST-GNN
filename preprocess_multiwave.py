@@ -705,14 +705,15 @@ def train_process(train_data, lr, num_epochs, net, criterion, bs, vali_data, tes
 
 #function 3.1
 def read_data():
-    os.chdir("data")
+    cwd = os.getcwd()
+    os.chdir("data/multiwave_data")
     jcode23 = list(read_tokyo_23()["JCODE"])                    #1.1 get the tokyo 23 zone shapefile
     jcode23 = jcode23[:23]
     all_mobility = read_mobility_data(jcode23)                  #1.2 read the mobility data
     all_text = read_text_data(jcode23)                          #1.3 read the text data
     all_infection, all_infection_cum = read_infection_data(jcode23)                #1.4 read the infection data
-    os.chdir("..")
-    
+    os.chdir(cwd)
+        
     #smooth the data using 7-days average
     window_size = WINDOW_SIZE                 #20210818
     dateList = generate_dateList()  #20210818
