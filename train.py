@@ -68,7 +68,8 @@ def run_tgnn_model(graphs: list,
 
     num_nodes, input_size = features_train[0].shape
     hidden_size, num_layers, num_heads = 32, 2, 4
-    model = GNNLSTM(input_size, hidden_size, num_layers, num_nodes, num_heads)
+    model = MPNN_LSTM(nfeat=7, nhid=64, nout=1, n_nodes=num_nodes, window=graph_window, dropout=0.5).cuda()
+    # model = GNNLSTM(input_size, hidden_size, num_layers, num_nodes, num_heads)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=3e-3)
 
@@ -205,7 +206,8 @@ def run_tokyo_model(train_x_y, vali_data, test_data, device):
             if batch_num % 16 ==0:
                 print ("batch_num: ", batch_num, "total batch number: ", int(len(trainX_c)/batch_size))
             x_batch = trainX_c[beg_i:beg_i+batch_size]        
-            y_batch = torch.tensor(trainY_c[beg_i:beg_i+batch_size], device=device)   
+            y_batch = np.array(trainY_c[beg_i:beg_i+batch_size])
+            y_batch = torch.tensor(y_batch, device=device)   
             opt.zero_grad()
             x_batch = convertAdj(x_batch)   #conduct the column normalization
             y_hat = model.run_specGCN_lstm(x_batch)                          ###Attention

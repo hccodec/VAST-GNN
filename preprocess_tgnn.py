@@ -264,7 +264,7 @@ def read_meta_datasets(window, config=None):
 
     # 从文件中取
     import pickle
-    data_file = 'dataset.bin'
+    data_file = 'dataset_tgnn.bin'
 
     if os.path.exists(data_file):
         print('从 bin 文件中读取数据集')

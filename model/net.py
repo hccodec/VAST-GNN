@@ -132,6 +132,110 @@ class GNNLSTM(nn.Module):
         n = int(math.sqrt(output.shape[1]))
         return output.reshape(n, -1)
     
+
+#######################################################################
+
+class MPNN_LSTM(nn.Module):
+    def __init__(self, nfeat: int , 
+                 nhid: int , 
+                 nout: int , 
+                 n_nodes: int, 
+                 window: int, 
+                 dropout: float):
+        """
+        Parameters:
+        nfeat (int): Number of features
+        nhid (int): Hidden size
+        nout (int): Number of output features
+        n_nodes (int): Number of nodes
+        window (int): Window size
+        dropout (float): Dropout rate
+        
+        Returns:
+        x (torch.Tensor): Output of the model
+        """
+        super(MPNN_LSTM, self).__init__()
+        self.window = window
+        self.n_nodes = n_nodes
+        self.nhid = nhid
+        self.nfeat = nfeat
+        
+        # 定义GCNConv层
+        self.conv1 = GCNConv(nfeat, nhid)
+        self.conv2 = GCNConv(nhid, nhid)
+        
+        # 定义Batch Normalization层
+        self.bn1 = nn.BatchNorm1d(nhid)
+        self.bn2 = nn.BatchNorm1d(nhid)
+        
+        # 定义LSTM层
+        self.rnn1 = nn.LSTM(2*nhid, nhid, 1)
+        self.rnn2 = nn.LSTM(nhid, nhid, 1)
+        
+        # 定义全连接层
+        self.fc1 = nn.Linear(2*nhid+window*nfeat, nhid)
+        self.fc2 = nn.Linear( nhid, nout)
+        
+        # 定义Dropout层和ReLU激活函数
+        self.dropout = nn.Dropout(dropout)
+        self.relu = nn.ReLU()
+        
+        
+    def forward(self, adj, x):
+        lst = list()
+        
+        # 获取稀疏邻接矩阵的权重和索引
+        weight = adj.coalesce().values()
+        adj = adj.coalesce().indices()
+
+        # 处理时间窗口数据
+        skip = x.view(-1,self.window,self.n_nodes,self.nfeat)
+        skip = torch.transpose(skip, 1, 2).reshape(-1,self.window,self.nfeat)
+        
+        # 第一层GCNConv
+        x = self.relu(self.conv1(x, adj, edge_weight=weight))
+        x = self.bn1(x)
+        x = self.dropout(x)
+        lst.append(x)
+        
+        # 第二层GCNConv
+        x = self.relu(self.conv2(x, adj, edge_weight=weight))
+        x = self.bn2(x)
+        x = self.dropout(x)
+        lst.append(x)
+        
+        # 将所有层的输出进行拼接
+        x = torch.cat(lst, dim=1)
+        
+        # reshape to (seq_len, batch_size , hidden) to fit the lstm
+        # 重新整形以适应LSTM输入形状
+        x = x.view(-1, self.window, self.n_nodes, x.size(1))
+        x = torch.transpose(x, 0, 1)
+        x = x.contiguous().view(self.window, -1, x.size(3))
+        
+        # 第一个LSTM层
+        x, (hn1, cn1) = self.rnn1(x)
+        # 第二个LSTM层
+        out2, (hn2,  cn2) = self.rnn2(x)
+        
+        # use the hidden states of both rnns 
+        # 使用两个LSTM层的隐藏状态
+        x = torch.cat([hn1[0,:,:],hn2[0,:,:]], dim=1)
+        skip = skip.reshape(skip.size(0),-1)
+                
+        x = torch.cat([x,skip], dim=1)
+
+        # 第一个全连接层
+        x = self.relu(self.fc1(x))
+        x = self.dropout(x)
+        
+        # 第二个全连接层
+        x = self.relu(self.fc2(x)).squeeze()
+        x = x.view(-1)
+        
+        return x
+
+#######################################################################
  
 class SpecGCNLayer(nn.Module):
     def __init__(self, input_dim, hidden_dim, dropout=0.5, concat=True):
@@ -151,6 +255,7 @@ class SpecGCNLayer(nn.Module):
         feature_new  = F.dropout(feature_new, self.dropout, training=self.training)
         H = torch.mm(D_n_A_D_n.float(), feature_new)
         return H
+    
 class SpecGCN(nn.Module):
     def __init__(self, input_dim, hidden_dim, out_dim, dropout=0.5):
         super(SpecGCN, self).__init__()

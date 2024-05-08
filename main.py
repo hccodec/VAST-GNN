@@ -9,9 +9,13 @@ random.seed(seed)
 np.random.seed(seed)
 torch.manual_seed(seed)
 
-def make_results_dirs():
+class Datasets:
+    TGNN = "tgnn",
+    MULTIWAVE = "multiwave"
 
-    results_dir = "results"
+def make_results_dirs(dataset: Datasets):
+
+    results_dir = f"results_{str(dataset[0])}"
     
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
@@ -28,7 +32,7 @@ def make_results_dirs():
 def experiment_tgnn(args, config):
     import preprocess_tgnn
 
-    results_dir = make_results_dirs()
+    results_dir = make_results_dirs(Datasets.TGNN)
 
     config_tgnn = config['pandemic_tgnn_dataset']
 
@@ -71,9 +75,9 @@ def experiment_tgnn(args, config):
                 run_tgnn_model(gs_adj, features, y, idx_train, idx_val, 1, shift,
                           batch_size, device, test_sample, fw)
             
-        torch.save(model.state_dict(), os.path.join(results_dir, 'model.pth'))
+        torch.save(model.state_dict(), os.path.join(results_dir, f'model_{country}.pth'))
         # 存到文件中
-        with open(os.path.join(results_dir, 'losses.bin'), 'wb') as f:
+        with open(os.path.join(results_dir, f'losses_{country}.bin'), 'wb') as f:
             pickle.dump((train_among_epochs, val_among_epochs), f)
 
         print('Training completed. Best model save in {}/:\n[best_train_loss {}, best_val_loss {}]'.format(
@@ -82,13 +86,16 @@ def experiment_tgnn(args, config):
 
 def experiment_multiwave():
     from preprocess_multiwave import read_data, device
+
+    results_dir = make_results_dirs(Datasets.MULTIWAVE)
+
     #4.1
     #read the data
     # train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list =read_data()
     tokyo_datafile = 'dataset_tokyo.bin'
-    if not os.path.exists(tokyo_datafile):
+    if not os.path.exists(tokyo_datafile) or True:
         with open(tokyo_datafile, 'wb') as f:
-            print('正在将数据存入二进制文件 %s 中' % tokyo_datafile)
+            print('Bin file %s not found. Reading data from dataset files...' % tokyo_datafile)
             pickle.dump(read_data(), f)
 
     print('从 bin 文件中读取数据集')
@@ -145,3 +152,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
+    # from preprocess_multiwave import read_data
+    # read_data()

@@ -13,6 +13,30 @@
 # Step 5: evaluation
 # Step 6: visualization
 
+from datetime import datetime, timedelta
+
+class datetime(datetime):
+    def __add__(self, other):
+        if isinstance(other, int):
+            return self + timedelta(days=other)
+        else:
+            return super().__add__(other)
+    
+    def __radd__(self, other):
+        return self.__add__(other)
+    
+    def __sub__(self, other):
+        if isinstance(other, int):
+            return self + timedelta(days=-other)
+        else:
+            return super().__sub__(other)
+
+    def __rsub__(self, other):
+        return self.__sub__(other)
+
+def str2date(f): return f if isinstance(f, datetime) else datetime.strptime(f, '%Y%m%d')
+def date2str(f): return f if isinstance(f, str) else datetime.strftime(f, '%Y%m%d')
+
 import os
 os.environ['CUDA_AVAILABLE_DEVICES'] = '7,8,9'
 import csv
@@ -32,13 +56,14 @@ from torch.autograd import Variable
 import matplotlib.pyplot as plt
 from matplotlib import pyplot as plt
 import torch.nn.functional as F
+from tqdm.auto import tqdm
 
 from model.sab_gnn import SpecGCN
 from model.sab_gnn import SpecGCN_LSTM
 #hyperparameter for the setting
 # X_day, Y_day = 21,7
 # X_day, Y_day = 21,14
-X_day, Y_day = 21,21
+X_day, Y_day = 21,7
 # START_DATE, END_DATE = '20200414','20210207' # possible wave 3
 START_DATE, END_DATE = '20200720','20210515' # possible wave 4
 
@@ -61,7 +86,36 @@ r = random.random
 # random.seed(5)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print("HCCODEC: Running on ", device)
+# print("HCCODEC: Running on ", device)
+
+text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',
+                    '腹痛', 'めまい', '吐き気', '嘔吐', '筋肉痛', '動悸',
+                    '副鼻腔炎', '発疹', 'くしゃみ', '倦怠感', '寒気', '脱水',
+                    '中咽頭', '関節痛', '不眠症', '睡眠障害', '鼻漏', '片頭痛',
+                    '多汗症', 'ほてり', '胸痛', '発汗', '無気力', '呼吸困難',
+                    '喘鳴', '目の痛み', '体の痛み', '無嗅覚症', '耳の痛み',
+                    '錯乱', '見当識障害', '胸の圧迫感', '鼻の乾燥', '耳感染症',
+                    '味覚消失', '上気道感染症', '眼感染症', '食欲減少'])
+
+symptoms_zh = ['疼痛', '头痛', '咳嗽', '腹泻', '压力', '焦虑',
+                '腹痛', '头晕', '恶心', '呕吐', '肌肉疼痛', '心悸',
+                '鼻窦炎', '皮疹', '打喷嚏', '疲劳', '寒冷', '脱水',
+                '咽喉炎', '关节痛', '失眠', '睡眠障碍', '流鼻涕', '偏头痛',
+                '多汗', '潮红', '胸痛', '出汗', '无精打采', '呼吸困难',
+                '喘鸣', '眼痛', '身体疼痛', '无嗅', '耳痛',
+                '混乱', '迷失方向', '胸闷', '鼻干', '耳感染',
+                '味觉丧失', '上呼吸道感染', '眼感染', '食欲减退']
+
+symptoms_en = ['Pain', 'Headache', 'Cough', 'Diarrhea', 'Stress', 'Anxiety',
+                'Abdominal pain', 'Dizziness', 'Nausea', 'Vomiting', 'Muscle pain', 'Palpitations',
+                'Sinusitis', 'Rash', 'Sneezing', 'Fatigue', 'Chills', 'Dehydration',
+                'Pharyngitis', 'Joint pain', 'Insomnia', 'Sleep disorder', 'Rhinorrhea', 'Migraine',
+                'Hyperhidrosis', 'Flushing', 'Chest pain', 'Sweating', 'Apathy', 'Shortness of breath',
+                'Wheezing', 'Eye pain', 'Body pain', 'Anosmia', 'Ear pain',
+                'Confusion', 'Disorientation', 'Chest pressure', 'Dry nose', 'Ear infection',
+                'Loss of taste', 'Upper respiratory tract infection', 'Eye infection', 'Decreased appetite']
+
+text_list = symptoms_en
 
 # # Step 1: read and pack the training and testing data
 
@@ -84,11 +138,11 @@ print("HCCODEC: Running on ", device)
 #function 1.1
 #get the central areas of Tokyo (e.g., the Special wards of Tokyo)
 #return: a 23 zone shapefile
-def read_tokyo_23():
+def read_tokyo_23(path=""):
     # folder = "tokyo_23" 
     # file = "tokyo_23zones.shp"
     # path = os.path.join(folder,file) 
-    path = "tokyo_shapefile/tokyo.shp"
+    if path == "": path = "tokyo_shapefile/tokyo.shp"
     data = gpd.read_file(path)   
     return data
 
@@ -100,7 +154,7 @@ def mob_inf_average(data, key1, key2):
     record1, record2 = data[key1], data[key2]
     for i in record1:
         if i in record2:
-            new_record[i] = (record1[i]+record2[i])/2.0
+            new_record[i] = (record1[i] + record2[i]) / 2.
     return new_record
 
 #function 1.3
@@ -116,41 +170,25 @@ def mob_inf_average_multiple(data, keyList):
             else:
                 new_record[zone_id] += record[zone_id]
     for new_record_key in new_record:
-        new_record[new_record_key] = new_record[new_record_key]*1.0/num_day
+        new_record[new_record_key] = new_record[new_record_key] * 1. / num_day
     return new_record
-
-#function 1.4
-#generate the dateList: [20200101, 20200102, ..., 20211231]
-def generate_dateList():
-    yearList = ["2020","2021"]
-    monthList = ["0"+str(i+1) for i in range(9)] + ["10","11","12"]
-    dayList = ["0"+str(i+1) for i in range(9)] + [str(i) for i in range(10,32)]
-    day_2020_num = [31,29,31,30,31,30,31,31,30,31,30,31]
-    day_2021_num = [31,28,31,30,31,30,31,31,30,31,30,31]
-    date_2020, date_2021 = list(), list()
-    for i in range(12):
-        for j in range(day_2020_num[i]):
-              date_2020.append(yearList[0] + monthList[i] + dayList[j])
-        for j in range(day_2021_num[i]):
-              date_2021.append(yearList[1] + monthList[i] + dayList[j])
-    date_2020_2021 = date_2020 + date_2021
-    return date_2020_2021
 
 #function 1.5
 #smooth the mobility (infection) data using the neighborhood average
 #under a given window size 
 #dateList: [20200101, 20200102, ..., 20211231]
-def mob_inf_smooth(data, window_size, dateList):
+def mob_inf_smooth(data, window_size, dateList, hint):
     data_copy = copy.copy(data)
     data_key_list = list(data_copy.keys())
-    for data_key in data_key_list:
+    qbar1 = progress_indicator(data_key_list, desc=f"Smoothing {hint}")
+    for data_key in qbar1:
         if data_key not in dateList: continue
-        left = int(max(dateList.index(data_key)-(window_size-1)/2, 0))
-        right = int(min(dateList.index(data_key)+(window_size-1)/2, len(dateList)-1))
+        left = int(max(dateList.index(data_key) - (window_size-1) / 2, 0))
+        right = int(min(dateList.index(data_key) + (window_size-1) / 2, len(dateList) - 1))
         potential_neighbor = dateList[left:right+1]
         neighbor_data_key = list(set(data_key_list).intersection(set(potential_neighbor)))
         data_average = mob_inf_average_multiple(data_copy, neighbor_data_key)
-        data[data_key] =  data_average
+        data[data_key] = data_average
     return data
 
 #function 1.6
@@ -171,26 +209,33 @@ def read_mobility_data(jcode23):
     all_mobility = dict()
     mobilityFilePath = "mobility"
     mobilityNameList = os.listdir(mobilityFilePath)
-    for i in range(len(mobilityNameList)):
+
+    # print('Reading mobility data...')
+    qbar1 = progress_indicator(range(len(mobilityNameList)), desc='Reading mobility data')
+
+    for i in qbar1:
         day_mobility = dict()
         file_name = mobilityNameList[i] 
         if "20" in file_name:
             day = (file_name.split("_")[3]).split(".")[0]  #get the day
             file_path = mobilityFilePath + '/' + file_name
-            f = open(file_path,)
-            df_file = json.load(f)   #read the mobility file
-            f.close()
-            for key in df_file:
-                origin, dest = key.split("_")[0], key.split("_")[1]
+            with open(file_path,) as f:
+                df_file = json.load(f)   #read the mobility file
+            
+            qbar2 = tqdm(df_file, leave=False, position=1)
+
+            for key in qbar2:
+                origin, dest = key.split("_")
                 if origin in jcode23 and dest in jcode23:
-                    if origin == dest:
-                        day_mobility[(origin, dest)] = 0.0     #ignore the inner-zone flow
-                    else:
-                        day_mobility[(origin, dest)] = df_file[key] 
+                    _v = 0. if origin == dest else df_file[key] #ignore the inner-zone flow
+                    day_mobility[(origin, dest)] = _v
+
             all_mobility[day] = day_mobility
     #missing data
-    all_mobility["20201128"] = mob_inf_average(all_mobility,"20201127","20201129")
-    all_mobility["20210104"] = mob_inf_average(all_mobility, "20210103","20210105")
+    # all_mobility["20201128"] = mob_inf_average(all_mobility,"20201127","20201129")
+    # all_mobility["20210104"] = mob_inf_average(all_mobility, "20210103","20210105")
+    interpolate(all_mobility, mob_inf_average)
+    # all_mobility = interpolate(all_mobility, mob_inf_average)
     return all_mobility
 
 ##################2.Text#####################
@@ -232,10 +277,11 @@ def text_average_multiple(data, keyList):
 #function 1.10
 #smooth the text data using the neighborhood average
 #under a given window size 
-def text_smooth(data, window_size, dateList):
+def text_smooth(data, window_size, dateList, hint):
     data_copy = copy.copy(data)
     data_key_list = list(data_copy.keys())
-    for data_key in data_key_list:
+    qbar1 = progress_indicator(data_key_list, desc=f"Smoothing {hint}")
+    for data_key in qbar1:
         left = int(max(dateList.index(data_key)-(window_size-1)/2, 0))
         right = int(min(dateList.index(data_key)+(window_size-1)/2, len(dateList)-1))
         potential_neighbor = dateList[left:right+1]
@@ -284,22 +330,29 @@ def read_text_data(jcode23):
     all_text = dict()
     textFilePath = "text"
     textNameList = os.listdir(textFilePath)
-    for i in range(len(textNameList)):
+
+    # print('Reading text data...')
+    qbar1 = progress_indicator(range(len(textNameList)), desc='Reading text data')
+
+    for i in qbar1:
         day_text = dict()
         file_name = textNameList[i]
         if "20" in file_name:
             day = (file_name.split("_")[3]).split(".")[0]
             file_path = textFilePath + "/" + file_name
-            f = open(file_path,)
-            df_file = json.load(f)   #read the mobility file
-            f.close()
+            with open(file_path,) as f: df_file = json.load(f)   #read the mobility file
             new_dict = dict()
-            for key in df_file:
+            
+            qbar2 = tqdm(df_file, leave=False, position=-1)
+
+            for key in qbar2:
                 if key in jcode23:
                     new_dict[key] = {key1:df_file[key][key1]*1.0*web_search_normalize_ratio for key1 in df_file[key]}
                     #new_dict[key] = df_file[key]*WEB_SEARCH_RATIO
             all_text[day] = new_dict
-    all_text["20201030"] = text_average(all_text, "20201029", "20201031") #data missing
+    # all_text["20201030"] = text_average(all_text, "20201029", "20201031") #data missing
+    interpolate(all_text, text_average)
+    # all_text = interpolate(all_text, text_average)
     return all_text
 
 #function 1.14
@@ -307,34 +360,54 @@ def read_text_data(jcode23):
 def min_max_text_data(all_text,jcode23):
     #calculate the min_max
     #region_key: sym: [min,max]
-    text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',                     '腹痛', 'めまい', '吐き気', '嘔吐', '筋肉痛', '動悸',                     '副鼻腔炎', '発疹', 'くしゃみ', '倦怠感', '寒気', '脱水',                     '中咽頭', '関節痛', '不眠症', '睡眠障害', '鼻漏', '片頭痛',                     '多汗症', 'ほてり', '胸痛', '発汗', '無気力', '呼吸困難',                     '喘鳴', '目の痛み', '体の痛み', '無嗅覚症', '耳の痛み',                     '錯乱', '見当識障害', '胸の圧迫感', '鼻の乾燥', '耳感染症',                     '味覚消失', '上気道感染症', '眼感染症', '食欲減少'])
+    # text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',
+    #                   '腹痛', 'めまい', '吐き気', '嘔吐', '筋肉痛', '動悸',
+    #                   '副鼻腔炎', '発疹', 'くしゃみ', '倦怠感', '寒気', '脱水',
+    #                   '中咽頭', '関節痛', '不眠症', '睡眠障害', '鼻漏', '片頭痛',
+    #                   '多汗症', 'ほてり', '胸痛', '発汗', '無気力', '呼吸困難',
+    #                   '喘鳴', '目の痛み', '体の痛み', '無嗅覚症', '耳の痛み',
+    #                   '錯乱', '見当識障害', '胸の圧迫感', '鼻の乾燥', '耳感染症',
+    #                   '味覚消失', '上気道感染症', '眼感染症', '食欲減少'])
+    
+    total = len(all_text) * len(jcode23) * len(text_list)
+    desc = lambda f: f'Min-max normalizing the text data ({f})'
+
+    qbar = progress_indicator(total=total * 2 + len(text_list) * len(jcode23),
+                              show_total=False)
+    
+    qbar.desc = desc('Initializing')
     region_sym_min_max = dict()
-    for key in jcode23:                          #initialize
-        region_sym_min_max[key] = dict()
+    #initialize
+    for area in jcode23:
+        region_sym_min_max[area] = dict()
         for sym in text_list:
-            region_sym_min_max[key][sym] = [1000000,0]  #min, max
-    for day in all_text:                            #update
-        for key in jcode23:
-            if key not in all_text[day].keys(): continue
+            region_sym_min_max[area][sym] = [1000000,0]  #min, max
+            qbar.update()
+
+    qbar.desc = desc('Updating')
+    #update
+    for day in all_text:
+        for area in jcode23:
             for sym in text_list:
-                if sym in all_text[day][key]:
-                    count = all_text[day][key][sym]
-                    if count < region_sym_min_max[key][sym][0]:
-                        region_sym_min_max[key][sym][0] = count
-                    if count > region_sym_min_max[key][sym][1]:
-                        region_sym_min_max[key][sym][1] = count
+                if sym in all_text[day][area]:
+                    count = all_text[day][area][sym]
+                    if count < region_sym_min_max[area][sym][0]: region_sym_min_max[area][sym][0] = count
+                    if count > region_sym_min_max[area][sym][1]: region_sym_min_max[area][sym][1] = count
+                qbar.update()
+
+    qbar.desc = desc('Normalizing')
+    #normalize
     #print ("region_sym_min_max",region_sym_min_max)
-    for key in jcode23:              #normalize
-        if key not in all_text[day].keys(): continue
+    for area in jcode23:
         for sym in text_list:
-            min_count,max_count=region_sym_min_max[key][sym][0],region_sym_min_max[key][sym][1]
+            min_count, max_count = region_sym_min_max[area][sym]
             for day in all_text:
-                if sym in all_text[day][key]:
-                    if max_count-min_count == 0:
-                        all_text[day][key][sym] = 1
-                    else:
-                        all_text[day][key][sym] = (all_text[day][key][sym]-min_count)*1.0/(max_count-min_count)
+                if sym in all_text[day][area]:
+                    all_text[day][area][sym] = 1 \
+                        if max_count - min_count == 0 \
+                        else (all_text[day][area][sym] - min_count) * 1. / (max_count - min_count)
                         #print("all_text[day][key][sym]",all_text[day][key][sym])
+                qbar.update()
     return all_text
 
 ##################3.Infection#####################
@@ -346,52 +419,66 @@ def read_infection_data(jcode23):
     all_infection = dict()
     infection_path = "covid_case/patient.json"
     # infection_path = "patient_20210725.json"
-    f = open(infection_path,)
-    df_file = json.load(f)   #read the mobility file
-    f.close()
-    for zone_id in df_file:
-        for one_day in df_file[zone_id]:
-            daySplit = one_day.split("/") 
-            year, month, day = daySplit[0], daySplit[1], daySplit[2]
-            if len(month) == 1:
-                month = "0" + month
-            if len(day) == 1:
-                day = "0" + day
-            new_date = year + month + day
-            if str(zone_id[0:5]) in jcode23:
+
+    # print('Reading infection data...')
+
+    with open(infection_path,) as f: df_file = json.load(f)   #read the mobility file
+
+    qbar1 = progress_indicator(df_file, desc='Reading infection data')
+
+    for zone_id in qbar1:
+
+        qbar2 = tqdm(df_file[zone_id], leave=False)
+
+        for one_day in qbar2:
+            # year, month, day = one_day.split("/")
+            # if len(month) == 1: month = "0" + month
+            # if len(day) == 1: day = "0" + day
+            # new_date = year + month + day
+            # assert new_date == "{:s}{:0>2s}{:0>2s}".format(*one_day.split("/"))
+            new_date = "{:s}{:0>2s}{:0>2s}".format(*one_day.split("/"))
+
+            if str(zone_id[0:5]) in jcode23: # 13101* in 13101 can be seen
+                area, _res = zone_id[0:5], df_file[zone_id][one_day] * (1. / infection_normalize_ratio)
                 if new_date not in all_infection:
-                    all_infection[new_date] = {zone_id[0:5]:df_file[zone_id][one_day]*1.0/infection_normalize_ratio}
+                    all_infection[new_date] = {area: _res}
                 else:
-                    all_infection[new_date][zone_id[0:5]] = df_file[zone_id][one_day]*1.0/infection_normalize_ratio
+                    all_infection[new_date][area] = _res
     #missing
-    date_list = [str(20200316+i) for i in range(15)]
-    for date in date_list:
-        all_infection[date] = mob_inf_average(all_infection,'20200401','20200401')
-    all_infection['20200514'] = mob_inf_average(all_infection,'20200513','20200515')
-    all_infection['20200519'] = mob_inf_average(all_infection,'20200518','20200520')
-    all_infection['20200523'] = mob_inf_average(all_infection,'20200522','20200524')
-    all_infection['20200530'] = mob_inf_average(all_infection,'20200529','20200601')
-    all_infection['20200531'] = mob_inf_average(all_infection,'20200529','20200601')
-    all_infection['20201231'] = mob_inf_average(all_infection,'20201230','20210101')
-    all_infection['20210611'] = mob_inf_average(all_infection,'20210610','20210612')
+    # date_list = [str(20200316+i) for i in range(15)]
+    # assert date_list == generateDates('20200316', '20200330')
+    date_list = generateDates('20200316', '20200330')
+    # for date in date_list:
+    #     all_infection[date] = mob_inf_average(all_infection,'20200401','20200401')
+    _res = mob_inf_average(all_infection,'20200401','20200401')
+    for date in date_list: all_infection[date] = _res
+    # all_infection['20200514'] = mob_inf_average(all_infection,'20200513','20200515')
+    # all_infection['20200519'] = mob_inf_average(all_infection,'20200518','20200520')
+    # all_infection['20200523'] = mob_inf_average(all_infection,'20200522','20200524')
+    # all_infection['20200530'] = mob_inf_average(all_infection,'20200529','20200601')
+    # all_infection['20200531'] = mob_inf_average(all_infection,'20200529','20200601')
+    # all_infection['20201231'] = mob_inf_average(all_infection,'20201230','20210101')
+    # all_infection['20210611'] = mob_inf_average(all_infection,'20210610','20210612')
+    interpolate(all_infection, mob_inf_average)
+    # all_infection = interpolate(all_infection, mob_inf_average)
     #outlier
-    all_infection['20200331'] = mob_inf_average(all_infection,'20200401','20200401')
-    all_infection['20200910'] = mob_inf_average(all_infection,'20200909','20200912')
-    all_infection['20200911'] = mob_inf_average(all_infection,'20200909','20200912')
-    all_infection['20200511'] = mob_inf_average(all_infection,'20200510','20200512')
-    all_infection['20201208'] = mob_inf_average(all_infection,'20201207','20201209')
-    all_infection['20210208'] = mob_inf_average(all_infection,'20210207','20210209')
-    all_infection['20210214'] = mob_inf_average(all_infection,'20210213','20210215')
+    all_infection['20200331'] = mob_inf_average(all_infection, '20200401', '20200401')
+    all_infection['20200910'] = mob_inf_average(all_infection, '20200909', '20200912')
+    all_infection['20200911'] = mob_inf_average(all_infection, '20200909', '20200912')
+    all_infection['20200511'] = mob_inf_average(all_infection, '20200510', '20200512')
+    all_infection['20201208'] = mob_inf_average(all_infection, '20201207', '20201209')
+    all_infection['20210208'] = mob_inf_average(all_infection, '20210207', '20210209')
+    all_infection['20210214'] = mob_inf_average(all_infection, '20210213', '20210215')
     #calculate the subtraction
     all_infection_subtraction = dict()
     all_infection_subtraction['20200331'] = all_infection['20200331']
     all_keys = list(all_infection.keys())
     all_keys.sort()
-    for i in range(len(all_keys)-1):
+    for i in range(len(all_keys) - 1):
         record = dict()
-        for j in all_infection[all_keys[i+1]]:
-            record[j] = all_infection[all_keys[i+1]][j] - all_infection[all_keys[i]][j]
-        all_infection_subtraction[all_keys[i+1]] = record
+        for j in all_infection[all_keys[i + 1]]:
+            record[j] = all_infection[all_keys[i + 1]][j] - all_infection[all_keys[i]][j]
+        all_infection_subtraction[all_keys[i + 1]] = record
     return all_infection_subtraction, all_infection
 
 ##################4.Preprocess#####################
@@ -400,8 +487,7 @@ def read_infection_data(jcode23):
 #all_mobility = {"20200201":{('123','123'):12345,...},...}
 #all_text = {"20200201":{"123":{"cold":3,"fever":2,...},...},...}
 #all_infection = {"20200316":{"123":1,"123":2}}
-#all_x_y = {"0":[[mobility_1,text_1, ..., mobility_x_day,text_x_day], [infection_1,...,infection_y_day],\
-#[infection_1,...,infection_x_day]],0}
+#all_x_y = {"0":[[mobility_1,text_1, ..., mobility_x_day,text_x_day], [infection_1,...,infection_y_day],[infection_1,...,infection_x_day]],0}
 #x_days, y_days: use x_days to predict y_days
 def ensemble(all_mobility, all_text, all_infection, x_days, y_days, all_day_list):
     all_x_y = dict()
@@ -417,7 +503,7 @@ def ensemble(all_mobility, all_text, all_infection, x_days, y_days, all_day_list
         for k in range(y_days):
             day = all_day_list[x_days + k + j]
             y_sample.append(all_infection[day]) 
-        all_x_y[str(j)] = [x_sample, y_sample, x_sample_infection,j]                          
+        all_x_y[str(j)] = [x_sample, y_sample, x_sample_infection, j]                          
     return all_x_y
 
 #function 1.17
@@ -451,7 +537,7 @@ def split_data_2(all_x_y, train_ratio, validation_ratio):
         else:
             train_key.append(all_x_y[str(i)])
             train_list.append(i)
-    test_key = [all_x_y[str(i+n_train+n_validate)] for i in range(n_test)]
+    test_key = [all_x_y[str(i +n_train + n_validate)] for i in range(n_test)]
     return train_key, validate_key, test_key, train_list, validate_list
 
 ##function 1.19
@@ -460,20 +546,20 @@ def split_data_2(all_x_y, train_ratio, validation_ratio):
 def split_data_3(all_x_y, train_ratio, validation_ratio):
     all_x_y_key = list(all_x_y.keys())
     n = len(all_x_y_key)
-    n_train, n_validate = round(n*train_ratio), round(n*validation_ratio)
-    n_test = n - n_train  - n_validate
+    n_train, n_validate = round(n * train_ratio), round(n * validation_ratio)
+    n_test = n - n_train - n_validate
     train_list, validate_list = list(), list()
     
     train_validate_key = [all_x_y[str(i)] for i in range(n_train + n_validate)]
+    test_key = [all_x_y[str(i + n_train + n_validate)] for i in range(n_test)]
     train_key, validate_key = list(), list()
     for i in range(len(train_validate_key)):
-        if (n_train + n_validate-i) % 2 == 0 and (n_train + n_validate-i) <= 2*n_validate:
+        if (n_train + n_validate - i) % 2 == 0 and (n_train + n_validate - i) <= 2 * n_validate:
             validate_key.append(all_x_y[str(i)])
             validate_list.append(i)
         else:
             train_key.append(all_x_y[str(i)])
             train_list.append(i)
-    test_key = [all_x_y[str(i+n_train+n_validate)] for i in range(n_test)]
     return train_key, validate_key, test_key, train_list, validate_list
 
 ##function 1.20
@@ -503,7 +589,7 @@ def sort_date_2(all_mobility, start_date, x_days, end_date, y_days):
 #get zone_text_to_idx 
 def get_zone_text_to_idx(all_infection):
     zone_list = list(set(all_infection["20200401"].keys()))
-    text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',                     '腹痛', 'めまい'])
+    # text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',                     '腹痛', 'めまい'])
     zone_list.sort()
     zone_dict = {str(zone_list[i]):i for i in range(len(zone_list))}
     text_dict = {str(text_list[i]):i for i in range(len(text_list))}
@@ -705,31 +791,47 @@ def train_process(train_data, lr, num_epochs, net, criterion, bs, vali_data, tes
 
 #function 3.1
 def read_data():
-    cwd = os.getcwd()
-    os.chdir("data/multiwave_data")
-    jcode23 = list(read_tokyo_23()["JCODE"])                    #1.1 get the tokyo 23 zone shapefile
-    jcode23 = jcode23[:23]
-    all_mobility = read_mobility_data(jcode23)                  #1.2 read the mobility data
-    all_text = read_text_data(jcode23)                          #1.3 read the text data
-    all_infection, all_infection_cum = read_infection_data(jcode23)                #1.4 read the infection data
-    os.chdir(cwd)
+
+    smoothed_fn = 'smoothed_multiwave_data.bin'
+    if os.path.exists(smoothed_fn):
+        print(f'Read smoothed data from bin file {smoothed_fn}.')
+        with open(smoothed_fn, 'rb') as f:
+            import pickle
+            all_mobility, all_text, all_infection = pickle.load(f)
+    else:
+        ####################################
+        cwd = os.getcwd()
+        os.chdir("data/multiwave_data")
+        jcode23 = list(read_tokyo_23()["JCODE"])                    #1.1 get the tokyo 23 zone shapefile
+        jcode23 = jcode23[:23]
+        all_mobility = read_mobility_data(jcode23)                  #1.2 read the mobility data
+        all_infection, all_infection_cum = read_infection_data(jcode23)                #1.4 read the infection data
+        all_text = read_text_data(jcode23)                          #1.3 read the text data
+        os.chdir(cwd)
+        del cwd
+            
+        #smooth the data using 7-days average
+        window_size = WINDOW_SIZE                 #20210818
+        dateList = generateDates('20200101', '20211231')  #20210818
+        all_mobility = mob_inf_smooth(all_mobility, window_size, dateList, "mobility") #20210818
+        all_infection = mob_inf_smooth(all_infection, window_size, dateList, "infection")  #20210818
         
-    #smooth the data using 7-days average
-    window_size = WINDOW_SIZE                 #20210818
-    dateList = generate_dateList()  #20210818
-    all_mobility = mob_inf_smooth(all_mobility, window_size, dateList) #20210818
-    all_infection = mob_inf_smooth(all_infection, window_size, dateList)  #20210818
-    
-    #smooth, user, min-max.
-    # point_json = read_point_json()                           #20210821
-    # all_text = normalize_text_user(all_text, point_json)       #20210821
-    all_text = text_smooth(all_text, window_size, dateList) #20210818
-    all_text = min_max_text_data(all_text,jcode23)                 #20210820
-    
+        #smooth, user, min-max.
+        # point_json = read_point_json()                           #20210821
+        # all_text = normalize_text_user(all_text, point_json)       #20210821
+        all_text = text_smooth(all_text, window_size, dateList, 'text') #20210818
+        all_text = min_max_text_data(all_text,jcode23)                 #20210820
+
+        with open(smoothed_fn, 'wb') as f:
+            import pickle
+            pickle.dump((all_mobility, all_text, all_infection), f)
+        ####################################
+        
     x_days, y_days =  X_day, Y_day
-    mobility_date_cut = sort_date_2(all_mobility, START_DATE, x_days, END_DATE, y_days)
+    # mobility_date_cut = sort_date_2(all_mobility, START_DATE, x_days, END_DATE, y_days)
+    mobility_date_cut = generateDates(str2date(START_DATE) - x_days, str2date(END_DATE) + y_days - 1)
     all_x_y = ensemble(all_mobility, all_text, all_infection, x_days, y_days, mobility_date_cut)
-    train_original, validate_original, test_original, train_list, validation_list =    split_data_3(all_x_y,train_ratio,validate_ratio)  
+    train_original, validate_original, test_original, train_list, validation_list = split_data_3(all_x_y,train_ratio,validate_ratio)  
     zone_dict, text_dict = get_zone_text_to_idx(all_infection)                       #get zone_idx, text_idx
     train_x_y = change_to_matrix(train_original, zone_dict, text_dict)                   #get train
     print ("train_x_y_shape",len(train_x_y),"train_x_y_shape[0]",len(train_x_y[0]))
@@ -768,3 +870,95 @@ def validate_test_process(trained_model, vali_test_data):
     loss = criterion(y_hat.float(), y_real.float())
     return loss, y_hat, y_real 
 
+#################################################################################
+
+# l_bar='{desc}...({n_fmt}/{total_fmt} {percentage:3.2f}%)'
+# r_bar= '{n_fmt}/{total_fmt}'
+# r_bar= '{n_fmt}/{total_fmt} [{rate_fmt}{postfix}]'
+# bar_format = f'{l_bar}|{{bar}}|{r_bar}{"{postfix}"} '
+def bar_format(show_total):
+    if show_total: return '{desc}...|{bar}|({n_fmt}/{total_fmt} {percentage:3.0f}%){postfix}'
+    else: return '{desc}...{percentage:3.2f}% {postfix}'
+
+def progress_indicator(*args, show_total=True, **kwargs):
+    return tqdm(*args, **kwargs, bar_format=bar_format(show_total))
+
+def generateDates(start, end):
+    '''
+    根据形如 20220103 的字符串 生成 起止时间中间的所有日期的字符串
+    (包含 start 和 end)
+    '''
+    start, end = str2date(start), str2date(end) + timedelta(1)
+    if not (end - start).days > 1: return None
+
+    res = []
+    while (end - start).days:
+        res.append(date2str(start))
+        start += timedelta(1)
+    return res
+
+def checkContinuous(lis: list, _type=None, _print=False):
+    '''
+    计算列表中连续的值的范围
+    '''
+
+    if _type == "date": convert = [str2date, date2str]
+    else: convert = [lambda f: int(f)] * 2
+    lis = [convert[0](i) for i in lis]
+    msg = ('TOTAL', 'RANGE', 'LAST')
+
+    lis.sort()
+    # res 是元素为 tuple 的列表，以 (start, end) 的形式储存连续范围的起止
+    res = []
+
+    if _print: print(f"{msg[0]:6s} {convert[1](lis[0])} - {convert[1](lis[-1])}\n")
+    
+    start = lis[0]
+    for i, l in enumerate(lis[1:]):
+        _delta = l - lis[i]
+        if isinstance(_delta, timedelta): _delta = _delta.days
+        if _delta == 1: continue
+        else:
+            _res = (convert[1](start), convert[1](lis[i]))
+            res.append(_res)
+            start = l
+
+            if _print: print(f"{msg[1]:6s} {_res}")
+
+    if start == lis[0] and _print: print('Continuous'); return res
+
+    _res = (convert[1](start), convert[1](l))
+    res.append(_res)
+    start = l
+
+    if _print: print(f"{msg[2]:6s} {_res}")
+
+    return res
+
+def interpolate(dic: dict, avg = None, _type: str='date', _print=False):
+    '''
+    插补数据。数据是字典格式，其中key是日期，value是一个 {jCode: value} 格式的字典
+    '''
+    assert avg is not None
+
+    # 获得 keys 的连续性信息
+    res_continuous = checkContinuous(dic.keys(), "date")
+
+    # 根据连续性信息插补字典对象
+    res = []
+    count = 0
+    for i, (start, end) in enumerate(res_continuous[1:]):
+        end_last = res_continuous[i][1]
+        
+        if _type == 'date':
+            value = avg(dic, end_last, start)
+            for d in generateDates(end_last, start)[1:-1]:
+                if _print: print(f"插补 {d} 为 {end_last}-{start} 均值")
+                dic[d] = value
+                count += 1
+        else:
+            _res = list(range(int(end_last) + 1, int(start)))
+            _res = [str(i) for i in _res]
+            res += _res
+    print(f'{count} new data interpreted')
+    # return dic
