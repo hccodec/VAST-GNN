@@ -17,17 +17,14 @@ from datetime import datetime, timedelta
 
 class datetime(datetime):
     def __add__(self, other):
-        if isinstance(other, int):
-            return self + timedelta(days=other)
-        else:
-            return super().__add__(other)
+        if isinstance(other, int): return self + timedelta(days=other)
+        else: return super().__add__(other)
     
     def __radd__(self, other):
         return self.__add__(other)
     
     def __sub__(self, other):
-        if isinstance(other, int):
-            return self + timedelta(days=-other)
+        if isinstance(other, int): return self + timedelta(days=-other)
         else:
             return super().__sub__(other)
 
@@ -487,10 +484,10 @@ def read_infection_data(jcode23):
 #all_mobility = {"20200201":{('123','123'):12345,...},...}
 #all_text = {"20200201":{"123":{"cold":3,"fever":2,...},...},...}
 #all_infection = {"20200316":{"123":1,"123":2}}
-#all_x_y = {"0":[[mobility_1,text_1, ..., mobility_x_day,text_x_day], [infection_1,...,infection_y_day],[infection_1,...,infection_x_day]],0}
+#all_original = {"0":[[mobility_1,text_1, ..., mobility_x_day,text_x_day], [infection_1,...,infection_y_day],[infection_1,...,infection_x_day]],0}
 #x_days, y_days: use x_days to predict y_days
 def ensemble(all_mobility, all_text, all_infection, x_days, y_days, all_day_list):
-    all_x_y = dict()
+    all_original = dict()
     for j in range(len(all_day_list) - x_days - y_days + 1):
         x_sample, y_sample, x_sample_infection = list(), list(), list()                   
         #add the data from all_day_list[0+j] to all_day_list[x_days-1+j]
@@ -503,96 +500,90 @@ def ensemble(all_mobility, all_text, all_infection, x_days, y_days, all_day_list
         for k in range(y_days):
             day = all_day_list[x_days + k + j]
             y_sample.append(all_infection[day]) 
-        all_x_y[str(j)] = [x_sample, y_sample, x_sample_infection, j]                          
-    return all_x_y
+        all_original[str(j)] = [x_sample, y_sample, x_sample_infection, j]                          
+    return all_original
 
 #function 1.17
 #split the data by train/validate/test = train_ratio/validation_ratio/(1-train_ratio-validation_ratio)
-def split_data(all_x_y, train_ratio, validation_ratio):
-    all_x_y_key = list(all_x_y.keys())
-    n = len(all_x_y_key)
-    n_train, n_validate = round(n*train_ratio), round(n*validation_ratio)
-    n_test = n-n_train-n_validate
-    train_key = [all_x_y[str(i)] for i in range(n_train)]
-    validate_key = [all_x_y[str(i+n_train)] for i in range(n_validate)]
-    test_key = [all_x_y[str(i+n_train+n_validate)] for i in range(n_test)]
-    return train_key, validate_key, test_key
+def split_dataset_sequential(all_original, train_ratio, validation_ratio):
+    n = len(all_original.keys())
+    n_train, n_validate = round(n * train_ratio), round(n * validation_ratio)
+
+    train_value = [all_original[str(k)] for k in range(n_train)]
+    validate_value = [all_original[str(k)] for k in range(n_train, n_train + n_validate)]
+    test_value = [all_original[str(k)] for k in range(n_train + n_validate, n)]
+
+    return train_value, validate_value, test_value
 
 ##function 1.18
 #the second data split method
 #split the data by train/validate/test = train_ratio/validation_ratio/(1-train_ratio-validation_ratio)
-def split_data_2(all_x_y, train_ratio, validation_ratio):
-    all_x_y_key = list(all_x_y.keys())
-    n = len(all_x_y_key)
-    n_train, n_validate = round(n*train_ratio), round(n*validation_ratio)
-    n_test = n-n_train-n_validate
-    train_list, validate_list = list(), list()
+def split_dataset_modulo_9(all_original, train_ratio, validation_ratio):
+    n = len(all_original.keys())
+    n_train, n_validate = round(n * train_ratio), round(n * validation_ratio)
     
-    train_validate_key = [all_x_y[str(i)] for i in range(n_train+n_validate)]
-    train_key, validate_key = list(), list()
-    for i in range(len(train_validate_key)):
-        if i % 9 == 8:
-            validate_key.append(all_x_y[str(i)])
-            validate_list.append(i)
-        else:
-            train_key.append(all_x_y[str(i)])
-            train_list.append(i)
-    test_key = [all_x_y[str(i +n_train + n_validate)] for i in range(n_test)]
-    return train_key, validate_key, test_key, train_list, validate_list
+    train_validate_key, test_key = range(n_train + n_validate), range(n_train + n_validate, n)
+    train_key, validate_key = [], []
+    for k in train_validate_key:
+        validate_key.append(k) if k % 9 == 8 else train_key.append(k)
+
+    train_value = [all_original[str(k)] for k in train_key]
+    validate_value = [all_original[str(k)] for k in validate_key]
+    test_value = [all_original[str(k)] for k in test_key]
+
+    return train_value, validate_value, test_value, train_key, validate_key
 
 ##function 1.19
 #the third data split method
 #split the data by train/validate/test = train_ratio/validation_ratio/(1-train_ratio-validation_ratio)
-def split_data_3(all_x_y, train_ratio, validation_ratio):
-    all_x_y_key = list(all_x_y.keys())
-    n = len(all_x_y_key)
+def split_dataset_backwards_even_index(all_original, train_ratio, validation_ratio):
+    '''
+    从总数据的后 2*len_validate 条，将 index 为偶数的挑选为验证集
+    '''
+    n = len(all_original.keys())
     n_train, n_validate = round(n * train_ratio), round(n * validation_ratio)
-    n_test = n - n_train - n_validate
-    train_list, validate_list = list(), list()
     
-    train_validate_key = [all_x_y[str(i)] for i in range(n_train + n_validate)]
-    test_key = [all_x_y[str(i + n_train + n_validate)] for i in range(n_test)]
-    train_key, validate_key = list(), list()
-    for i in range(len(train_validate_key)):
-        if (n_train + n_validate - i) % 2 == 0 and (n_train + n_validate - i) <= 2 * n_validate:
-            validate_key.append(all_x_y[str(i)])
-            validate_list.append(i)
-        else:
-            train_key.append(all_x_y[str(i)])
-            train_list.append(i)
-    return train_key, validate_key, test_key, train_list, validate_list
+    train_validate_key, test_key = range(n_train + n_validate), range(n_train + n_validate, n)
+    train_key, validate_key = [], []
+    for k in train_validate_key:
+        _k = n_train + n_validate - k
+        validate_key.append(k) if (_k <= 2 * n_validate and _k % 2 == 0) else train_key.append(k)
 
-##function 1.20
-#find the mobility data starting from the day, which is x_days before the start_date
-#start_date = "20200331", x_days = 7
-def sort_date(all_mobility, start_date, x_days): 
-    mobility_date_list = list(all_mobility.keys())
-    mobility_date_list.sort()
-    idx = mobility_date_list.index(start_date)
-    mobility_date_cut = mobility_date_list[idx-x_days:] 
-    return mobility_date_cut
+    train_value = [all_original[str(k)] for k in train_key]
+    validate_value = [all_original[str(k)] for k in validate_key]
+    test_value = [all_original[str(k)] for k in test_key]
 
-#function 1.21
-#find the mobility data starting from the day, which is x_days before the start_date,
-#ending at the day, which is y_days after the end_date
-#start_date = "20200331", x_days = 7
-def sort_date_2(all_mobility, start_date, x_days, end_date, y_days): 
-    mobility_date_list = list(all_mobility.keys())
-    mobility_date_list.sort()
-    idx = mobility_date_list.index(start_date)
-    idx2 = mobility_date_list.index(end_date)
-    mobility_date_cut = mobility_date_list[idx-x_days:idx2+y_days] 
-    return mobility_date_cut
+    return train_value, validate_value, test_value, train_key, validate_key
+# ##function 1.20
+# #find the mobility data starting from the day, which is x_days before the start_date
+# #start_date = "20200331", x_days = 7
+# def sort_date(all_mobility, start_date, x_days): 
+#     mobility_date_list = list(all_mobility.keys())
+#     mobility_date_list.sort()
+#     idx = mobility_date_list.index(start_date)
+#     mobility_date_cut = mobility_date_list[idx-x_days:] 
+#     return mobility_date_cut
+
+# #function 1.21
+# #find the mobility data starting from the day, which is x_days before the start_date,
+# #ending at the day, which is y_days after the end_date
+# #start_date = "20200331", x_days = 7
+# def sort_date_2(all_mobility, start_date, x_days, end_date, y_days): 
+#     mobility_date_list = list(all_mobility.keys())
+#     mobility_date_list.sort()
+#     idx = mobility_date_list.index(start_date)
+#     idx2 = mobility_date_list.index(end_date)
+#     mobility_date_cut = mobility_date_list[idx-x_days:idx2+y_days] 
+#     return mobility_date_cut
 
 #function 1.22
 #get the mappings from zone id to id, text id to id.
 #get zone_text_to_idx 
 def get_zone_text_to_idx(all_infection):
-    zone_list = list(set(all_infection["20200401"].keys()))
+    zone_list = sorted(set(all_infection["20200401"].keys()))
     # text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',                     '腹痛', 'めまい'])
-    zone_list.sort()
-    zone_dict = {str(zone_list[i]):i for i in range(len(zone_list))}
-    text_dict = {str(text_list[i]):i for i in range(len(text_list))}
+    zone_dict = {str(zone_list[i]): i for i in range(len(zone_list))}
+    text_dict = {str(text_list[i]): i for i in range(len(text_list))}
     return zone_dict, text_dict
 
 #function 1.23
@@ -794,7 +785,7 @@ def read_data():
 
     smoothed_fn = 'smoothed_multiwave_data.bin'
     if os.path.exists(smoothed_fn):
-        print(f'Read smoothed data from bin file {smoothed_fn}.')
+        print(f'Read smoothed data from bin file [{smoothed_fn}].')
         with open(smoothed_fn, 'rb') as f:
             import pickle
             all_mobility, all_text, all_infection = pickle.load(f)
@@ -830,8 +821,8 @@ def read_data():
     x_days, y_days =  X_day, Y_day
     # mobility_date_cut = sort_date_2(all_mobility, START_DATE, x_days, END_DATE, y_days)
     mobility_date_cut = generateDates(str2date(START_DATE) - x_days, str2date(END_DATE) + y_days - 1)
-    all_x_y = ensemble(all_mobility, all_text, all_infection, x_days, y_days, mobility_date_cut)
-    train_original, validate_original, test_original, train_list, validation_list = split_data_3(all_x_y,train_ratio,validate_ratio)  
+    all_original = ensemble(all_mobility, all_text, all_infection, x_days, y_days, mobility_date_cut)
+    train_original, validate_original, test_original, train_list, validation_list = split_dataset_backwards_even_index(all_original, train_ratio, validate_ratio)  
     zone_dict, text_dict = get_zone_text_to_idx(all_infection)                       #get zone_idx, text_idx
     train_x_y = change_to_matrix(train_original, zone_dict, text_dict)                   #get train
     print ("train_x_y_shape",len(train_x_y),"train_x_y_shape[0]",len(train_x_y[0]))
