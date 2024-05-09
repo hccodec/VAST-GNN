@@ -95,7 +95,7 @@ def experiment_multiwave():
     tokyo_datafile = 'dataset_tokyo.bin'
     if not os.path.exists(tokyo_datafile) or True:
         with open(tokyo_datafile, 'wb') as f:
-            print('Bin file %s not found. Reading data from dataset files...' % tokyo_datafile)
+            print(f'Reading original data from dataset files (bin file [{tokyo_datafile}] not found)...')
             pickle.dump(read_data(), f)
 
     print('从 bin 文件中读取数据集')
