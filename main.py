@@ -93,25 +93,26 @@ def experiment_multiwave():
     #read the data
     # train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list =read_data()
     tokyo_datafile = 'dataset_tokyo.bin'
-    if not os.path.exists(tokyo_datafile) or True:
+    if not os.path.exists(tokyo_datafile):
         with open(tokyo_datafile, 'wb') as f:
-            print(f'Reading original data from dataset files (bin file [{tokyo_datafile}] not found)...')
-            pickle.dump(read_data(), f)
+            print(f'Reading original data from dataset files...')
+            res = read_data()
+            pickle.dump(res, f)
+            del res
+    else:
+        print(f'Reading original data from bin file [{tokyo_datafile}]...')
+        with open(tokyo_datafile, 'rb') as f:
+            try:
+                train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list = pickle.load(f)
+            except Exception as e:
+                msg = "- Failed: "
+                if isinstance(e, EOFError): msg += 'File collapsed'
+                elif isinstance(e, pickle.UnpicklingError): msg = 'File irregular'
+                else: msg = e
+                print(msg)
+                os.remove(tokyo_datafile)
+                return experiment_multiwave()
 
-    print('从 bin 文件中读取数据集')
-    with open(tokyo_datafile, 'rb') as f:
-        try:
-            train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list = pickle.load(f)
-        except EOFError as e:
-            os.remove(tokyo_datafile)
-            print('bin 文件异常，重新读取')
-            return experiment_multiwave()
-
-    #train_x_y, validate_x_y, test_x_y = normalize(train_x_y, validate_x_y, test_x_y)
-
-    #train_x_y = train_x_y[0:30]
-    print (len(train_x_y))
-    print ("---------------------------------finish data preparation------------------------------------")
 
     e_losses, trained_model = run_tokyo_model(train_x_y, validate_x_y, test_x_y, device)
 

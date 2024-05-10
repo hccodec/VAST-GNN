@@ -81,6 +81,7 @@ validate_ratio = 0.1
 # torch.manual_seed(SEED)
 r = random.random
 # random.seed(5)
+zone_indicies, text_indicies = {}, {}
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # print("HCCODEC: Running on ", device)
@@ -522,16 +523,16 @@ def split_dataset_modulo_9(all_original, train_ratio, validation_ratio):
     n = len(all_original.keys())
     n_train, n_validate = round(n * train_ratio), round(n * validation_ratio)
     
-    train_validate_key, test_key = range(n_train + n_validate), range(n_train + n_validate, n)
-    train_key, validate_key = [], []
-    for k in train_validate_key:
-        validate_key.append(k) if k % 9 == 8 else train_key.append(k)
+    train_validate_indicies, test_indicies = range(n_train + n_validate), range(n_train + n_validate, n)
+    train_indicies, validate_indicies = [], []
+    for k in train_validate_indicies:
+        validate_indicies.append(k) if k % 9 == 8 else train_indicies.append(k)
 
-    train_value = [all_original[str(k)] for k in train_key]
-    validate_value = [all_original[str(k)] for k in validate_key]
-    test_value = [all_original[str(k)] for k in test_key]
+    train_value = [all_original[str(k)] for k in train_indicies]
+    validate_value = [all_original[str(k)] for k in validate_indicies]
+    test_value = [all_original[str(k)] for k in test_indicies]
 
-    return train_value, validate_value, test_value, train_key, validate_key
+    return train_value, validate_value, test_value, train_indicies, validate_indicies
 
 ##function 1.19
 #the third data split method
@@ -543,17 +544,17 @@ def split_dataset_backwards_even_index(all_original, train_ratio, validation_rat
     n = len(all_original.keys())
     n_train, n_validate = round(n * train_ratio), round(n * validation_ratio)
     
-    train_validate_key, test_key = range(n_train + n_validate), range(n_train + n_validate, n)
-    train_key, validate_key = [], []
-    for k in train_validate_key:
+    train_validate_indicies, test_indicies = range(n_train + n_validate), range(n_train + n_validate, n)
+    train_indicies, validate_indicies = [], []
+    for k in train_validate_indicies:
         _k = n_train + n_validate - k
-        validate_key.append(k) if (_k <= 2 * n_validate and _k % 2 == 0) else train_key.append(k)
+        validate_indicies.append(k) if (_k <= 2 * n_validate and _k % 2 == 0) else train_indicies.append(k)
 
-    train_value = [all_original[str(k)] for k in train_key]
-    validate_value = [all_original[str(k)] for k in validate_key]
-    test_value = [all_original[str(k)] for k in test_key]
+    train_value = [all_original[str(k)] for k in train_indicies]
+    validate_value = [all_original[str(k)] for k in validate_indicies]
+    test_value = [all_original[str(k)] for k in test_indicies]
 
-    return train_value, validate_value, test_value, train_key, validate_key
+    return train_value, validate_value, test_value, train_indicies, validate_indicies
 # ##function 1.20
 # #find the mobility data starting from the day, which is x_days before the start_date
 # #start_date = "20200331", x_days = 7
@@ -579,10 +580,21 @@ def split_dataset_backwards_even_index(all_original, train_ratio, validation_rat
 #function 1.22
 #get the mappings from zone id to id, text id to id.
 #get zone_text_to_idx 
-def get_zone_text_to_idx(all_infection):
-    zone_list = sorted(set(all_infection["20200401"].keys()))
-    # text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',                     '腹痛', 'めまい'])
-    zone_dict = {str(zone_list[i]): i for i in range(len(zone_list))}
+# def get_zone_text_to_idx(all_infection):
+#     zone_list = sorted(set(all_infection["20200401"].keys()))
+#     # text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',                     '腹痛', 'めまい'])
+#     zone_dict = {str(zone_list[i]): i for i in range(len(zone_list))}
+#     text_dict = {str(text_list[i]): i for i in range(len(text_list))}
+#     return zone_dict, text_dict
+# def get_zone_text_to_idx():
+#     zone_list = sorted(set(all_infection["20200401"].keys()))
+#     # text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',                     '腹痛', 'めまい'])
+#     zone_dict = {str(zone_list[i]): i for i in range(len(zone_list))}
+#     text_dict = {str(text_list[i]): i for i in range(len(text_list))}
+#     return zone_dict, text_dict
+
+def get_zone_text_to_idx(jcode23, text_list):
+    zone_dict = {str(jcode23[i]): i for i in range(len(jcode23))}
     text_dict = {str(text_list[i]): i for i in range(len(text_list))}
     return zone_dict, text_dict
 
@@ -594,53 +606,85 @@ def get_zone_text_to_idx(all_infection):
 #text: {'13101': {'痛み': 51,...},...}  text
 #infection: {'13101': 50, '13102': 137, '13103': 401,...} 
 #data_type = {"mobility", "text", "infection"}
-def to_matrix(zoneid_to_idx, sym_to_idx, input_data, data_type):
-    n_zone, n_text = len(zoneid_to_idx), len(sym_to_idx)
+def to_matrix(input_data, data_type):
+    global zone_indicies, text_indicies
+    n_zone, n_text = len(zone_indicies), len(text_indicies)
     if data_type == "mobility":
         result = np.zeros((n_zone, n_zone))
-        for key in input_data:    
-            from_id, to_id = key[0], key[1]
-            from_idx, to_idx = zoneid_to_idx[from_id], zoneid_to_idx[to_id]
-            result[from_idx][to_idx] += input_data[key]
+        for zone in input_data:    
+            from_idx, to_idx = zone_indicies[zone[0]], zone_indicies[zone[1]]
+            result[from_idx][to_idx] += input_data[zone]
     if data_type == "text":
         result = np.zeros((n_zone, n_text))
-        for key1 in input_data:
-            for key2 in input_data[key1]:
-                if key1 in list(zoneid_to_idx.keys()) and key2 in list(sym_to_idx.keys()):
-                    zone_idx, text_idx = zoneid_to_idx[key1], sym_to_idx[key2]
-                    result[zone_idx][text_idx] += input_data[key1][key2]
+        for zone in input_data:
+            for sym in input_data[zone]:
+                if zone in list(zone_indicies.keys()) and sym in list(text_indicies.keys()):
+                    zone_idx, text_idx = zone_indicies[zone], text_indicies[sym]
+                    result[zone_idx][text_idx] += input_data[zone][sym]
     if data_type == "infection":
         result = np.zeros(n_zone)
-        for key in input_data:
-            zone_idx = zoneid_to_idx[key]
-            result[zone_idx] += input_data[key]
+        for zone in input_data:
+            zone_idx = zone_indicies[zone]
+            result[zone_idx] += input_data[zone]
     return result
 
 #function 1.24
 #change the data to the matrix format
-def change_to_matrix(data, zoneid_to_idx, sym_to_idx):
+# def change_to_matrix(data, zoneid_to_idx, sym_to_idx):
+#     data_result = list()
+#     for i in range(len(data)):
+#         combine1, combine2 = list(), list()
+#         combine3 = list()                                    #NEW
+#         mobility_text = data[i][0]
+#         x_infection_all = data[i][2]          #the x_days infection data
+#         day_order =  data[i][3] #NEW          the order of the day
+#         for j in range(round(len(mobility_text)*1.0/2)):
+#             mobility, text = mobility_text[2*j], mobility_text[2*j+1]
+#             x_infection =  x_infection_all[j]   #NEW
+#             new_mobility = to_matrix(zoneid_to_idx, sym_to_idx, mobility, "mobility")
+#             new_text = to_matrix(zoneid_to_idx, sym_to_idx, text, "text")
+#             combine1.append(new_mobility)
+#             combine1.append(new_text) 
+#             new_x_infection = to_matrix(zoneid_to_idx, sym_to_idx, x_infection, "infection") #NEW
+#             combine3.append(new_x_infection)   #NEW
+#         for j in range(len(data[i][1])):
+#             infection = data[i][1][j]                                                          
+#             new_infection = to_matrix(zoneid_to_idx, sym_to_idx, infection, "infection")
+#             combine2.append(new_infection)                                               
+#         data_result.append([combine1,combine2,combine3,day_order])    #mobility/text; infection_y; infection_x; day_order
+#     return data_result  
+def change_to_matrix(data, hint):
     data_result = list()
-    for i in range(len(data)):
-        combine1, combine2 = list(), list()
-        combine3 = list()                                    #NEW
-        mobility_text = data[i][0]
-        x_infection_all = data[i][2]          #the x_days infection data
-        day_order =  data[i][3] #NEW          the order of the day
-        for j in range(round(len(mobility_text)*1.0/2)):
-            mobility, text = mobility_text[2*j], mobility_text[2*j+1]
-            x_infection =  x_infection_all[j]   #NEW
-            new_mobility = to_matrix(zoneid_to_idx, sym_to_idx, mobility, "mobility")
-            new_text = to_matrix(zoneid_to_idx, sym_to_idx, text, "text")
+
+    n = len(data)
+
+    qbar = progress_indicator(total=n, desc=f"Transforming {hint} data to matrix")
+
+
+    for i in range(n):
+
+        combine1, combine2, combine3 = list(), list(), list()
+        mobility_text_all, y_infection_all, x_infection_all, day_order = data[i]
+
+        for j in range(round(len(mobility_text_all) * 1. / 2)):
+
+            mobility, text, x_infection = mobility_text_all[2 * j], mobility_text_all[2 * j + 1], x_infection_all[j]   #NEW
+
+            new_mobility = to_matrix(mobility, "mobility")
+            new_text = to_matrix(text, "text")
+            new_x_infection = to_matrix(x_infection, "infection") #NEW
+
             combine1.append(new_mobility)
             combine1.append(new_text) 
-            new_x_infection = to_matrix(zoneid_to_idx, sym_to_idx, x_infection, "infection") #NEW
             combine3.append(new_x_infection)   #NEW
-        for j in range(len(data[i][1])):
-            infection = data[i][1][j]                                                          
-            new_infection = to_matrix(zoneid_to_idx, sym_to_idx, infection, "infection")
+        for j in range(len(y_infection_all)):
+            infection = y_infection_all[j]                                                          
+            new_infection = to_matrix(infection, "infection")
             combine2.append(new_infection)                                               
-        data_result.append([combine1,combine2,combine3,day_order])    #mobility/text; infection_y; infection_x; day_order
-    return data_result   
+        data_result.append([combine1, combine2, combine3, day_order])    #mobility/text; infection_y; infection_x; day_order
+
+        qbar.update()
+    return data_result
 
 ##################5.learn#####################
 #function 1.25
@@ -783,58 +827,60 @@ def train_process(train_data, lr, num_epochs, net, criterion, bs, vali_data, tes
 #function 3.1
 def read_data():
 
-    smoothed_fn = 'smoothed_multiwave_data.bin'
-    if os.path.exists(smoothed_fn):
-        print(f'Reading smoothed data from bin file [{smoothed_fn}].')
-        with open(smoothed_fn, 'rb') as f:
-            import pickle
-            all_mobility, all_text, all_infection = pickle.load(f)
-    else:
-        ####################################
-        cwd = os.getcwd()
-        os.chdir("data/multiwave_data")
-        jcode23 = list(read_tokyo_23()["JCODE"])                    #1.1 get the tokyo 23 zone shapefile
-        jcode23 = jcode23[:23]
-        all_mobility = read_mobility_data(jcode23)                  #1.2 read the mobility data
-        all_infection, all_infection_cum = read_infection_data(jcode23)                #1.4 read the infection data
-        all_text = read_text_data(jcode23)                          #1.3 read the text data
-        os.chdir(cwd)
-        del cwd
-            
-        #smooth the data using 7-days average
-        window_size = WINDOW_SIZE                 #20210818
-        dateList = generateDates('20200101', '20211231')  #20210818
-        all_mobility = mob_inf_smooth(all_mobility, window_size, dateList, "mobility") #20210818
-        all_infection = mob_inf_smooth(all_infection, window_size, dateList, "infection")  #20210818
-        
-        #smooth, user, min-max.
-        # point_json = read_point_json()                           #20210821
-        # all_text = normalize_text_user(all_text, point_json)       #20210821
-        all_text = text_smooth(all_text, window_size, dateList, 'text') #20210818
-        all_text = min_max_text_data(all_text,jcode23)                 #20210820
+    global zone_indicies, text_indicies
 
-        with open(smoothed_fn, 'wb') as f:
-            import pickle
-            pickle.dump((all_mobility, all_text, all_infection), f)
-        ####################################
+    ####################################
+    cwd = os.getcwd()
+    os.chdir("data/multiwave_data")
+    jcode23 = list(read_tokyo_23()["JCODE"])                    #1.1 get the tokyo 23 zone shapefile
+    jcode23 = jcode23[:23]
+    all_mobility = read_mobility_data(jcode23)                  #1.2 read the mobility data
+    all_infection, all_infection_cum = read_infection_data(jcode23)                #1.4 read the infection data
+    all_text = read_text_data(jcode23)                          #1.3 read the text data
+    os.chdir(cwd)
+    del cwd
+
+    #smooth the data using 7-days average
+    window_size = WINDOW_SIZE                 #20210818
+    dateList = generateDates('20200101', '20211231')  #20210818
+    all_mobility = mob_inf_smooth(all_mobility, window_size, dateList, "mobility") #20210818
+    all_infection = mob_inf_smooth(all_infection, window_size, dateList, "infection")  #20210818
+    
+    #smooth, user, min-max.
+    # point_json = read_point_json()                           #20210821
+    # all_text = normalize_text_user(all_text, point_json)       #20210821
+    all_text = text_smooth(all_text, window_size, dateList, 'text') #20210818
+    all_text = min_max_text_data(all_text,jcode23)                 #20210820
+
+    zone_indicies, text_indicies = get_zone_text_to_idx(jcode23, text_list)                       #get zone_indicies, text_indicies
+
+    ####################################
         
     x_days, y_days =  X_day, Y_day
     # mobility_date_cut = sort_date_2(all_mobility, START_DATE, x_days, END_DATE, y_days)
-    mobility_date_cut = generateDates(str2date(START_DATE) - x_days, str2date(END_DATE) + y_days - 1)
-    all_original = ensemble(all_mobility, all_text, all_infection, x_days, y_days, mobility_date_cut)
-    train_original, validate_original, test_original, train_list, validation_list = split_dataset_backwards_even_index(all_original, train_ratio, validate_ratio)  
-    zone_dict, text_dict = get_zone_text_to_idx(all_infection)                       #get zone_idx, text_idx
-    train_x_y = change_to_matrix(train_original, zone_dict, text_dict)                   #get train
-    print ("train_x_y_shape",len(train_x_y),"train_x_y_shape[0]",len(train_x_y[0]))
-    validate_x_y = change_to_matrix(validate_original, zone_dict, text_dict)             #get validate
-    test_x_y = change_to_matrix(test_original, zone_dict, text_dict)                     #get test
+    date_all = generateDates(str2date(START_DATE) - x_days, str2date(END_DATE) + y_days - 1)
+    all_original = ensemble(all_mobility, all_text, all_infection, x_days, y_days, date_all)
+    train_original, validate_original, test_original, train_indicies, validate_indicies = \
+        split_dataset_backwards_even_index(all_original, train_ratio, validate_ratio)
+
+    # zone_dict, text_dict = get_zone_text_to_idx(jcode23, text_list)                       #get zone_indicies, text_indicies
+    train_x_y = change_to_matrix(train_original, "train")                   #get train
+    validate_x_y = change_to_matrix(validate_original, "validate")             #get validate
+    test_x_y = change_to_matrix(test_original, "test")                     #get test
     
-    print (len(train_x_y))  #300
-    print (len(train_x_y[0][0])) #14
-    print (np.shape(train_x_y[0][0][0])) #(23,23)
-    print (np.shape(train_x_y[0][0][1])) #(23,43)
+    print ("train_x_y_shape",len(train_x_y),"train_x_y_shape[0]",len(train_x_y[0]))
+    print (len(train_x_y),
+           ': Length of training set')  #300
+    print (len(train_x_y[0][0]),
+           'Count of mobility&text data per zone in training set. (the time span for training set is', f'{len(train_x_y[0][0])} / 2 = {len(train_x_y[0][0]) // 2})') #14
+    print (np.shape(train_x_y[0][0][0]),
+           "Shape of mobility data per day per zone in training set.") #(23,23)
+    print (np.shape(train_x_y[0][0][1]),
+           "Shape of text data per dday per zone in training set.") #(23,43)
     #print ("---------------------------------finish data reading and preprocessing------------------------------------")
-    return train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list
+
+    return train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, \
+        train_original, validate_original, test_original, train_indicies, validate_indicies
 
 #function 3.2
 #train the model
