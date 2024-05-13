@@ -1,45 +1,40 @@
-import argparse, json, os, datetime
+import argparse, json, os
 from train import *
 import torch, pickle
 
 import random, numpy as np, time
 
+# 设置随机种子
 seed = 42
 random.seed(seed)
 np.random.seed(seed)
 torch.manual_seed(seed)
 
+from utils.datetime import datetime
+now = datetime.now()
+
 class Datasets:
-    TGNN = "tgnn",
+    TGNN = "tgnn"
     MULTIWAVE = "multiwave"
 
-def make_results_dirs(dataset: Datasets):
+def make_results_dir(dataset: Datasets):
 
-    results_dir = f"results_{str(dataset[0])}"
+    results_dir = os.path.join("results", now.strftime("%Y%m%d%H%M%S"), str(dataset)) + "_incomplete"
     
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir)
-
-    results_dir = os.path.join(
-        results_dir,
-        datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
-    
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir, exist_ok=True)
+    os.makedirs(results_dir, exist_ok=True)
     
     return results_dir
 
 def experiment_tgnn(args, config):
     import preprocess_tgnn
 
-    results_dir = make_results_dirs(Datasets.TGNN)
+    results_dir = make_results_dir(Datasets.TGNN)
 
     config_tgnn = config['pandemic_tgnn_dataset']
 
     # 使用数据集对应文章的方法加载数据集 - pandemic tgnn
     # meta_labs, meta_graphs, meta_features, meta_y = \
-    meta_dataset = preprocess_tgnn.read_meta_datasets(
-            args.window, config_tgnn)
+    meta_dataset = preprocess_tgnn.read_meta_datasets(args.window, config_tgnn)
     
     nfeat = meta_dataset[2][0][0].shape[1] # `meta_dataset[2]` is features
     
@@ -60,20 +55,28 @@ def experiment_tgnn(args, config):
             
             fw.write(f"Epoch,val_loss,train_loss,time\n")
             
-            print('Start training...')
-            
-            test_sample, window, sep = 15, 7, 10
+            test_sample, window, sep = 15, args.window, args.sep
             shift, batch_size, device = 1, 8, torch.device('cuda:0')
             
-            idx_train = list(range(window-1, test_sample-sep))
+            idx_train = list(range(window - 1, test_sample - sep))
             
-            idx_val = list(range(test_sample-sep, test_sample, 2)) 
+            idx_val = list(range(test_sample - sep, test_sample, 2)) 
                             
-            idx_train = idx_train+list(range(test_sample-sep+1, test_sample, 2))
+            idx_train = idx_train + list(range(test_sample - sep + 1, test_sample, 2))
 
-            train_among_epochs, val_among_epochs, model = \
-                run_tgnn_model(gs_adj, features, y, idx_train, idx_val, 1, shift,
-                          batch_size, device, test_sample, fw)
+            train_among_epochs, val_among_epochs, model = run_tgnn_model(
+                gs_adj, features, y, idx_train, idx_val, args.graph_window, shift, batch_size, device, test_sample, fw)
+            # graphs        : list,
+            # features      : list,
+            # y             : list,
+            # idx_train     : list,
+            # idx_val       : list,
+            # graph_window  : int,
+            # shift         : int,
+            # batch_size    : int,
+            # device        : torch.device,
+            # test_sample   : int,
+            # fw
             
         torch.save(model.state_dict(), os.path.join(results_dir, f'model_{country}.pth'))
         # 存到文件中
@@ -83,38 +86,43 @@ def experiment_tgnn(args, config):
         print('Training completed. Best model save in {}/:\n[best_train_loss {}, best_val_loss {}]'.format(
             results_dir, train_among_epochs[-1], val_among_epochs[-1]
         ))
+    
+    os.rename(results_dir, results_dir.split('_')[0])
 
 def experiment_multiwave():
     from preprocess_multiwave import read_data, device
 
-    results_dir = make_results_dirs(Datasets.MULTIWAVE)
+    results_dir = make_results_dir(Datasets.MULTIWAVE)
 
     #4.1
     #read the data
     # train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list =read_data()
     tokyo_datafile = 'dataset_tokyo.bin'
     if not os.path.exists(tokyo_datafile):
+        res = read_data()
         with open(tokyo_datafile, 'wb') as f:
             print(f'Reading original data from dataset files...')
-            res = read_data()
             pickle.dump(res, f)
             del res
     else:
-        print(f'Reading original data from bin file [{tokyo_datafile}]...')
-        with open(tokyo_datafile, 'rb') as f:
-            try:
-                train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list = pickle.load(f)
-            except Exception as e:
-                msg = "- Failed: "
-                if isinstance(e, EOFError): msg += 'File collapsed'
-                elif isinstance(e, pickle.UnpicklingError): msg = 'File irregular'
-                else: msg = e
-                print(msg)
-                os.remove(tokyo_datafile)
-                return experiment_multiwave()
+        print(f'Reading processed data from bin file [{tokyo_datafile}]...')
+    with open(tokyo_datafile, 'rb') as f:
+        try:
+            train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list = pickle.load(f)
+        except Exception as e:
+            msg = "- Failed: "
+            if isinstance(e, EOFError): msg += 'File collapsed'
+            elif isinstance(e, pickle.UnpicklingError): msg = 'File irregular'
+            else: msg = e
+            print(msg)
+            os.remove(tokyo_datafile)
+            return experiment_multiwave()
 
 
-    e_losses, trained_model = run_tokyo_model(train_x_y, validate_x_y, test_x_y, device)
+    e_losses, trained_model = run_tokyo_model(train_x_y, validate_x_y, test_x_y, device, results_dir)
+
+    os.rename(results_dir, results_dir.split('_')[0])
+
 
 
 
@@ -132,7 +140,7 @@ def main():
                         help='Dropout rate.')
     parser.add_argument('--window', type=int, default=7,
                         help='Size of window for features.')
-    parser.add_argument('--graph-window', type=int, default=7,
+    parser.add_argument('--graph-window', type=int, default=1,
                         help='Size of window for graphs in MPNN LSTM.')
     parser.add_argument('--recur',  default=False,
                         help='True or False.')
@@ -148,7 +156,9 @@ def main():
     with open('config.json', 'r') as config_file:
         config = json.load(config_file)
     args = parser.parse_args()
-    # experiment_tgnn(args, config)
+    print('\nEurope\n')
+    experiment_tgnn(args, config)
+    print('\Japan\n')
     experiment_multiwave()
 
 if __name__ == '__main__':

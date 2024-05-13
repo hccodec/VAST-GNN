@@ -5,6 +5,86 @@ import torch.nn.functional as F
 from torch_geometric.data import Data
 from torch.utils.data import DataLoader
 
+
+class MyModel(nn.Module):
+    def __init__(self, x_days, y_days, input_dim_1, hidden_dim_1, out_dim_1, hidden_dim_2, dropout_1, N, device='cpu'):
+        super (MyModel, self).__init__()
+        self.device = device
+        self.N = N
+        self.x_days = x_days
+        self.y_days = y_days
+        self.specGCN = SpecGCN(input_dim_1, hidden_dim_1, out_dim_1, dropout_1).to(device)
+        
+        self.lstm = nn.LSTM(batch_first=True, input_size=out_dim_1+1, hidden_size=hidden_dim_2,num_layers=2, bidirectional=False)
+        #self.lstm = nn.LSTM(batch_first=True, input_size=N*out_dim_1+N, hidden_size=N*hidden_dim_2,num_layers=1, bidirectional=False)     
+        self.out_dim_1 = out_dim_1             #out dimension of GNN
+        self.hidden_dim_2 = hidden_dim_2       #out dimension of LSTM
+        self.fc1 = nn.Linear(self.hidden_dim_2 + self.x_days, 1)
+        self.v = torch.nn.Parameter(torch.empty(23))
+        self.v.requires_grad = True
+        torch.nn.init.normal_(self.v.data, mean=0.05, std=0.000)
+        
+    def encode(self, input_record):
+        N = self.N
+        n_batch = len(input_record)
+        x_days, y_days = round(len(input_record[0][0])/2), len(input_record[0][1])
+        
+        #Step1: calculate the SpecGCN output        
+        #lstm_input_batch = torch.zeros((N, n_batch, self.x_days, self.out_dim_1+1))  
+        lstm_input_batch = torch.zeros((N, n_batch, self.x_days, self.out_dim_1+1), device=self.device)
+        for batch in range(n_batch):
+            #mobility
+            #torch.tensor(input_record[batch][0][2*i]).float()     #(N,N)
+            #text
+            #torch.tensor(input_record[batch][0][2*i+1]).float()   #(N,text_dimension)
+            #infection
+            #torch.tensor(input_record[batch][2][i]).float()       #N
+            for i in range(x_days):
+                x  = torch.tensor(input_record[batch][0][2*i+1]).float()   #(N, text_dimension)
+                adj = torch.tensor(input_record[batch][0][2*i]).float()    #(N, N)
+                x_infection = torch.tensor(input_record[batch][2][i]).float() #N
+                x_infection = x_infection.reshape((x_infection.size()[0],1)) #(N, 1)
+                day_order =  input_record[batch][3]                           #v6
+                x = x.to(self.device)
+                adj = adj.to(self.device)
+                x_infection = x_infection.to(self.device)
+                specGCN_out = self.specGCN(x, adj)                        #(N, out_dim1)
+                specGCN_out = specGCN_out.mul(torch.unsqueeze(torch.exp(self.v*self.v*float(day_order)),dim=1).repeat(1,self.out_dim_1))
+                
+                specGCN_out = torch.cat([specGCN_out, x_infection], dim=1) #(N, out_dim1+1) 
+                for j in range(N):
+                    lstm_input_batch[j][batch][i] = specGCN_out[j]    
+        #lstm_input_batch.shape = [N, batch, x_days, out_dim_1+1]
+        
+        #Step2: calculate the LSTM outputs
+        y_output_batch = torch.zeros((n_batch, self.y_days, self.N))
+        for j in range(N):
+            lstm_input_x1 = lstm_input_batch[j]                   #[batch, x_days, out_dim_1+1]
+            lstm_input_x2 = torch.mean(lstm_input_x1, dim=1)
+            lstm_input_x2 = lstm_input_x2.view((lstm_input_x2.size()[0], 1, lstm_input_x2.size()[1])) ##[batch, 1, out_dim_1+1]
+            lstm_input_x2 = lstm_input_x2.repeat(1, y_days, 1)  ##[batch, y_days, out_dim_1+1]
+            
+            lstm_input_x1_output, (hc,cn) = self.lstm(lstm_input_x1)          #[batch, x_days, hidden_dim_2]
+            lstm_output, (hc1,cn1) = self.lstm(lstm_input_x2, (hc,cn))        #[batch, y_days, hidden_dim_2]
+            
+            infection_tensor = torch.tensor([[input_record[batch][2][x_day_c][j] for x_day_c in range(x_days)] for batch in range(n_batch)]).float().to(self.device)
+            infection_tensor = infection_tensor.view((infection_tensor.size()[0], 1, infection_tensor.size()[1]))
+            infection_tensor = infection_tensor.repeat(1, y_days, 1)  #[batch, y_days, x_days]
+            
+            lstm_output = torch.cat([lstm_output, infection_tensor], dim=2)
+            
+            
+            fc_output = self.fc1(lstm_output)   #[batch, y_days, 1]
+            fc_output = F.relu(fc_output)    #[batch, y_days, 1]
+            if j == 0:
+                y_output_batch = fc_output
+            else:
+                y_output_batch = torch.cat([y_output_batch, fc_output], dim=2)
+        return y_output_batch      #y_output_batch.shape = (batch, y_day, N)
+
+
+#region GraphEncoder, GraphReconstruction, GNN, LSTM, GNNLSTM
+
 class GraphEncoder(nn.Module):
     def __init__(self, num_nodes, input_dim, hidden_dim, num_heads):
         super(GraphEncoder, self).__init__()
@@ -135,6 +215,9 @@ class GNNLSTM(nn.Module):
 
 #######################################################################
 
+#endregion
+
+# Pandemic TGNN 对应模型
 class MPNN_LSTM(nn.Module):
     def __init__(self, nfeat: int , 
                  nhid: int , 

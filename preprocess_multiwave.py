@@ -13,26 +13,7 @@
 # Step 5: evaluation
 # Step 6: visualization
 
-from datetime import datetime, timedelta
-
-class datetime(datetime):
-    def __add__(self, other):
-        if isinstance(other, int): return self + timedelta(days=other)
-        else: return super().__add__(other)
-    
-    def __radd__(self, other):
-        return self.__add__(other)
-    
-    def __sub__(self, other):
-        if isinstance(other, int): return self + timedelta(days=-other)
-        else:
-            return super().__sub__(other)
-
-    def __rsub__(self, other):
-        return self.__sub__(other)
-
-def str2date(f): return f if isinstance(f, datetime) else datetime.strptime(f, '%Y%m%d')
-def date2str(f): return f if isinstance(f, str) else datetime.strftime(f, '%Y%m%d')
+from utils.datetime import *
 
 import os
 os.environ['CUDA_AVAILABLE_DEVICES'] = '7,8,9'
@@ -288,37 +269,37 @@ def text_smooth(data, window_size, dateList, hint):
         data[data_key] =  data_average
     return data
 
-#function 1.11
-#read the number of user points
-def read_point_json():
-    with open('user_point/mobility_user_point.json') as point1:
-        user_point1 = json.load(point1)
-    with open('user_point/mobility_user_point_20210812.json') as point2:
-        user_point2 = json.load(point2)
-    user_point_all = dict()
-    for i in user_point1:
-        user_point_all[i] = user_point1[i]
-    for i in user_point2:
-        user_point_all[i] = user_point2[i]
-    user_point_all["20201128"] = user_point_all["20201127"]  #data missing
-    user_point_all["20210104"] = user_point_all["20210103"]  #data missing
-    return user_point_all
+# #function 1.11
+# #read the number of user points
+# def read_point_json():
+#     with open('user_point/mobility_user_point.json') as point1:
+#         user_point1 = json.load(point1)
+#     with open('user_point/mobility_user_point_20210812.json') as point2:
+#         user_point2 = json.load(point2)
+#     user_point_all = dict()
+#     for i in user_point1:
+#         user_point_all[i] = user_point1[i]
+#     for i in user_point2:
+#         user_point_all[i] = user_point2[i]
+#     user_point_all["20201128"] = user_point_all["20201127"]  #data missing
+#     user_point_all["20210104"] = user_point_all["20210103"]  #data missing
+#     return user_point_all
 
 #function 1.12
 #normalize the text search by the number of user points.
-def normalize_text_user(all_text, user_point_all):
-    for day in all_text:
-        if day in user_point_all:
-            num_user = user_point_all[day]["num_user"]
-            all_text_day_new = dict()
-            all_text_day = all_text[day]
-            for zone in all_text_day:
-                if zone not in all_text_day_new:
-                    all_text_day_new[zone] = dict()
-                for sym in all_text_day[zone]:
-                    all_text_day_new[zone][sym] = all_text_day[zone][sym]*1.0/num_user
-            all_text[day] = all_text_day_new
-    return all_text
+# def normalize_text_user(all_text, user_point_all):
+#     for day in all_text:
+#         if day in user_point_all:
+#             num_user = user_point_all[day]["num_user"]
+#             all_text_day_new = dict()
+#             all_text_day = all_text[day]
+#             for zone in all_text_day:
+#                 if zone not in all_text_day_new:
+#                     all_text_day_new[zone] = dict()
+#                 for sym in all_text_day[zone]:
+#                     all_text_day_new[zone][sym] = all_text_day[zone][sym]*1.0/num_user
+#             all_text[day] = all_text_day_new
+#     return all_text
     
 #function 1.13
 #read the text data
