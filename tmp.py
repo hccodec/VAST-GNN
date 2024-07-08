@@ -1,25 +1,28 @@
-# from preprocess_multiwave import interpolate
+# vis_results.py
+from argparse import ArgumentParser
+import pickle, os
+
+def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument("-e", "--exp", choices=['eu', 'jp'], default="eu", help="choose the experiment")
+    parser.add_argument("-t", "--timestr", help="choose the specific time in , default for the latest one")
+    args = parser.parse_args()
+    return args
 
 
-# import pickle
-# with open('all_infection_origin.bin', 'rb') as f: t = pickle.load(f)
-# res = interpolate(t)
-# pass
+def make_config_filepath(args):
+    timestr, exp = args.timestr, args.exp
+    if timestr is None: timestr = sorted(os.listdir('results'))[-1]
+    return os.path.join('results', timestr, exp)
 
-import pickle
 
-def getrange(t):
-    if not hasattr(t, '__len__'): raise TypeError
-    return range(len(t))
-
-# with open('tmp.bin', 'rb') as f: t, _t =pickle.load(f)
-def compare(t, _t):
-    res = True
-    for i in getrange(t):
-        for j in getrange(t[i]):
-            if isinstance(t[i][j], int): res = res and (t[i][j] == _t[i][j])
-            else:
-                for k in getrange(t[i][j]):
-                    res = res and (t[i][j][k] == _t[i][j][k]).any()
-
-    return res
+if __name__ == "__main__":
+    args = parse_args()
+    fn = make_config_filepath(args)
+    data_res = []
+    for bin_file in os.listdir(fn):
+        if not bin_file.endswith('bin'): continue
+        with open(os.path.join(fn, bin_file), 'rb') as f:
+            _v = pickle.load(f)
+            data_res.append(_v)
+    pass

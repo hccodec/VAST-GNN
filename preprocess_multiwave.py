@@ -42,13 +42,15 @@ from model.sab_gnn import SpecGCN_LSTM
 # X_day, Y_day = 21,7
 # X_day, Y_day = 21,14
 X_day, Y_day = 21,7
-# START_DATE, END_DATE = '20200414','20210207' # possible wave 3
-START_DATE, END_DATE = '20200720','20210515' # possible wave 4
+START_DATE, END_DATE = '20200414','20210207' # possible wave 3
+# START_DATE, END_DATE = '20200720','20210515' # possible wave 4
 
 # START_DATE, END_DATE = '20201210', '20210207' # 3rd wave
 # START_DATE, END_DATE = '20210317', '20210515' # 4th wave
 
 WINDOW_SIZE = 7
+
+USE_GRAPH_LEARNER = False
 
 #hyperparameter for the learning
 DROPOUT, ALPHA = 0.50, 0.20
@@ -67,34 +69,34 @@ zone_indicies, text_indicies = {}, {}
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # print("HCCODEC: Running on ", device)
 
-text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',
-                    '腹痛', 'めまい', '吐き気', '嘔吐', '筋肉痛', '動悸',
-                    '副鼻腔炎', '発疹', 'くしゃみ', '倦怠感', '寒気', '脱水',
-                    '中咽頭', '関節痛', '不眠症', '睡眠障害', '鼻漏', '片頭痛',
-                    '多汗症', 'ほてり', '胸痛', '発汗', '無気力', '呼吸困難',
-                    '喘鳴', '目の痛み', '体の痛み', '無嗅覚症', '耳の痛み',
-                    '錯乱', '見当識障害', '胸の圧迫感', '鼻の乾燥', '耳感染症',
-                    '味覚消失', '上気道感染症', '眼感染症', '食欲減少'])
+# text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',
+#                     '腹痛', 'めまい', '吐き気', '嘔吐', '筋肉痛', '動悸',
+#                     '副鼻腔炎', '発疹', 'くしゃみ', '倦怠感', '寒気', '脱水',
+#                     '中咽頭', '関節痛', '不眠症', '睡眠障害', '鼻漏', '片頭痛',
+#                     '多汗症', 'ほてり', '胸痛', '発汗', '無気力', '呼吸困難',
+#                     '喘鳴', '目の痛み', '体の痛み', '無嗅覚症', '耳の痛み',
+#                     '錯乱', '見当識障害', '胸の圧迫感', '鼻の乾燥', '耳感染症',
+#                     '味覚消失', '上気道感染症', '眼感染症', '食欲減少'])
 
-symptoms_zh = ['疼痛', '头痛', '咳嗽', '腹泻', '压力', '焦虑',
-                '腹痛', '头晕', '恶心', '呕吐', '肌肉疼痛', '心悸',
-                '鼻窦炎', '皮疹', '打喷嚏', '疲劳', '寒冷', '脱水',
-                '咽喉炎', '关节痛', '失眠', '睡眠障碍', '流鼻涕', '偏头痛',
-                '多汗', '潮红', '胸痛', '出汗', '无精打采', '呼吸困难',
-                '喘鸣', '眼痛', '身体疼痛', '无嗅', '耳痛',
-                '混乱', '迷失方向', '胸闷', '鼻干', '耳感染',
-                '味觉丧失', '上呼吸道感染', '眼感染', '食欲减退']
+# symptoms_zh = ['疼痛', '头痛', '咳嗽', '腹泻', '压力', '焦虑',
+#                 '腹痛', '头晕', '恶心', '呕吐', '肌肉疼痛', '心悸',
+#                 '鼻窦炎', '皮疹', '打喷嚏', '疲劳', '寒冷', '脱水',
+#                 '咽喉炎', '关节痛', '失眠', '睡眠障碍', '流鼻涕', '偏头痛',
+#                 '多汗', '潮红', '胸痛', '出汗', '无精打采', '呼吸困难',
+#                 '喘鸣', '眼痛', '身体疼痛', '无嗅', '耳痛',
+#                 '混乱', '迷失方向', '胸闷', '鼻干', '耳感染',
+#                 '味觉丧失', '上呼吸道感染', '眼感染', '食欲减退']
 
-symptoms_en = ['Pain', 'Headache', 'Cough', 'Diarrhea', 'Stress', 'Anxiety',
-                'Abdominal pain', 'Dizziness', 'Nausea', 'Vomiting', 'Muscle pain', 'Palpitations',
-                'Sinusitis', 'Rash', 'Sneezing', 'Fatigue', 'Chills', 'Dehydration',
-                'Pharyngitis', 'Joint pain', 'Insomnia', 'Sleep disorder', 'Rhinorrhea', 'Migraine',
-                'Hyperhidrosis', 'Flushing', 'Chest pain', 'Sweating', 'Apathy', 'Shortness of breath',
-                'Wheezing', 'Eye pain', 'Body pain', 'Anosmia', 'Ear pain',
-                'Confusion', 'Disorientation', 'Chest pressure', 'Dry nose', 'Ear infection',
-                'Loss of taste', 'Upper respiratory tract infection', 'Eye infection', 'Decreased appetite']
+# symptoms_en = ['Pain', 'Headache', 'Cough', 'Diarrhea', 'Stress', 'Anxiety',
+#                 'Abdominal pain', 'Dizziness', 'Nausea', 'Vomiting', 'Muscle pain', 'Palpitations',
+#                 'Sinusitis', 'Rash', 'Sneezing', 'Fatigue', 'Chills', 'Dehydration',
+#                 'Pharyngitis', 'Joint pain', 'Insomnia', 'Sleep disorder', 'Rhinorrhea', 'Migraine',
+#                 'Hyperhidrosis', 'Flushing', 'Chest pain', 'Sweating', 'Apathy', 'Shortness of breath',
+#                 'Wheezing', 'Eye pain', 'Body pain', 'Anosmia', 'Ear pain',
+#                 'Confusion', 'Disorientation', 'Chest pressure', 'Dry nose', 'Ear infection',
+#                 'Loss of taste', 'Upper respiratory tract infection', 'Eye infection', 'Decreased appetite']
 
-text_list = symptoms_en
+# text_list = symptoms_en
 
 # # Step 1: read and pack the training and testing data
 
@@ -161,7 +163,9 @@ def mob_inf_smooth(data, window_size, dateList, hint):
     data_key_list = list(data_copy.keys())
     qbar1 = progress_indicator(data_key_list, desc=f"Smoothing {hint}")
     for data_key in qbar1:
-        if data_key not in dateList: continue
+        if data_key not in dateList:
+            # raise RuntimeError("出错")
+            continue
         left = int(max(dateList.index(data_key) - (window_size-1) / 2, 0))
         right = int(min(dateList.index(data_key) + (window_size-1) / 2, len(dateList) - 1))
         potential_neighbor = dateList[left:right+1]
@@ -332,11 +336,15 @@ def read_text_data(jcode23):
     # all_text["20201030"] = text_average(all_text, "20201029", "20201031") #data missing
     interpolate(all_text, text_average)
     # all_text = interpolate(all_text, text_average)
-    return all_text
+    
+    text_list = sorted(set([i for day in all_text for zone in all_text[day] for i in all_text[day][zone]]))
+
+
+    return all_text, text_list
 
 #function 1.14
 #perform the min-max normalization for the text data.
-def min_max_text_data(all_text,jcode23):
+def min_max_text_data(all_text,jcode23, text_list):
     #calculate the min_max
     #region_key: sym: [min,max]
     # text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',
@@ -365,9 +373,9 @@ def min_max_text_data(all_text,jcode23):
 
     qbar.desc = desc('Updating')
     #update
-    for day in all_text:
-        for area in jcode23:
-            for sym in text_list:
+    for area in jcode23:
+        for sym in text_list:
+            for day in all_text:
                 if sym in all_text[day][area]:
                     count = all_text[day][area][sym]
                     if count < region_sym_min_max[area][sym][0]: region_sym_min_max[area][sym][0] = count
@@ -429,8 +437,8 @@ def read_infection_data(jcode23):
     date_list = generateDates('20200316', '20200330')
     # for date in date_list:
     #     all_infection[date] = mob_inf_average(all_infection,'20200401','20200401')
-    _res = mob_inf_average(all_infection,'20200401','20200401')
-    for date in date_list: all_infection[date] = _res
+    # _res = mob_inf_average(all_infection,'20200401','20200401')
+    for date in date_list: all_infection[date] = all_infection['20200401']
     # all_infection['20200514'] = mob_inf_average(all_infection,'20200513','20200515')
     # all_infection['20200519'] = mob_inf_average(all_infection,'20200518','20200520')
     # all_infection['20200523'] = mob_inf_average(all_infection,'20200522','20200524')
@@ -536,43 +544,6 @@ def split_dataset_backwards_even_index(all_original, train_ratio, validation_rat
     test_value = [all_original[str(k)] for k in test_indicies]
 
     return train_value, validate_value, test_value, train_indicies, validate_indicies
-# ##function 1.20
-# #find the mobility data starting from the day, which is x_days before the start_date
-# #start_date = "20200331", x_days = 7
-# def sort_date(all_mobility, start_date, x_days): 
-#     mobility_date_list = list(all_mobility.keys())
-#     mobility_date_list.sort()
-#     idx = mobility_date_list.index(start_date)
-#     mobility_date_cut = mobility_date_list[idx-x_days:] 
-#     return mobility_date_cut
-
-# #function 1.21
-# #find the mobility data starting from the day, which is x_days before the start_date,
-# #ending at the day, which is y_days after the end_date
-# #start_date = "20200331", x_days = 7
-# def sort_date_2(all_mobility, start_date, x_days, end_date, y_days): 
-#     mobility_date_list = list(all_mobility.keys())
-#     mobility_date_list.sort()
-#     idx = mobility_date_list.index(start_date)
-#     idx2 = mobility_date_list.index(end_date)
-#     mobility_date_cut = mobility_date_list[idx-x_days:idx2+y_days] 
-#     return mobility_date_cut
-
-#function 1.22
-#get the mappings from zone id to id, text id to id.
-#get zone_text_to_idx 
-# def get_zone_text_to_idx(all_infection):
-#     zone_list = sorted(set(all_infection["20200401"].keys()))
-#     # text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',                     '腹痛', 'めまい'])
-#     zone_dict = {str(zone_list[i]): i for i in range(len(zone_list))}
-#     text_dict = {str(text_list[i]): i for i in range(len(text_list))}
-#     return zone_dict, text_dict
-# def get_zone_text_to_idx():
-#     zone_list = sorted(set(all_infection["20200401"].keys()))
-#     # text_list = list(['痛み', '頭痛', '咳', '下痢', 'ストレス', '不安',                     '腹痛', 'めまい'])
-#     zone_dict = {str(zone_list[i]): i for i in range(len(zone_list))}
-#     text_dict = {str(text_list[i]): i for i in range(len(text_list))}
-#     return zone_dict, text_dict
 
 def get_zone_text_to_idx(jcode23, text_list):
     zone_dict = {str(jcode23[i]): i for i in range(len(jcode23))}
@@ -609,41 +580,11 @@ def to_matrix(input_data, data_type):
             result[zone_idx] += input_data[zone]
     return result
 
-#function 1.24
-#change the data to the matrix format
-# def change_to_matrix(data, zoneid_to_idx, sym_to_idx):
-#     data_result = list()
-#     for i in range(len(data)):
-#         combine1, combine2 = list(), list()
-#         combine3 = list()                                    #NEW
-#         mobility_text = data[i][0]
-#         x_infection_all = data[i][2]          #the x_days infection data
-#         day_order =  data[i][3] #NEW          the order of the day
-#         for j in range(round(len(mobility_text)*1.0/2)):
-#             mobility, text = mobility_text[2*j], mobility_text[2*j+1]
-#             x_infection =  x_infection_all[j]   #NEW
-#             new_mobility = to_matrix(zoneid_to_idx, sym_to_idx, mobility, "mobility")
-#             new_text = to_matrix(zoneid_to_idx, sym_to_idx, text, "text")
-#             combine1.append(new_mobility)
-#             combine1.append(new_text) 
-#             new_x_infection = to_matrix(zoneid_to_idx, sym_to_idx, x_infection, "infection") #NEW
-#             combine3.append(new_x_infection)   #NEW
-#         for j in range(len(data[i][1])):
-#             infection = data[i][1][j]                                                          
-#             new_infection = to_matrix(zoneid_to_idx, sym_to_idx, infection, "infection")
-#             combine2.append(new_infection)                                               
-#         data_result.append([combine1,combine2,combine3,day_order])    #mobility/text; infection_y; infection_x; day_order
-#     return data_result  
 def change_to_matrix(data, hint):
     data_result = list()
-
     n = len(data)
-
     qbar = progress_indicator(total=n, desc=f"Transforming {hint} data to matrix")
-
-
     for i in range(n):
-
         combine1, combine2, combine3 = list(), list(), list()
         mobility_text_all, y_infection_all, x_infection_all, day_order = data[i]
 
@@ -817,7 +758,7 @@ def read_data():
     jcode23 = jcode23[:23]
     all_mobility = read_mobility_data(jcode23)                  #1.2 read the mobility data
     all_infection, all_infection_cum = read_infection_data(jcode23)                #1.4 read the infection data
-    all_text = read_text_data(jcode23)                          #1.3 read the text data
+    all_text, text_list = read_text_data(jcode23)                          #1.3 read the text data
     os.chdir(cwd)
     del cwd
 
@@ -831,7 +772,7 @@ def read_data():
     # point_json = read_point_json()                           #20210821
     # all_text = normalize_text_user(all_text, point_json)       #20210821
     all_text = text_smooth(all_text, window_size, dateList, 'text') #20210818
-    all_text = min_max_text_data(all_text,jcode23)                 #20210820
+    all_text = min_max_text_data(all_text,jcode23, text_list)                 #20210820
 
     zone_indicies, text_indicies = get_zone_text_to_idx(jcode23, text_list)                       #get zone_indicies, text_indicies
 
@@ -980,3 +921,4 @@ def interpolate(dic: dict, avg = None, _type: str='date', _print=False):
             res += _res
     print(f'{count} new data interpreted')
     # return dic
+    

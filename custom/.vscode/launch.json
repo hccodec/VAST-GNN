@@ -1,0 +1,51 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "MAIN",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--data-dir",
+                "../data/multiwave_data",
+                "--model", "sab_gnn_case_only"
+            ]
+        },
+        {
+            "name": "MAIN(CPU)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--data-dir",
+                "../data/multiwave_data",
+                "--device",
+                "-1"
+            ]
+        },
+        {
+            "name": "TEST",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "test.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--data-dir",
+                "../data/multiwave_data"
+            ]
+        },
+        {
+            "name": "CLEANUP",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "cleanup.py",
+            "console": "integratedTerminal"
+        }
+    ]
+}

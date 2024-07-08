@@ -39,21 +39,21 @@ def generate_features(
         # region [slide window explanation]
         # H 和 _v 各用到了滑窗，下图是其简单理解 ($=window, &=序号, #=滑窗中的元素, _=滑窗外的元素)
         # H and _v each utilize a sliding window. Below is a simple representation:
-        # idx |  0123456  |  01234...         -1 |
-        # 0   |  _______  |  ___________________ |
-        # 1   |  ______$  |  &__________________ |
-        # 2   |  _____#$  |  #&_________________ |
-        # 3   |  ____##$  |  ##&________________ |
-        # 4   |  ___###$  |  ###&_______________ |
-        # 5   |  __####$  |  ####&______________ |
-        # 6   |  _#####$  |  #####&_____________ |
-        # 7   |  ######$  |  ######&____________ |
-        # 8   |  ######$  |  _######&___________ |
-        # 9   |  ######$  |  __######&__________ |
+        # idx |  0123456  <-  01234...         -1 |
+        # 0   |  _______  <-  ___________________ |
+        # 1   |  ______$  <-  &__________________ |
+        # 2   |  _____#$  <-  #&_________________ |
+        # 3   |  ____##$  <-  ##&________________ |
+        # 4   |  ___###$  <-  ###&_______________ |
+        # 5   |  __####$  <-  ####&______________ |
+        # 6   |  _#####$  <-  #####&_____________ |
+        # 7   |  ######$  <-  ######&____________ |
+        # 8   |  ######$  <-  _######&___________ |
+        # 9   |  ######$  <-  __######&__________ |
         #                 ...                    |
-        # -3  |  ######$  |  __________######&__ |
-        # -2  |  ######$  |  ___________######&_ |
-        # -1  |  ######$  |  ____________######& |
+        # -3  |  ######$  <-  __________######&__ |
+        # -2  |  ######$  <-  ___________######&_ |
+        # -1  |  ######$  <-  ____________######& |
         # endregion
 
         for i, node in enumerate(G.nodes()):
@@ -125,10 +125,13 @@ def judge_batches(new, old) -> bool:
     res = True
     res0 = [i.to_dense() == j.to_dense() for i, j in zip(new[0], old[0])]
     res = res and all([i.all() for i in res0])
+    if not res: print('0 检查不通过')
     res1 = [i == j for i, j in zip(new[1], old[1])]
     res = res and all([i.all() for i in res1])
+    if not res: print('1 检查不通过')
     res2 = [i == j for i, j in zip(new[2], old[2])]
     res = res and all([i.all() for i in res2])
+    if not res: print('2 检查不通过')
     return res
 
 
@@ -288,7 +291,6 @@ def generate_batches_lstm(
 
     return adj_fake, features_lst, y_lst
 
-
 def adj_list_to_torch_sparse_tensor(matrix: list):
     """
     Convert a scipy sparse matrix to a torch sparse tensor.
@@ -335,7 +337,7 @@ def read_meta_datasets(window, config):
     data_file = "dataset_tgnn.bin"
 
     if os.path.exists(data_file):
-        print("从 bin 文件中读取数据集")
+        print("Reading dataset from bin file")
         with open(data_file, "rb") as f:
             return pickle.load(f)
 
@@ -417,7 +419,7 @@ def read_meta_datasets(window, config):
     # --------------------------------------------------------------
     os.chdir(cwd)
 
-    # 存到文件中
+    # 存到文件中，下次直接从该文件读取
     with open(data_file, "wb") as f:
         print(f"将读到的数据存入文件 {data_file} 中")
         pickle.dump((meta_labs, meta_graphs, meta_features, meta_y), f)
@@ -440,7 +442,7 @@ def generate_graphs(dates, country):
     for date in qbar:
         d = pd.read_csv("graphs/" + country + "_" + date + ".csv", header=None)
         G = nx.DiGraph()
-        nodes = set(d[0].unique()).union(set(d[1].unique()))
+        nodes = sorted(set(d[0].unique()).union(set(d[1].unique())))
         G.add_nodes_from(nodes)
 
         for row in d.iterrows():
