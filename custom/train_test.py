@@ -1,55 +1,24 @@
-import traceback
-import torch, time, os
+import torch, time
 from torch import nn
-from eval import compute, metrices_labels
+from eval import compute, get_correlation, metrices_labels
 
 from utils.logger import file_logger, logger
 # from utils.tensorboard import writer
-from utils.utils import catch, green, yellow
+from utils.utils import font_underlined, catch, font_green, font_yellow
 # logger = logger.getLogger()
-
-def train_epoch(
-        args, model, opt, criterion, train_loader, e
-):
-    model.train()
-    loss_res = []
-
-    for mobility, text, casex, casey, idx in train_loader:
-        opt.zero_grad()
-
-        mobility = mobility.to(args.device)
-        text = text.to(args.device)
-        casex = casex.to(args.device)
-        casey = casey.to(args.device)
-        idx = idx.to(args.device)
-
-        y_hat = model(mobility, text, casex, idx)
-        y = casey[:,:,:,0].to(y_hat.device)
-
-        loss = criterion(y.float(), y_hat.float())
-        loss.backward()
-        opt.step()
-
-        loss_res.append(loss.data.cpu().numpy())
-
-    return sum(loss_res) / len(loss_res), model
 
 @catch()
 def train_process(
-    args, model, criterion,
+    model, criterion, epochs, lr, lr_min, lr_scheduler_stepsize, lr_scheduler_gamma,
     train_loader, validation_loader, test_loader,
-    writer):
+    early_stop_patience, case_normalize_ratio, device, writer, result_paths):
     
-    opt = torch.optim.Adam(model.parameters(), args.lr, betas=(0.9, 0.999), weight_decay=0)
+    opt = torch.optim.Adam(model.parameters(), lr, betas=(0.9, 0.999), weight_decay=0)
 
-    scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=10, gamma=0.7)
+    scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=lr_scheduler_stepsize, gamma=lr_scheduler_gamma)
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         # opt, mode='min', factor=0.7, patience=5, min_lr=1e-5, threshold=1e-4)
     
-    result_paths = {
-        'model': os.path.join(args.result_dir, "best_model_jp.pth"),
-        'csv': os.path.join(args.result_dir, 'results_jp.csv')
-    }
     losses = {'train': [], 'val': [], 'test': []}
 
     time_start = time.time()
@@ -59,61 +28,90 @@ def train_process(
         fw.write(f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,lr,time\n")
     
 
-    loss_best = 1e7
-    model_best = None
+    loss_best, model_best, epoch_best = float("inf"), None, 0
+    early_stop_wait = 0 # 控制 early stop 的行为。当其值达到阈值时停止训练
     early_stop = False
 
     try:
-        for e in range(args.epochs):
+        for e in range(epochs):
 
             msg_file_logger = ""
             time1 = time.time()
 
-            lr = opt.param_groups[0]['lr']
+            _lr = opt.param_groups[0]['lr']
 
-            print(f"[Epoch] {green(e)}/{args.epochs}, [lr] {lr:.7f}, ", end='')
-            msg_file_logger += f"[Epoch] {e}/{args.epochs}, [lr] {lr}, "
-            loss, model = train_epoch(
-                args, model, opt, criterion, train_loader, e
-            )
-            loss *= args.case_normalize_ratio ** 2
+            print(f"[Epoch] {font_green(e)}/{epochs}, [lr] {_lr:.7f}, ", end='')
+            msg_file_logger += f"[Epoch] {e}/{epochs}, [lr] {_lr}, "
+            
+            
+            model.train()
+            loss_res = []
+
+            for mobility, text, casex, casey, idx in train_loader:
+                opt.zero_grad()
+
+                mobility = mobility.to(device)
+                text = text.to(device)
+                casex = casex.to(device)
+                casey = casey.to(device)
+                idx = idx.to(device)
+
+                y_hat = model(mobility, text, casex, idx)
+                y = casey[:,:,:,0].to(y_hat.device)
+
+                loss = criterion(y.float(), y_hat.float())
+                loss.backward()
+                opt.step()
+
+                loss_res.append(loss.data.cpu().numpy())
+
+            loss = sum(loss_res) / len(loss_res)
+
+
+            loss *= case_normalize_ratio ** 2
 
             # todo：loss 放缩  ratio ** 2
             msg_file_logger += f"[Loss(train/val/test)] {loss:.3f}/"
             print(f"[Loss(train/val/test)] {loss:.3f}/", end='')
             losses['train'].append(loss)
 
-            loss_val, y_hat_val, y_real_val = validate_test_process(model, criterion, validation_loader)
-            loss_test, y_hat_test, y_real_test = validate_test_process(model, criterion, test_loader)
-            loss_val *= args.case_normalize_ratio ** 2
-            loss_test *= args.case_normalize_ratio ** 2
+            loss_val, y_hat_val, y_real_val = validate_test_process(model, criterion, validation_loader, device)
+            loss_test, y_hat_test, y_real_test = validate_test_process(model, criterion, test_loader, device)
+            loss_val *= case_normalize_ratio ** 2
+            loss_test *= case_normalize_ratio ** 2
 
             msg_file_logger += f"{loss_val:.3f}/{loss_test:.3f}"
-            print(f"{yellow(loss_val)}/{loss_test:.3f}")
+            print(f"{font_yellow(loss_val)}/{loss_test:.3f}, ", end='')
             losses['val'].append(loss_val)
             losses['test'].append(loss_test)
 
             time2 = time.time()
-            print(f'[time] {time2 - time1:.3f}s', end='')
+            print(f'({time2 - time1:.3f}s)', end='')
 
             if loss_val < loss_best:
                 msg_file_logger += " (Best model saved)"
-                print(" (Best model saved)", end='')
-                torch.save(model, result_paths['model'])
-                loss_best = loss_val
+                print(font_underlined(font_yellow(" (Best model saved)")), end='')
+                loss_best , model_best, epoch_best = loss_val, model, e
+                torch.save(model_best, result_paths['model'])
+                early_stop_wait = 0
+            # # early stop 规则：连续 args.early_stop_patience 个 epoch没有更优结果，停止训练
+            else:
+                early_stop_wait += 1
+                if early_stop_wait == early_stop_patience:
+                    early_stop = True
 
             # early stop 规则：loss val 连续 2 次差值小于 1e-2
-            last = 2
-            last_losses = losses['val'][-min(last, len(losses['val'])):]
-            if len(losses['val']) > 2 and max(last_losses) - min(last_losses) < 1e-2:
-                msg_file_logger += " (Early stop)"
-                print(" (Early stop)")
-                early_stop = True
+            # last = 3
+            # last_losses = losses['val'][-min(last, len(losses['val'])):]
+            # if len(losses['val']) > 2 and max(last_losses) - min(last_losses) < 1e-2:
+            #     msg_file_logger += " (Early stop)"
+            #     print(" (Early stop)")
+            #     early_stop = True
 
             print()
             file_logger.info(msg_file_logger)
 
-            metrices = compute(y_hat_val, y_real_val, y_hat_test, y_real_test, args.case_normalize_ratio)
+            metrices = compute(y_hat_val, y_real_val, y_hat_test, y_real_test, case_normalize_ratio)
 
             # fw.write(f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,time\n")
             with open(result_paths['csv'], 'a') as fw:
@@ -133,35 +131,31 @@ def train_process(
 
             scheduler.step()
 
-            for g in opt.param_groups:
-                if g['lr'] < args.lr_min:
-                    g['lr'] = args.lr_min
-        print('-' * 20)
+            for group in opt.param_groups:
+                if group['lr'] < lr_min:
+                    group['lr'] = lr_min
+            print()
 
 
     except KeyboardInterrupt:
-        file_logger.info("已手动停止训练")
-    except Exception as e:
-        file_logger.info("出现错误，中断训练")
-        logger.info(str(e))
-        for line in traceback.format_exc():
-            logger.info(str(line))
+        logger.info("已手动停止训练")
+        
     
-    return losses, model
+    return losses, model, epoch_best
 
 
-
-def validate_test_process(model: nn.Module, criterion, dataloader):
+@torch.no_grad()
+def validate_test_process(model: nn.Module, criterion, dataloader, device):
     model.eval()
     loss_res = []
     y_hat_res, y_real_res = None, None
 
     for mobility, text, casex, casey, idx in dataloader:
-        mobility = mobility.to(model.device)
-        text = text.to(model.device)
-        casex = casex.to(model.device)
-        casey = casey.to(model.device)
-        idx = idx.to(model.device)
+        mobility = mobility.to(device)
+        text = text.to(device)
+        casex = casex.to(device)
+        casey = casey.to(device)
+        idx = idx.to(device)
 
         y = casey[:,:,:,0]
         y_hat = model(mobility, text, casex, idx)
@@ -176,3 +170,22 @@ def validate_test_process(model: nn.Module, criterion, dataloader):
 
     return sum(loss_res) / len(loss_res), y_hat_res, y_real_res
 
+
+def eval_process(model, criterion,
+                 train_loader, validation_loader, test_loader,
+                 y_days, case_normalize_ratio, device):
+    
+    trained_model = torch.load(model) if isinstance(model, str) else model
+
+    validation_result, validation_hat, validation_real = validate_test_process(trained_model, criterion, validation_loader, device)
+    test_result, test_hat, test_real = validate_test_process(trained_model, criterion, test_loader, device)
+
+    metrices = compute(
+        validation_hat, validation_real,
+        test_hat, test_real, case_normalize_ratio
+    )
+    
+    train_result, train_hat, train_real = validate_test_process(trained_model, criterion, train_loader, device)
+    get_correlation(
+        train_hat, train_real, validation_hat, validation_real, test_hat, test_real, y_days
+        )

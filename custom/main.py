@@ -1,72 +1,23 @@
-from argparse import ArgumentParser
 import os, sys, torch
 sys.path.append(os.getcwd())
 from torch.utils.tensorboard import SummaryWriter
 
-from utils.custom_datetime import date2str, datetime
 from utils.data_process import load_data, split_dataset 
-from train_test import train_process, validate_test_process, compute
-from eval import get_correlation
+from train_test import train_process, validate_test_process, eval_process
+from eval import get_correlation, compute
 
-from utils.logger import set_logger, logger
-from utils.utils import select_model, set_random_seed, set_device, models
-
-def parse_args():
-    args = ArgumentParser()
-    args.add_argument("--data-dir", default="data", help="数据集目录")
-    args.add_argument("--preprocessed-data-dir", default="data_preprocessed", help="处理后的数据集目录")
-    args.add_argument("--exp", default="", help="实验编号.-1 表示不编号")
-    args.add_argument("--model", default="sabgnn", choices=models, help="设置实验所用模型")
-    args.add_argument("--result-dir", default="results_test", help="")
-    args.add_argument("--seed", default=5, help='随机种子')
-    args.add_argument("--device", default=7, help="GPU号")
-    args.add_argument("--xdays", type=int, default=21, help="预测所需历史天数")
-    args.add_argument("--ydays", type=int, default=7, help="预测未来天数")
-    # args.add_argument("--startdate", type=str, default="20200414", help="预测开始天数")
-    # args.add_argument("--enddate", type=str, default="20210207", help="预测结束天数")
-    args.add_argument("--wave", type=int, default=4, choices=[3, 4], help="预测波次")
-    args.add_argument("--case-normalize-ratio", type=float, default=100., help="训练集比例百分点")
-    args.add_argument("--text-normalize-ratio", type=float, default=100., help="训练集比例百分点")
-    args.add_argument("--trainratio", type=int, default=70, help="训练集比例百分点")
-    args.add_argument("--validateratio", type=int, default=10, help="验证集比例百分点")
-    args.add_argument("--epochs", type=int, default=1000)
-    args.add_argument("--batchsize", type=int, default=8)
-    args.add_argument("--lr", type=float, default=1e-3)
-    args.add_argument("--lr-min", type=float, default=1e-4)
-    args.add_argument("--databinfile", type=str, default='dataset', help='处理后的数据集文件名称。其实际文件名为 args.databinfile_wave_xdays_ydays.bin')
-    args.add_argument("--enable-graph-learner", default=False, help='是否启用图学习器')
-    args.add_argument("--desc", help="该实验的说明")
-    args.add_argument("--f", help="兼容 jupyter")
-    args = args.parse_args()
-
-    now = date2str(datetime.now(), "%Y%m%d%H%M%S")
-    if args.exp == "":
-        args.result_dir = os.path.join(
-            "results", args.result_dir,
-            f"{args.wave}_{args.xdays}_{args.ydays}_{now}"
-        )
-    else:
-        args.result_dir = os.path.join(
-            "results", args.result_dir, f"exp_{args.exp}",
-            f"{args.wave}_{args.xdays}_{args.ydays}_{now}"
-        )
-    os.makedirs(args.result_dir, exist_ok=True)
-    
-    set_logger(os.path.join(args.result_dir, "log.txt"))
-
-    args.device = set_device(args.device)
-    args.databinfile = f"{args.databinfile}_{args.wave}_{args.xdays}_{args.ydays}.bin"
-
-    args.trainratio /= 100
-    args.validateratio /= 100
-
-    args.startdate = "20200414" if args.wave == 3 else "20200720"
-    args.enddate = "20210207" if args.wave == 3 else "20210515"
-
-    return args
+from utils.logger import logger
+from utils.utils import select_model, set_random_seed, parse_args
 
 def main():
     args = parse_args()
+
+    result_paths = {
+        'model': os.path.join(args.result_dir, "model_jp_best.pth"),
+        'model_latest': os.path.join(args.result_dir, "model_jp_latest.pth"),
+        'csv': os.path.join(args.result_dir, 'results_jp.csv'),
+        'log': os.path.join(args.result_dir, 'log.txt')
+    }
 
     logger.info(f"运行结果将保存至 {args.result_dir}")
 
@@ -76,6 +27,11 @@ def main():
 
 
     set_random_seed(args.seed)
+
+    preprocessed_data_dir, databinfile = args.preprocessed_data_dir, args.databinfile
+    
+    start_date, end_date, x_days, y_days = args.startdate, args.enddate, args.xdays, args.ydays
+    data_dir, case_normalize_ratio, text_normalize_ratio = args.data_dir, args.case_normalize_ratio, args.text_normalize_ratio
 
     data_origin, date_all = load_data(args)
     
@@ -88,27 +44,35 @@ def main():
     logger.info("数据准备完成，开始训练")
 
     writer = SummaryWriter(args.result_dir)
-    losses, trained_model = train_process(
-        args, model, criterion, 
+
+    lr = args.lr
+    lr_min = args.lr_min
+    lr_scheduler_stepsize = args.lr_scheduler_stepsize
+    lr_scheduler_gamma = args.lr_scheduler_gamma
+    epochs = args.epochs
+    device = args.device
+    early_stop_patience = args.early_stop_patience
+    case_normalize_ratio = args.case_normalize_ratio
+
+    losses, trained_model, epoch_best = train_process(
+        model, criterion, epochs, lr, lr_min, lr_scheduler_stepsize, lr_scheduler_gamma,
         train_loader, validation_loader, test_loader,
-        writer
+        early_stop_patience, case_normalize_ratio,
+        device, writer, result_paths
     )
     writer.close()
 
-    logger.info("训练完毕，开始评估")
+    logger.info("训练完毕，开始评估: ")
 
-    validation_result, validation_hat, validation_real = validate_test_process(trained_model, criterion, validation_loader)
-    test_result, test_hat, test_real = validate_test_process(trained_model, criterion, test_loader)
-
-    metrices = compute(
-        validation_hat, validation_real,
-        test_hat, test_real, args.case_normalize_ratio
-    )
+    logger.info(f"最新")
+    eval_process(trained_model, criterion,
+                 train_loader, validation_loader, test_loader,
+                 y_days, case_normalize_ratio, device)
     
-    train_result, train_hat, train_real = validate_test_process(trained_model, criterion, train_loader)
-    get_correlation(
-        train_hat, train_real, validation_hat, validation_real, test_hat, test_real, args.ydays
-        )
+    logger.info(f"Loss validate 最小 (epoch {epoch_best})")
+    eval_process(result_paths['model'], criterion,
+                 train_loader, validation_loader, test_loader,
+                 y_days, case_normalize_ratio, device)
 
     logger.info(f"实验（波次 {args.wave}, 预测范围 {args.xdays}->{args.ydays}）结束")
     logger.info(f"实验结果已保存至 {args.result_dir}")

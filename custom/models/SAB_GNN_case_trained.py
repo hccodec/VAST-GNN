@@ -42,29 +42,29 @@ class SpecGCN(nn.Module):
         return x_out
 
 
-class Multiwave_SpecGCN_LSTM(nn.Module):
+class Multiwave_SpecGCN_LSTM_CASE_TRAINED(nn.Module):
 
     def __init__(self, args, model_args):
-        super(Multiwave_SpecGCN_LSTM, self).__init__()
+        super(Multiwave_SpecGCN_LSTM_CASE_TRAINED, self).__init__()
         self.device = args.device
 
         self.x_days = args.xdays
         self.y_days = args.ydays
         _, self.N, self.input_dim = model_args["shape"]
 
-        self.lstm_input_dim, self.lstm_output_dim = model_args["specGCN"]["out"] + 1, model_args["lstm"]["hid"]
+        self.lstm_input_dim, self.lstm_output_dim = model_args["specGCN"]["out"], model_args["lstm"]["hid"]
 
         self.specGCN = SpecGCN(
             self.input_dim, *model_args["specGCN"].values(), device=self.device
         ).to(self.device)
         self.lstm = nn.LSTM(
             batch_first=True,
-            input_size=model_args["specGCN"]["out"] + 1,
-            hidden_size=model_args["lstm"]["hid"],
+            input_size=self.lstm_input_dim,
+            hidden_size=self.lstm_output_dim,
             num_layers=2,
             bidirectional=False,
         ).to(self.device)
-        self.fc1 = nn.Linear(model_args["lstm"]["hid"] + self.x_days, 1).to(self.device)
+        self.fc1 = nn.Linear(self.lstm_output_dim, 1).to(self.device)
 
         self.v = torch.nn.Parameter(torch.empty(23), requires_grad=True)
         torch.nn.init.normal_(self.v.data, mean=0.05, std=0.)
@@ -80,17 +80,18 @@ class Multiwave_SpecGCN_LSTM(nn.Module):
         lstm_output = torch.empty((self.N, batch_size, self.y_days)).to(self.device)
 
         for batch in range(mobility.size(0)):
-            day = idx[batch]
+            # day = idx[batch]
             for i in range(self.x_days):
                 adj = mobility[batch][i].float()
-                x = text[batch][i].float()
+                # x = text[batch][i].float()
                 case = casex[batch][i].float()
-                specGCN_out = self.specGCN(x, adj)
+                # specGCN_out = self.specGCN(x, adj)
+                specGCN_out = self.specGCN(case, adj)
 
-                social_recovery_vec = torch.exp(float(day) * self.v ** 2).unsqueeze(-1).repeat(1, specGCN_out.size(-1)).to(self.device)
+                # social_recovery_vec = torch.exp(float(day) * self.v ** 2).unsqueeze(-1).repeat(1, specGCN_out.size(-1)).to(self.device)
 
-                specGCN_out = specGCN_out.mul(social_recovery_vec)
-                specGCN_out = torch.cat([specGCN_out, case[:,-1].unsqueeze(-1)], -1)
+                # specGCN_out = specGCN_out.mul(social_recovery_vec)
+                # specGCN_out = torch.cat([specGCN_out, case[:,-1].unsqueeze(-1)], -1)
                 lstm_input[batch][i] = specGCN_out
 
         lstm_input = lstm_input.permute(2, 0, 1, 3) # N, batch_size, self.x_days, self.lstm_input_dim
@@ -101,8 +102,8 @@ class Multiwave_SpecGCN_LSTM(nn.Module):
             x1_out, (hc, cn) = self.lstm(x1)
             out, (hc1, cn1) = self.lstm(x2, (hc, cn))
 
-            cases = casex[:,:,zone,-1].unsqueeze(1).repeat(1, self.y_days, 1).float()
-            out = torch.cat([out, cases], -1)
+            # cases = casex[:,:,zone,-1].unsqueeze(1).repeat(1, self.y_days, 1).float()
+            # out = torch.cat([out, cases], -1)
             out_fc = F.relu(self.fc1(out))
 
             lstm_output[zone] = out_fc.squeeze(-1).unsqueeze(0)

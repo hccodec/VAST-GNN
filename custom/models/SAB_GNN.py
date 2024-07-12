@@ -85,6 +85,8 @@ class Multiwave_SpecGCN_LSTM(nn.Module):
                 adj = mobility[batch][i].float()
                 x = text[batch][i].float()
                 case = casex[batch][i].float()
+                if hasattr(self, 'graph_learner'):
+                    adj = self.graph_learner(x.unsqueeze(0)).squeeze(0)
                 specGCN_out = self.specGCN(x, adj)
 
                 social_recovery_vec = torch.exp(float(day) * self.v ** 2).unsqueeze(-1).repeat(1, specGCN_out.size(-1)).to(self.device)

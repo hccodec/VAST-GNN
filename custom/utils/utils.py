@@ -1,11 +1,22 @@
 import os, torch, numpy as np, random
+from models.LSTM_ONLY import LSTM_MODEL
 from models.SAB_GNN import Multiwave_SpecGCN_LSTM
+from models.SAB_GNN_case_trained import Multiwave_SpecGCN_LSTM_CASE_TRAINED
+from models.SELF_MODEL import SelfModel
 from utils.logger import logger
-import traceback, functools
+import traceback, functools, yaml
+from argparse import ArgumentParser
+from utils.custom_datetime import date2str, datetime
+from utils.logger import set_logger
 
-font_stype = ['', 'bold', '']
+font_style = ['', 'b', 'h', 'i', 'u', "", "", "r", 't', 'd']
 color_code = ['red', 'green', 'yellow', 'blue', 'purple', 'cyan']
-models = ['sabgnn', 'sab_gnn_case_only', 'lstm']
+
+def _style(style, content):
+    assert style in font_style
+    _color = f"\033[1;{font_style.index(style) + 31}m"
+    if isinstance(content, float): return f"{_color}{content:.3f}\033[0m"
+    else: return f"{_color}{content}\033[0m"
 
 def _color(color, content):
     assert color in color_code
@@ -13,12 +24,20 @@ def _color(color, content):
     if isinstance(content, float): return f"{_color}{content:.3f}\033[0m"
     else: return f"{_color}{content}\033[0m"
 
-def red(content): return _color('red', content)
-def green(content): return _color('green', content)
-def yellow(content): return _color('yellow', content)
-def blue(content): return _color('blue', content)
-def purple(content): return _color('purple', content)
-def cyan(content): return _color('cyan', content)
+def font_bold(content): return _style('b', content)
+def font_hide(content): return _style('h', content)
+def font_italics(content): return _style('i', content)
+def font_underlined(content): return _style("u", content)
+def font_reversed(content): return _style("r", content)
+def font_transparent(content): return _style('t', content)
+def font_deleted(content): return _style('d', content)
+
+def font_red(content): return _color('red', content)
+def font_green(content): return _color('green', content)
+def font_yellow(content): return _color('yellow', content)
+def font_blue(content): return _color('blue', content)
+def font_purple(content): return _color('purple', content)
+def font_cyan(content): return _color('cyan', content)
 
 def set_random_seed(seed):
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -53,33 +72,122 @@ def catch(msg='出现错误，中断训练'):
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
+            if os.getenv('DEBUG_MODE') == 'true':
+                return f(*args, **kwargs)
             try:
                 return f(*args, **kwargs)
             except Exception as e:
                 logger.info(msg)
                 logger.info(str(e))
-                for line in traceback.format_exc():
+                _traceback = traceback.format_exc()
+                for line in _traceback.split("\n"):
                     logger.info(str(line))
-                    return None
+                return None
         return wrapper
     return decorator
     
-# models = ['sabgnn', 'sab_gnn_case_only', 'lstm']
+
 def select_model(args, train_loader):
+
+    shape = [tuple(i.shape) for i in train_loader.dataset[0]]
+
     specGCN_model_args = {
         'alpha': 0.2,
         'specGCN': {'hid': 6, 'out': 4, 'dropout': 0.5},
-        'shape': list(train_loader.dataset[0][1].shape),
+        'shape': shape,
         'lstm': {'hid': 3}
+    }
+    self_model_args = {
+        'in': train_loader.dataset[0][2].shape[-1],
+        'hid': 64,
+        'out': 32,
+        'shape': shape,
+    }
+    lstm_model_args = {
+        # 'in': train_loader.dataset[0][2].shape[-1],
+        'lstm': {'hid': 128},
+        'linear': {'hid': 64},
+        'with_text': False,
+        'dropout': 0.5,
+        # 'out': 32,
+        'shape': shape
     }
 
     assert args.model in models
     index = models.index(args.model)
 
     if index == 0:
-        return Multiwave_SpecGCN_LSTM(args, specGCN_model_args)
+        return SelfModel(args, self_model_args).to(args.device)
     elif index == 1:
-        specGCN_model_args['shape'] = train_loader.dataset[0][2].shape
-        return Multiwave_SpecGCN_LSTM(args, specGCN_model_args)
+        return Multiwave_SpecGCN_LSTM(args, specGCN_model_args).to(args.device)
     elif index == 2:
-        return torch.nn.LSTM() # TODO
+        specGCN_model_args['shape'] = train_loader.dataset[0][2].shape
+        return Multiwave_SpecGCN_LSTM_CASE_TRAINED(args, specGCN_model_args).to(args.device)
+    elif index == 3:
+        return LSTM_MODEL(args, lstm_model_args).to(args.device)
+    elif index == 4:
+        lstm_model_args['with_text'] = True
+        return LSTM_MODEL(args, lstm_model_args).to(args.device)
+    
+    raise IndexError("请选择模型：" + ', '.join(models))
+
+models = ['self_model', 'sabgnn', 'sab_gnn_case_only', 'lstm', 'lstm_with_text']
+
+def parse_args():
+    parser = ArgumentParser()
+    parser.add_argument("--config", type=str, default="cfg/config.yaml", help="配置文件路径")
+    parser.add_argument("--data-dir", default="data", help="数据集目录")
+    parser.add_argument("--databinfile", type=str, default='dataset', help='处理后的数据集文件名称。其实际文件名为 parser.databinfile_wave_xdays_ydays.bin')
+    parser.add_argument("--preprocessed-data-dir", default="data_preprocessed", help="处理后的数据集目录")
+    parser.add_argument("--exp", default="-1", help="实验编号.-1 表示不编号")
+    parser.add_argument("--model", default="sabgnn", choices=models, help="设置实验所用模型")
+    parser.add_argument("--result-dir", default="results_test", help="")
+    parser.add_argument("--seed", default=5, help='随机种子')
+    parser.add_argument("--device", default=7, help="GPU号")
+    parser.add_argument("--xdays", type=int, default=21, help="预测所需历史天数")
+    parser.add_argument("--ydays", type=int, default=7, help="预测未来天数")
+    parser.add_argument("--wave", type=int, default=4, choices=[3, 4], help="预测波次")
+    parser.add_argument("--case-normalize-ratio", type=float, default=100., help="训练集比例百分点")
+    parser.add_argument("--text-normalize-ratio", type=float, default=100., help="训练集比例百分点")
+    parser.add_argument("--trainratio", type=int, default=70, help="训练集比例百分点")
+    parser.add_argument("--validateratio", type=int, default=10, help="验证集比例百分点")
+    parser.add_argument("--epochs", type=int, default=1000)
+    parser.add_argument("--batchsize", type=int, default=8)
+    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--lr-min", type=float, default=1e-4)
+    parser.add_argument("--lr-scheduler-stepsize", type=float, default=50)
+    parser.add_argument("--lr-scheduler-gamma", type=float, default=0.8)
+    parser.add_argument("--early-stop-patience", type=float, default=100)
+    parser.add_argument("--enable-graph-learner", action='store_true', help='是否启用图学习器')
+    parser.add_argument("--desc", help="该实验的说明")
+    parser.add_argument("--f", help="兼容 jupyter")
+    args = parser.parse_args()
+
+    with open(args.config) as f: cfg = yaml.safe_load(f)
+
+    now = date2str(datetime.now(), "%Y%m%d%H%M%S")
+    if args.exp == "" or args.exp == "-1":
+        args.result_dir = os.path.join(
+            "results", args.result_dir, args.model,
+            f"{args.wave}_{args.xdays}_{args.ydays}_{now}"
+        )
+    else:
+        args.result_dir = os.path.join(
+            "results", args.result_dir,
+            f"exp_{args.exp}",
+            f"{args.wave}_{args.xdays}_{args.ydays}_{args.model}_{now}"
+        )
+    os.makedirs(args.result_dir, exist_ok=True)
+    
+    set_logger(os.path.join(args.result_dir, "log.txt"))
+
+    args.device = set_device(args.device)
+    args.databinfile = f"{args.databinfile}_{args.wave}_{args.xdays}_{args.ydays}.bin"
+
+    args.trainratio /= 100
+    args.validateratio /= 100
+
+    args.startdate = "20200414" if args.wave == 3 else "20200720"
+    args.enddate = "20210207" if args.wave == 3 else "20210515"
+
+    return args

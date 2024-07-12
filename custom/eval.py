@@ -3,7 +3,7 @@ from scipy import stats
 import numpy as np
 
 from utils.logger import logger
-from utils.utils import catch, green
+from utils.utils import catch, font_green
 
 metrices_labels = ["MAE_val", "RMSE_val", "MAE_test", "RMSE_test"]
 
@@ -47,6 +47,6 @@ def compute(
     rmse_val = round(np.mean(np.array(rmse_val) * case_normalize_ratio), 3)
     rmse_test = round(np.mean(np.array(rmse_test) * case_normalize_ratio), 3)
 
-    logger.info(f"[val(MAE/RMSE)] {mae_val:.3f}/{rmse_val:.3f}, [test(MAE/RMSE)] {green(mae_test)}/{green(rmse_test)}")
+    logger.info(f"[val(MAE/RMSE)] {mae_val:.3f}/{rmse_val:.3f}, [test(MAE/RMSE)] {font_green(mae_test)}/{font_green(rmse_test)}")
 
     return mae_val, rmse_val, mae_test, rmse_test

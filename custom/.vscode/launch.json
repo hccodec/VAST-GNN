@@ -10,10 +10,89 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
             "args": [
                 "--data-dir",
                 "../data/multiwave_data",
-                "--model", "sab_gnn_case_only"
+            ]
+        },
+        {
+            "name": "MAIN(graph learner)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--data-dir",
+                "../data/multiwave_data",
+                "--enable-graph-learner",
+            ]
+        },
+        {
+            "name": "MAIN(case trained)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--data-dir",
+                "../data/multiwave_data",
+                "--model", "sab_gnn_case_only",
+                "--batchsize", "16"
+            ]
+        },
+        {
+            "name": "MAIN(self)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--data-dir",
+                "../data/multiwave_data",
+                "--model", "self_model",
+                "--batchsize", "16"
+            ]
+        },
+        {
+            "name": "MAIN(lstm_only)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--data-dir",
+                "../data/multiwave_data",
+                "--model", "lstm"
+            ]
+        },
+        {
+            "name": "MAIN(lstm_with_text)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--data-dir",
+                "../data/multiwave_data",
+                "--model", "lstm_with_text",
             ]
         },
         {
@@ -22,6 +101,9 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
             "args": [
                 "--data-dir",
                 "../data/multiwave_data",
@@ -35,6 +117,9 @@
             "request": "launch",
             "program": "test.py",
             "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
             "args": [
                 "--data-dir",
                 "../data/multiwave_data"
@@ -45,7 +130,10 @@
             "type": "debugpy",
             "request": "launch",
             "program": "cleanup.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
         }
     ]
 }

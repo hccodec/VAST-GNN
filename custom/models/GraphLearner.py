@@ -11,7 +11,9 @@ class GraphLearner(nn.Module):
         self.linear2 = nn.Linear(self.hid, self.hid)
         self.alpha = tan_alpha
 
-        self.linear_layer = lambda linear, x: torch.tanh(self.alpha * linear(x))
+
+    def linear_layer(self, linear, x):
+        return torch.tanh(self.alpha * linear(x))
 
     def forward(self, x):
         x1, x2 = self.linear_layer(self.linear1, x), self.linear_layer(self.linear2, x)

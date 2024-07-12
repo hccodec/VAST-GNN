@@ -1,0 +1,42 @@
+paths:
+  data_dir: data
+  preprocessed_data_dir: data_preprocessed
+  result_dir: results_test
+  databinfile: dataset
+
+experiment:
+  exp: "-1"
+  model: sabgnn
+  desc: ""
+
+device:
+  seed: 5
+  device: 7
+
+prediction:
+  xdays: 21
+  ydays: 7
+  wave: 4
+  startdate_wave_3: 20200414
+  enddate_wave_3: 20210207
+  startdate_wave_4: 20200720
+  enddate_wave_4: 20210515
+
+normalization:
+  case_normalize_ratio: 100.0
+  text_normalize_ratio: 100.0
+
+training:
+  trainratio: 70
+  validateratio: 10
+  epochs: 1000
+  batchsize: 8
+  early_stop_patience: 50
+  learningrate:
+    lr: 1e_3
+    lr_min: 1e_5
+    lr_scheduler_stepsize: 10
+    lr_scheduler_gamma: 0.8
+
+options:
+  enable_graph_learner: false

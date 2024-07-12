@@ -68,13 +68,13 @@ def interpolate(data, hint=''):
             r.append(date)
     logger.info(f'为 {hint} 插补 {len(r)} 条缺失数据 ({",".join(r)})')
 
-def read_json_dir(args, data_type):
+def read_json_dir(data_dir, data_type):
     assert data_type in ["mobility", "text"]
     data = dict()
-    for file in os.listdir(os.path.join(args.data_dir, data_type)):
+    for file in os.listdir(os.path.join(data_dir, data_type)):
         if not file.endswith(".json"):
             continue
-        with open(os.path.join(args.data_dir, data_type, file)) as f:
+        with open(os.path.join(data_dir, data_type, file)) as f:
             data[file.split("_")[-1].split(".")[0]] = json.load(f)
 
     sub_keys = [tuple(data[k].keys()) for k in data]
@@ -193,11 +193,9 @@ def min_max_normalize_web_search_frequency(text):
 
     return text
 
-def read_cases_data(args, zones):
-    
-    case_normalize_ratio = args.case_normalize_ratio
+def read_cases_data(data_dir, zones, case_normalize_ratio):
 
-    with open(os.path.join(args.data_dir, "covid_case/patient.json")) as f:
+    with open(os.path.join(data_dir, "covid_case/patient.json")) as f:
         cases = json.load(f)
 
     # 处理 cases 数据的 key 顺序：cases[zone][day] → cases[day][zone]
@@ -251,20 +249,19 @@ def read_cases_data(args, zones):
 
     return cases_subtracted, cases_new
 
-def read_data(args):
-    start_date, end_date, x_days, y_days = args.startdate, args.enddate, args.xdays, args.ydays
-
+def read_data(data_dir, start_date, end_date, x_days, y_days, case_normalize_ratio, text_normalize_ratio):
+    
     # 因 mobility 和 text 数据的限制，故裁剪数据，只取 13101-13123 这 23 个地区
     zones = list(
-        gpd.read_file(os.path.join(args.data_dir, "tokyo_shapefile/tokyo.shp"))["JCODE"]
+        gpd.read_file(os.path.join(data_dir, "tokyo_shapefile/tokyo.shp"))["JCODE"]
     )[:23]
 
     # 读取数据集中的数据
-    cases, cases_origin = read_cases_data(args, zones)
-    mobility = read_json_dir(args, "mobility")
-    text = read_json_dir(args, "text")
+    cases, cases_origin = read_cases_data(data_dir, zones, case_normalize_ratio)
+    mobility = read_json_dir(data_dir, "mobility")
+    text = read_json_dir(data_dir, "text")
     # 将网络搜索数据整理成数组
-    text, sym_names = regulate_web_search_frequency(text, args.text_normalize_ratio)
+    text, sym_names = regulate_web_search_frequency(text, text_normalize_ratio)
 
     qbar = progress_indicator(total=100, desc='Smoothing data', show_total=False)
     cases = smooth(cases)
@@ -336,8 +333,14 @@ def read_data(args):
     return data_origin, date_all
 
 def load_data(args):
+
+    preprocessed_data_dir, databinfile = args.preprocessed_data_dir, args.databinfile
+    
+    start_date, end_date, x_days, y_days = args.startdate, args.enddate, args.xdays, args.ydays
+    data_dir, case_normalize_ratio, text_normalize_ratio = args.data_dir, args.case_normalize_ratio, args.text_normalize_ratio
+
     res = None
-    path = os.path.join(args.preprocessed_data_dir, args.databinfile)
+    path = os.path.join(preprocessed_data_dir, databinfile)
     if os.path.exists(path):
         try:
             logger.info(f'尝试从 {path} 中读取数据文件')
@@ -349,10 +352,10 @@ def load_data(args):
             res = None
     else:
         logger.info("数据文件不存在，重新读取")
-        if not os.path.exists(args.preprocessed_data_dir):
-            os.makedirs(args.preprocessed_data_dir, exist_ok=True)
+        if not os.path.exists(preprocessed_data_dir):
+            os.makedirs(preprocessed_data_dir, exist_ok=True)
     if res is None:
-        res = read_data(args)
+        res = read_data(data_dir, start_date, end_date, x_days, y_days, case_normalize_ratio, text_normalize_ratio)
         with open(path, 'wb') as f:
             pickle.dump(res, f)
             logger.info(f'将数据文件保存至 {path}')
