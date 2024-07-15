@@ -50,7 +50,7 @@ class Multiwave_SpecGCN_LSTM_CASE_TRAINED(nn.Module):
 
         self.x_days = args.xdays
         self.y_days = args.ydays
-        _, self.N, self.input_dim = model_args["shape"]
+        _, self.N, self.input_dim = model_args["shape"][2]
 
         self.lstm_input_dim, self.lstm_output_dim = model_args["specGCN"]["out"], model_args["lstm"]["hid"]
 

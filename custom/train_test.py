@@ -40,7 +40,7 @@ def train_process(
 
             _lr = opt.param_groups[0]['lr']
 
-            print(f"[Epoch] {font_green(e)}/{epochs}, [lr] {_lr:.7f}, ", end='')
+            print(f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr:.7f}, ", end='')
             msg_file_logger += f"[Epoch] {e}/{epochs}, [lr] {_lr}, "
             
             
@@ -57,7 +57,7 @@ def train_process(
                 idx = idx.to(device)
 
                 y_hat = model(mobility, text, casex, idx)
-                y = casey[:,:,:,0].to(y_hat.device)
+                y = casey[:,:,:,0].to(device)
 
                 loss = criterion(y.float(), y_hat.float())
                 loss.backward()
@@ -90,7 +90,7 @@ def train_process(
 
             if loss_val < loss_best:
                 msg_file_logger += " (Best model saved)"
-                print(font_underlined(font_yellow(" (Best model saved)")), end='')
+                print(font_yellow(" (Best model saved)"), end='')
                 loss_best , model_best, epoch_best = loss_val, model, e
                 torch.save(model_best, result_paths['model'])
                 early_stop_wait = 0
@@ -134,8 +134,8 @@ def train_process(
             for group in opt.param_groups:
                 if group['lr'] < lr_min:
                     group['lr'] = lr_min
-            print()
 
+            # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0) # 梯度剪裁
 
     except KeyboardInterrupt:
         logger.info("已手动停止训练")

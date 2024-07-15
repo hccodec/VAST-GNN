@@ -1,3 +1,5 @@
 geopandas
 matplotlib
 pandas
+tensorboard
+pyyaml

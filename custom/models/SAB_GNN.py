@@ -2,6 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from models.GraphLearner import GraphLearner
+from torch_geometric.nn import GCNConv
 
 class SpecGCNLayer(nn.Module):
     def __init__(self, input_dim, output_dim, dropout=0.5, concat=True):
@@ -50,7 +51,7 @@ class Multiwave_SpecGCN_LSTM(nn.Module):
 
         self.x_days = args.xdays
         self.y_days = args.ydays
-        _, self.N, self.input_dim = model_args["shape"]
+        _, self.N, self.input_dim = model_args["shape"][1]
 
         self.lstm_input_dim, self.lstm_output_dim = model_args["specGCN"]["out"] + 1, model_args["lstm"]["hid"]
 

@@ -7,8 +7,8 @@ class LSTM_MODEL(nn.Module):
     def __init__(self, args, lstm_args):
         super().__init__()
 
-        self.with_text = lstm_args['with_text']
-        text_dim = lstm_args['shape'][-1]
+        self.with_text = args.train_with_text
+        text_dim = lstm_args['shape'][1][-1]
         lstm_input_dim = (1 + text_dim) if self.with_text else args.xdays
 
         self.lstm = nn.LSTM(lstm_input_dim, lstm_args['lstm']['hid'], num_layers=2, batch_first=True)

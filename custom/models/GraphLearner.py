@@ -1,6 +1,6 @@
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
-from torch import nn
 from torch_geometric.nn import GCNConv
 
 class GraphLearner(nn.Module):
@@ -22,26 +22,3 @@ class GraphLearner(nn.Module):
         A = self.alpha * A
         A = torch.relu(torch.tanh(A))
         return A
-
-class GraphEncoder(nn.Module):
-    def __init__(self, in_c, out_c):
-        super(GraphEncoder, self).__init__()
-        self.conv1 = GCNConv(in_c, 16)
-        self.conv2 = GCNConv(16, out_c)
-    
-    def forward(self, x, A):
-        x = self.conv1(x, A)
-        x = F.relu(x)
-        x = self.conv2(x, A)
-        return x
-
-class GraphDecoder(nn.Module):
-    def __int__(self, latent_dim):
-        super(GraphDecoder, self).__init__()
-        self.latent_dim = latent_dim
-
-    def forwaerd(self, z):
-        A = torch.sigmoid(torch.matmul(z, z.t()))
-        return A
-
-
