@@ -18,23 +18,41 @@ args = parser.parse_args()
 result_dir = args.dir
 exp = 0
 files = os.listdir(result_dir)
-assert not len(files) % 6
+# assert not len(files) % 6, files
 files = [sorted(files[i: i + 6], key=lambda i: int(i.split('_')[0]) * 100 + int(i.split('_')[2])) for i in range(len(files) // 6)]
 # sorted()
 files = files[exp]
-res = ()
-for exp in files:
-    path = os.path.join(result_dir, exp, "log.txt")
+res_latest = ()
+res_best = ()
+for subdir in files:
+    path = os.path.join(result_dir, subdir, "log.txt")
     with open(path) as f: lines = f.readlines()
     for i in range(len(lines)):
         if "训练完毕，开始评估" in lines[i]:
             break
     try:
-        test_metrices = re.search(r"\[test.*\]\ (.*)", lines[i + 1]).groups()
-        test_metrices = test_metrices[0].split('/')
-        epoch, test_loss = re.search(r"\[Epoch\]\ (\d+).*\[Loss.*?/([\d.]+)", lines[i - 2]).groups()
-        res += (*test_metrices, epoch, exp.split('_')[-1])
+        test_metrices_latest = re.search(r"\[test.*\]\ (.*)", lines[i + 3]).groups()
+        test_metrices_latest = test_metrices_latest[0].split('/')
+        epoch, test_loss = re.search(r"\[Epoch\]\ (\d+).*\[Loss.*?/([\d.]+)", lines[i - 3]).groups()
+        # res_latest += (*test_metrices_latest, epoch, test_loss.split('_')[-1])
+        res_latest += (*test_metrices_latest, epoch, subdir.split('_')[-1])
     except Exception as e:
-        res += (('-',) * 4)
-print('\t'.join(res))
+        print(e)
+        res_latest += (('-',) * 4)
+        
+    try:
+        test_metrices_best = re.search(r"\[test.*\]\ (.*)", lines[i + 7]).groups()
+        test_metrices_best = test_metrices_best[0].split('/')
+        epoch, = re.search(r"epoch (\d+)", lines[i + 6]).groups()
+        res_best += (*test_metrices_best, epoch, subdir.split('_')[-1])
+        # epoch, test_loss = re.search(r"epoch (\d+)", lines[i + 6]).groups()
+        # res_best += (*test_metrices_best, epoch, test_loss.split('_')[-1])
+    except Exception as e:
+        print(e)
+        res_best += (('-',) * 4)
+
+print('latest')
+print('\t'.join(res_latest))
+print('best')
+print('\t'.join(res_best))
     

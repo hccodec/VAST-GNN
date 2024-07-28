@@ -1,6 +1,6 @@
 import torch, os
 from train_test import compute, validate_test_process
-from utils.data_process import split_dataset, load_data
+from utils.YJ_COVID19_data_process import split_dataset, load_data
 
 pth_name = 'best_model_jp.pth'
 log_name = "log.txt"

@@ -11,12 +11,20 @@ python -u main.py --wave 4 --ydays 7 --device 6 --model selfmodel --exp test11
 python -u main.py --wave 4 --ydays 14 --device 8 --model selfmodel --exp test11
 python -u main.py --wave 4 --ydays 21 --device 9 --model selfmodel --exp test11
 
-python -u main.py --wave 3 --ydays 7 --device 3 --model selfmodel --train-with-text --exp test11
-python -u main.py --wave 3 --ydays 14 --device 4 --model selfmodel --train-with-text --exp test11
-python -u main.py --wave 3 --ydays 21 --device 5 --model selfmodel --train-with-text --exp test11
-python -u main.py --wave 4 --ydays 7 --device 6 --model selfmodel --train-with-text --exp test11
-python -u main.py --wave 4 --ydays 14 --device 8 --model selfmodel --train-with-text --exp test11
-python -u main.py --wave 4 --ydays 21 --device 9 --model selfmodel --train-with-text --exp test11
+
+python -u main.py --wave 3 --ydays 7 --device 2 --model selfmodel --train-with-text --exp test14
+python -u main.py --wave 3 --ydays 14 --device 7 --model selfmodel --train-with-text --exp test14
+python -u main.py --wave 3 --ydays 21 --device 5 --model selfmodel --train-with-text --exp test14
+python -u main.py --wave 4 --ydays 7 --device 6 --model selfmodel --train-with-text --exp test14
+python -u main.py --wave 4 --ydays 14 --device 8 --model selfmodel --train-with-text --exp test14
+python -u main.py --wave 4 --ydays 21 --device 9 --model selfmodel --train-with-text --exp test14
+
+python -u main.py --wave 3 --ydays 7 --device 2 --model selfmodel --train-with-text --enable-graph-learner --exp test14
+python -u main.py --wave 3 --ydays 14 --device 7 --model selfmodel --train-with-text --enable-graph-learner --exp test14
+python -u main.py --wave 3 --ydays 21 --device 5 --model selfmodel --train-with-text --enable-graph-learner --exp test14
+python -u main.py --wave 4 --ydays 7 --device 6 --model selfmodel --train-with-text --enable-graph-learner --exp test14
+python -u main.py --wave 4 --ydays 14 --device 8 --model selfmodel --train-with-text --enable-graph-learner --exp test14
+python -u main.py --wave 4 --ydays 21 --device 9 --model selfmodel --train-with-text --enable-graph-learner --exp test14
 
 已经跑的实验：
 selfmodel *6
@@ -25,3 +33,7 @@ lstm_text *6  *2(同上)
 
 test11 使用 GCNConv 进行病例数图卷积，使用 fc 进行网络搜索数据编码潜在表示
 test12 改用 specGCN 进行病例数图卷积，仍用 fc 进行网络搜索数据编码潜在表示
+√（results_test/exp_test13） test13 上面的 selfmodel 效果太差，怀疑人生。再跑一次朴实的 sab gnn 结果看看正不正常
+
+test14 x_case＋z_case＋x_web
+test15 启用 graph learner

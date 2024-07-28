@@ -14,7 +14,7 @@
     ],
     "configurations": [
         {
-            "name": "MAIN",
+            "name": "MAIN(YJ_COVID-19)",
             "type": "debugpy",
             "request": "launch",
             "program": "main.py",
@@ -23,8 +23,20 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--wave", "3",
-                "--ydays", "7"
+                // "--dataset", "dataforgood"
+            ]
+        },
+        {
+            "name": "MAIN(dataforgood)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--dataset", "dataforgood"
             ]
         },
         {
@@ -65,7 +77,10 @@
             "args": [
                 "--model", "selfmodel",
                 "--wave", "3",
-                "--ydays", "7"
+                "--ydays", "7",
+                "--enable-graph-learner",
+                "--train-with-text",
+                "--device", "1",
             ]
         },
         {

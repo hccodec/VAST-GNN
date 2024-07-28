@@ -40,3 +40,4 @@ training:
 
 options:
   enable_graph_learner: false
+  train_with_text: false

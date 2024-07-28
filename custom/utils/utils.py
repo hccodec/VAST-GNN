@@ -2,12 +2,27 @@ import os, torch, numpy as np, random
 from models.LSTM_ONLY import LSTM_MODEL
 from models.SAB_GNN import Multiwave_SpecGCN_LSTM
 from models.SAB_GNN_case_trained import Multiwave_SpecGCN_LSTM_CASE_TRAINED
-from models.SELF_MODEL import SelfModel
+# from models.SELF_MODEL import SelfModel
+from models.self.SELF_MODEL_20240715 import SelfModel
 from utils.logger import logger
 import traceback, functools, yaml
 from argparse import ArgumentParser
 from utils.custom_datetime import date2str, datetime
 from utils.logger import set_logger
+from tqdm.auto import tqdm
+
+# 进度条
+# l_bar='{desc}...({n_fmt}/{total_fmt} {percentage:3.2f}%)'
+# r_bar= '{n_fmt}/{total_fmt}'
+# r_bar= '{n_fmt}/{total_fmt} [{rate_fmt}{postfix}]'
+# bar_format = f'{l_bar}|{{bar}}|{r_bar}{"{postfix}"} '
+def bar_format(show_total):
+    if show_total: return '{desc}...|{bar}|({n_fmt}/{total_fmt} {percentage:3.0f}%){postfix}'
+    else: return '{desc}...{percentage:3.2f}% {postfix}'
+
+def progress_indicator(*args, show_total=True, **kwargs):
+    return tqdm(*args, **kwargs, bar_format=bar_format(show_total))
+
 
 font_style = ["", "b", "h", "i", "u", "", "", "r", "t", "d"]
 color_code = ["red", "green", "yellow", "blue", "purple", "cyan"]
@@ -148,8 +163,9 @@ def select_model(args, train_loader):
     }
     self_model_args = {
         "dropout": 0.5,
+        "text_fc": {"out": 4},
         "gnn": {"hid": 6, "out": 4},
-        "lstm": {"hid": [3, 16]},
+        "lstm": {"hid": [3, 3]},
         "shape": shape,
     }
     lstm_model_args = {
@@ -192,6 +208,7 @@ def parse_args():
         "--config", type=str, default="cfg/config.yaml", help="配置文件路径"
     )
     parser.add_argument("--data-dir", default="data", help="数据集目录")
+    parser.add_argument("--dataset", default='YJ_COVID19', help="选择的数据集")
     parser.add_argument(
         "--databinfile",
         type=str,
@@ -227,14 +244,18 @@ def parse_args():
     parser.add_argument("--batchsize", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--lr-min", type=float, default=1e-4)
+    parser.add_argument("--lr-weight-decay", type=float, default=5e-4)
     parser.add_argument("--lr-scheduler-stepsize", type=float, default=50)
     parser.add_argument("--lr-scheduler-gamma", type=float, default=0.8)
     parser.add_argument("--early-stop-patience", type=float, default=100)
+    parser.add_argument("--graph-lambda-0", type=float, default=1.0)
+    parser.add_argument("--graph-lambda-k", type=float, default=1e-2)
+    parser.add_argument("--graph-lambda-method", choices=graph_lambda_methods, default='exp')
     parser.add_argument(
         "--enable-graph-learner", action="store_true", help="是否启用图学习器"
     )
     parser.add_argument(
-        "--train-with-text",
+        "--train-with-extra",
         action="store_true",
         help="是否结合除病例数外的数据进行训练",
     )
@@ -247,16 +268,18 @@ def parse_args():
 
     now = date2str(datetime.now(), "%Y%m%d%H%M%S")
     
-    if args.train_with_text:
-        subdir = f"{args.wave}_{args.xdays}_{args.ydays}_{args.model}_text_{now}"
-    else:
-        subdir = f"{args.wave}_{args.xdays}_{args.ydays}_{args.model}_{now}"
+    subdir = f"{args.wave}_{args.xdays}_{args.ydays}_{args.model}"
+    if args.train_with_extra: subdir += "_text"
+    if args.enable_graph_learner: subdir += "_graphlearner"
+    subdir += f"_{now}"
+
+    args.data_dir += "/" + args.dataset
         
     if args.exp == "" or args.exp == "-1":
-        args.result_dir = os.path.join("results", args.result_dir, subdir)
+        args.result_dir = os.path.join("results", args.result_dir, "tmp", args.dataset, subdir)
     else:
         args.result_dir = os.path.join(
-            "results", args.result_dir, f"exp_{args.exp}", subdir
+            "results", args.result_dir, f"exp_{args.exp}", args.dataset, subdir
         )
     os.makedirs(args.result_dir, exist_ok=True)
 
@@ -272,3 +295,11 @@ def parse_args():
     args.enddate = "20210207" if args.wave == 3 else "20210515"
 
     return args
+
+graph_lambda_methods = ['exp']
+def adjust_lambda(epoch, lambda_0, k, method='exp'):
+    index = graph_lambda_methods.index(method)
+    if index == 0:
+        return lambda_0 * np.exp(-k * epoch)
+    else:
+        raise IndexError("请选择正确的 adjency matrix lambda 策略")

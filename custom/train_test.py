@@ -4,18 +4,24 @@ from eval import compute, get_correlation, metrices_labels
 
 from utils.logger import file_logger, logger
 # from utils.tensorboard import writer
-from utils.utils import font_underlined, catch, font_green, font_yellow
+from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow
 # logger = logger.getLogger()
 
 @catch()
 def train_process(
-    model, criterion, epochs, lr, lr_min, lr_scheduler_stepsize, lr_scheduler_gamma,
+    model, criterion, epochs, lr, lr_min, lr_scheduler_stepsize, lr_scheduler_gamma, lr_weight_decay,
     train_loader, validation_loader, test_loader,
-    early_stop_patience, case_normalize_ratio, device, writer, result_paths):
+    early_stop_patience, case_normalize_ratio,
+    graph_lambda_0, graph_lambda_k, graph_lambda_method,
+    device, writer, result_paths):
     
-    opt = torch.optim.Adam(model.parameters(), lr, betas=(0.9, 0.999), weight_decay=0)
-
+    opt = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr, betas=(0.9, 0.999), weight_decay=lr_weight_decay)
+    # opt = torch.optim.Adam(model.parameters(), lr, betas=(0.9, 0.999), weight_decay=lr_weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=lr_scheduler_stepsize, gamma=lr_scheduler_gamma)
+
+    params_total = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info(f'# {params_total} params')
+
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         # opt, mode='min', factor=0.7, patience=5, min_lr=1e-5, threshold=1e-4)
     
@@ -39,15 +45,20 @@ def train_process(
             time1 = time.time()
 
             _lr = opt.param_groups[0]['lr']
+            adj_lambda = adjust_lambda(e, graph_lambda_0, graph_lambda_k, graph_lambda_method)
 
-            print(f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr:.7f}, ", end='')
-            msg_file_logger += f"[Epoch] {e}/{epochs}, [lr] {_lr}, "
+            print(f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr}", end='')
+            msg_file_logger += f"[Epoch] {e}/{epochs}, [lr] {_lr}, [adj_lambda] {adj_lambda}, "
+            
+            if hasattr(model, "graph_learner"):
+                print(f", [adj_lambda] {adj_lambda}\n", end='')
+                msg_file_logger += f"[adj_lambda] {adj_lambda}, "
             
             
             model.train()
             loss_res = []
 
-            for mobility, text, casex, casey, idx in train_loader:
+            for casex, casey, mobility, text, idx in train_loader:
                 opt.zero_grad()
 
                 mobility = mobility.to(device)
@@ -59,7 +70,12 @@ def train_process(
                 y_hat = model(mobility, text, casex, idx)
                 y = casey[:,:,:,0].to(device)
 
-                loss = criterion(y.float(), y_hat.float())
+                if hasattr(model, "graph_learner"):
+                    y_hat, adj_hat = y_hat
+                    loss = criterion(y.float(), y_hat.float()) + adj_lambda * criterion(mobility.float(), adj_hat.float())
+                else:
+                    loss = criterion(y.float(), y_hat.float())
+
                 loss.backward()
                 opt.step()
 
@@ -87,6 +103,7 @@ def train_process(
 
             time2 = time.time()
             print(f'({time2 - time1:.3f}s)', end='')
+            msg_file_logger += f'({time2 - time1:.3f}s)'
 
             if loss_val < loss_best:
                 msg_file_logger += " (Best model saved)"
@@ -141,7 +158,7 @@ def train_process(
         logger.info("已手动停止训练")
         
     
-    return losses, model, epoch_best
+    return losses, model, epoch_best, loss_best
 
 
 @torch.no_grad()
@@ -150,16 +167,16 @@ def validate_test_process(model: nn.Module, criterion, dataloader, device):
     loss_res = []
     y_hat_res, y_real_res = None, None
 
-    for mobility, text, casex, casey, idx in dataloader:
+    for casex, casey, mobility, text, idx in dataloader:
         mobility = mobility.to(device)
         text = text.to(device)
         casex = casex.to(device)
         casey = casey.to(device)
         idx = idx.to(device)
 
-        y = casey[:,:,:,0]
+        y = casey[:,:,:,0].to(device)
         y_hat = model(mobility, text, casex, idx)
-        y = y.to(y_hat.device)
+        if isinstance(y_hat, tuple): y_hat, _ = y_hat # 适配启用图学习器的情况
         loss = criterion(y.float(), y_hat.float())
 
         loss_res.append(loss.item())
