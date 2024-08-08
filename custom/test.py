@@ -1,5 +1,5 @@
 import torch, os
-from train_test import compute, validate_test_process
+from train_test import compute_metrics, validate_test_process
 from utils.YJ_COVID19_data_process import split_dataset, load_data
 
 pth_name = 'best_model_jp.pth'
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     validation_result, validation_hat, validation_real = validate_test_process(trained_model, criterion, validation_loader, args.device)
     test_result, test_hat, test_real = validate_test_process(trained_model, criterion, test_loader, args.device)
 
-    metrics = compute(
+    metrics = compute_metrics(
         validation_hat, validation_real,
         test_hat, test_real, args.case_normalize_ratio
     )

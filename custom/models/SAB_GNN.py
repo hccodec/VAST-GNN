@@ -73,19 +73,18 @@ class Multiwave_SpecGCN_LSTM(nn.Module):
         if args.enable_graph_learner:
             self.graph_learner = GraphLearner(self.input_dim).to(self.device)
         
-
-    def forward(self, mobility, text, casex, idx):
-        batch_size = mobility.size(0)
+    def forward(self, X, A, extra_info=None, idx=None):
+        batch_size = A.size(0)
 
         lstm_input = torch.empty((batch_size, self.x_days, self.N, self.lstm_input_dim)).to(self.device)
         lstm_output = torch.empty((self.N, batch_size, self.y_days)).to(self.device)
 
-        for batch in range(mobility.size(0)):
+        for batch in range(A.size(0)):
             day = idx[batch]
             for i in range(self.x_days):
-                adj = mobility[batch][i].float()
-                x = text[batch][i].float()
-                case = casex[batch][i].float()
+                adj = A[batch][i].float()
+                x = extra_info[batch][i].float()
+                case = X[batch][i].float()
                 if hasattr(self, 'graph_learner'):
                     adj = self.graph_learner(x.unsqueeze(0)).squeeze(0)
                 specGCN_out = self.specGCN(x, adj)
@@ -104,7 +103,7 @@ class Multiwave_SpecGCN_LSTM(nn.Module):
             x1_out, (hc, cn) = self.lstm(x1)
             out, (hc1, cn1) = self.lstm(x2, (hc, cn))
 
-            cases = casex[:,:,zone,-1].unsqueeze(1).repeat(1, self.y_days, 1).float()
+            cases = X[:,:,zone,-1].unsqueeze(1).repeat(1, self.y_days, 1).float()
             out = torch.cat([out, cases], -1)
             out_fc = F.relu(self.fc1(out))
 

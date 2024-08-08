@@ -73,7 +73,7 @@ class SelfModel(nn.Module):
         self.y_days = self_model_args["shape"][1][0]
         self.text_feature_dim = self_model_args["shape"][3][2]
 
-        self.with_text = args.train_with_extra
+        self.train_with_text = args.train_with_extrainfo
 
         if args.enable_graph_learner: self.graph_learner = GraphLearner(self.text_feature_dim)
         # if args.enable_graph_learner: self.graph_learner = GraphLearner(self.feature_dim)
@@ -85,7 +85,7 @@ class SelfModel(nn.Module):
             device=args.device
         )
 
-        # if self.with_text:
+        # if self.train_with_text:
         #     # self.text_graph_encoder = GraphEncoder(
         #     #     self.text_feature_dim,
         #     #     self_model_args["gnn"]["hid"],
@@ -124,20 +124,20 @@ class SelfModel(nn.Module):
                 stdv = 1. / math.sqrt(p.size(0))
                 p.data.uniform_(-stdv, stdv)
 
-    def forward(self, mobility, text, casex, idx):
-        batch_size = casex.size(0)
+    def forward(self, X, A, extra_info=None, idx=None):
+        batch_size = X.size(0)
 
-        mobility = mobility.float()
-        text = text.float()
-        casex = casex.float()
+        A = A.float()
+        extra_info = extra_info.float()
+        X = X.float()
         idx = idx.float()
 
         lstm_input = []
         adj_output = []
-        for day in range(casex.size(1)):
-            x = casex[:, day, :, :]
-            adj = mobility[:, day, :, :]
-            x_text = text[:, day, :, :]
+        for day in range(X.size(1)):
+            x = X[:, day, :, :]
+            adj = A[:, day, :, :]
+            x_text = extra_info[:, day, :, :]
 
             if hasattr(self, 'graph_learner'):
                 adj_hat = self.graph_learner(x_text)
@@ -148,7 +148,7 @@ class SelfModel(nn.Module):
 
             z = torch.cat((z, x[:, :, -1].unsqueeze(-1)), -1) # x_case + z_case
 
-            # if self.with_text:
+            # if self.train_with_text:
             #     z_text = self.text_fc(x_text)
 
             #     # z_text = self.text_graph_encoder(x_text, adj)

@@ -3,7 +3,8 @@ from models.LSTM_ONLY import LSTM_MODEL
 from models.SAB_GNN import Multiwave_SpecGCN_LSTM
 from models.SAB_GNN_case_trained import Multiwave_SpecGCN_LSTM_CASE_TRAINED
 # from models.SELF_MODEL import SelfModel
-from models.self.SELF_MODEL_20240715 import SelfModel
+# from models.self.SELF_MODEL_20240715 import SelfModel
+from models.self.SELF_MODEL_20240728 import SelfModel
 from utils.logger import logger
 import traceback, functools, yaml
 from argparse import ArgumentParser
@@ -164,8 +165,8 @@ def select_model(args, train_loader):
     self_model_args = {
         "dropout": 0.5,
         "text_fc": {"out": 4},
-        "gnn": {"hid": 6, "out": 4},
-        "lstm": {"hid": [3, 3]},
+        "gnn": {"hid": 16, "out": 6},
+        "lstm": {"hid": [6, 3]},
         "shape": shape,
     }
     lstm_model_args = {
@@ -222,7 +223,7 @@ def parse_args():
     )
     parser.add_argument("--exp", default="-1", help="实验编号.-1 表示不编号")
     parser.add_argument(
-        "--model", default="sabgnn", choices=models, help="设置实验所用模型"
+        "--model", default="selfmodel", choices=models, help="设置实验所用模型"
     )
     parser.add_argument("--result-dir", default="results_test", help="")
     parser.add_argument("--seed", default=5, help="随机种子")
@@ -242,8 +243,8 @@ def parse_args():
     )
     parser.add_argument("--epochs", type=int, default=1000)
     parser.add_argument("--batchsize", type=int, default=16)
-    parser.add_argument("--lr", type=float, default=1e-4)
-    parser.add_argument("--lr-min", type=float, default=1e-4)
+    parser.add_argument("--lr", type=float, default=6e-3)
+    parser.add_argument("--lr-min", type=float, default=1e-3)
     parser.add_argument("--lr-weight-decay", type=float, default=5e-4)
     parser.add_argument("--lr-scheduler-stepsize", type=float, default=50)
     parser.add_argument("--lr-scheduler-gamma", type=float, default=0.8)
@@ -255,7 +256,7 @@ def parse_args():
         "--enable-graph-learner", action="store_true", help="是否启用图学习器"
     )
     parser.add_argument(
-        "--train-with-extra",
+        "--train-with-extrainfo",
         action="store_true",
         help="是否结合除病例数外的数据进行训练",
     )
@@ -269,7 +270,7 @@ def parse_args():
     now = date2str(datetime.now(), "%Y%m%d%H%M%S")
     
     subdir = f"{args.wave}_{args.xdays}_{args.ydays}_{args.model}"
-    if args.train_with_extra: subdir += "_text"
+    if args.train_with_extrainfo: subdir += "_text"
     if args.enable_graph_learner: subdir += "_graphlearner"
     subdir += f"_{now}"
 
@@ -293,6 +294,10 @@ def parse_args():
 
     args.startdate = "20200414" if args.wave == 3 else "20200720"
     args.enddate = "20210207" if args.wave == 3 else "20210515"
+
+    if args.dataset == 'dataforgood':
+        args.case_normalize_ratio = 1
+        args.text_normalize_ratio = 1
 
     return args
 

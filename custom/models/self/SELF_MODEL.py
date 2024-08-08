@@ -53,7 +53,7 @@ class SelfModel(nn.Module):
         self.text_feature_dim = self_model_args["shape"][1][2]
         self.y_days = self_model_args["shape"][3][0]
 
-        self.with_text = args.train_with_extra
+        self.train_with_text = args.train_with_extrainfo
 
         if args.enable_graph_learner: self.graph_learner = GraphLearner(self.feature_dim)
 
@@ -64,7 +64,7 @@ class SelfModel(nn.Module):
             device=args.device
         )
 
-        if self.with_text:
+        if self.train_with_text:
             # self.text_graph_encoder = GraphEncoder(
             #     self.text_feature_dim,
             #     self_model_args["gnn"]["hid"],
@@ -78,7 +78,7 @@ class SelfModel(nn.Module):
         self.lstm = nn.LSTM(
             input_size=(
                 (self_model_args["gnn"]["out"] * 2)
-                if self.with_text
+                if self.train_with_text
                 else self_model_args["gnn"]["out"]
             ),
             hidden_size=self_model_args["lstm"]["hid"][0],
@@ -97,21 +97,21 @@ class SelfModel(nn.Module):
             torch.empty(self.num_zones), requires_grad=True
         )
         nn.init.normal_(self.social_recovery_lambda.data, mean=0.05, std=0.0)
+        
+    def forward(self, X, A, extra_info=None, idx=None):
+        batch_size = X.size(0)
 
-    def forward(self, mobility, text, casex, idx):
-        batch_size = casex.size(0)
-
-        mobility = mobility.float()
-        text = text.float()
-        casex = casex.float()
+        A = A.float()
+        extra_info = extra_info.float()
+        X = X.float()
         idx = idx.float()
 
         lstm_input = []
         adj_output = []
-        for day in range(casex.size(1)):
-            x = casex[:, day, :, :]
-            adj = mobility[:, day, :, :]
-            x_text = text[:, day, :, :]
+        for day in range(X.size(1)):
+            x = X[:, day, :, :]
+            adj = A[:, day, :, :]
+            x_text = extra_info[:, day, :, :]
 
             if hasattr(self, 'graph_learner'):
                 adj_hat = self.graph_learner(x)
@@ -120,7 +120,7 @@ class SelfModel(nn.Module):
             else:
                 z = self.graph_encoder(x, adj)
 
-            if self.with_text:
+            if self.train_with_text:
                 z_text = self.text_fc(x_text)
                 # z_text = self.text_graph_encoder(x_text, adj)
                 # social_recovery = []

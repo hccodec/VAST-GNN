@@ -73,18 +73,18 @@ class Multiwave_SpecGCN_LSTM_CASE_TRAINED(nn.Module):
             self.graph_learner = GraphLearner(self.input_dim).to(self.device)
         
 
-    def forward(self, mobility, text, casex, idx):
-        batch_size = mobility.size(0)
+    def forward(self, X, A, extra_info=None, idx=None):
+        batch_size = A.size(0)
 
         lstm_input = torch.empty((batch_size, self.x_days, self.N, self.lstm_input_dim)).to(self.device)
         lstm_output = torch.empty((self.N, batch_size, self.y_days)).to(self.device)
 
-        for batch in range(mobility.size(0)):
+        for batch in range(A.size(0)):
             # day = idx[batch]
             for i in range(self.x_days):
-                adj = mobility[batch][i].float()
+                adj = A[batch][i].float()
                 # x = text[batch][i].float()
-                case = casex[batch][i].float()
+                case = X[batch][i].float()
                 # specGCN_out = self.specGCN(x, adj)
                 specGCN_out = self.specGCN(case, adj)
 

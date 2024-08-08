@@ -21,18 +21,19 @@ country_start_dates = ["0224", "0312", "0313", "0310"]
 country_end_date = "0512"
 window_size = 7
 
+meta_info = {"name": country_names, "code": country_codes}
 
 def load_data(args):
     meta_data = {}
     for i in range(len(country_names)):
-        data = _load_data(args, i)
-        dataloaders, data_indices = split_dataset(*data)
+        data = _load_data(i)
+        dataloaders, data_indices = split_dataset(args, *data)
         meta_data[country_names[i]] = (dataloaders, data, data_indices)
         
     return meta_data
 
 
-def _load_data(args, i_country: int):
+def _load_data(i_country: int):
     """
     按国家从文件加载数据集
     """
@@ -82,7 +83,7 @@ def _load_data(args, i_country: int):
     adjs = np.stack([nx.adjacency_matrix(G).toarray() for G in Gs])  # A
 
     H = np.zeros((len(dates), len(nodes), window_size))  # X
-    y = np.zeros((len(dates), len(nodes)))  # y
+    y = np.zeros((len(dates), len(nodes), 1))  # y
 
     for i_date in range(len(dates)):
         for i_node in range(len(nodes)):
@@ -98,8 +99,8 @@ def _load_data(args, i_country: int):
 
 
 # 分割数据集
-def split_dataset(
-    H, y, adjs, batchsize=8, test_sample=15, graph_window=7, shift=1, sep=10
+def split_dataset(args, 
+    H, y, adjs, batchsize=8, test_sample=15, shift=1, sep=10
 ):
     train_indices, val_indices, test_indices = [], [], []
     for i in range(min(window_size - 1, test_sample - sep), test_sample):
@@ -113,16 +114,21 @@ def split_dataset(
     val_indices = np.array(val_indices)
     test_indices = np.array(test_indices)
 
-    X = torch.zeros_like(H).unsqueeze(1).repeat(1, graph_window, 1, 1)
-    A = torch.zeros_like(adjs).unsqueeze(1).repeat(1, graph_window, 1, 1)
+    x_days, y_days = args.xdays, args.ydays
+    X = torch.zeros_like(H).unsqueeze(1).repeat(1, x_days, 1, 1)
+    A = torch.zeros_like(adjs).unsqueeze(1).repeat(1, x_days, 1, 1)
+    Y = torch.zeros_like(y).unsqueeze(1).repeat(1, y_days, 1, 1)
 
     for i_date in range(H.shape[0]):
-        for i_graph_window in range(graph_window):
-            _i_date = i_date + i_graph_window - graph_window + 1
-            if _i_date < 0:
-                _i_date = 0
-            X[i_date, i_graph_window] = H[_i_date]
-            A[i_date, i_graph_window] = adjs[_i_date]
+        for i_xdays in range(x_days):
+            _i_date = i_date + i_xdays - x_days + 1
+            if _i_date < 0: _i_date = 0
+            X[i_date, i_xdays] = H[_i_date]
+            A[i_date, i_xdays] = adjs[_i_date]
+        for i_ydays in range(y_days):
+            _i_date = i_date + 1 + i_ydays
+            if _i_date >= Y.size(0): _i_date = Y.size(0) - 1
+            Y[i_date, i_ydays] = y[_i_date]
 
     y_indices = lambda indices: np.where(
         (test_sample > 0) & (indices + shift >= test_sample), indices, indices + shift
@@ -133,9 +139,9 @@ def split_dataset(
     #     else indices
     # )
 
-    train_data = (X[train_indices], y[y_indices(train_indices)], A[train_indices])
-    val_data = (X[val_indices], y[y_indices(val_indices)], A[val_indices])
-    test_data = (X[test_indices], y[y_indices(test_indices)], A[test_indices])
+    train_data = (X[train_indices], Y[y_indices(train_indices)], A[train_indices])
+    val_data = (X[val_indices], Y[y_indices(val_indices)], A[val_indices])
+    test_data = (X[test_indices], Y[y_indices(test_indices)], A[test_indices])
 
     train_loader = DataLoader(
         TensorDataset(*train_data), batch_size=batchsize, shuffle=True
@@ -144,6 +150,7 @@ def split_dataset(
     test_loader = DataLoader(TensorDataset(*test_data), batch_size=batchsize)
 
     return (train_loader, val_loader, test_loader), (train_indices, val_indices, test_indices)
+
 
 
 # def avg(data, *keys):

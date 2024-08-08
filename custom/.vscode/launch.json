@@ -33,10 +33,14 @@
             "program": "main.py",
             "console": "integratedTerminal",
             "env": {
-                "DEBUG_MODE": "true"
+                "DEBUG_MODE": "true",
             },
             "args": [
-                "--dataset", "dataforgood"
+                "--dataset", "dataforgood",
+                "--xdays", "7",
+                "--ydays", "1",
+                "--lr", "0.001",
+                "--batchsize", "32",
             ]
         },
         {
@@ -79,7 +83,7 @@
                 "--wave", "3",
                 "--ydays", "7",
                 "--enable-graph-learner",
-                "--train-with-text",
+                "--train-with-extrainfo",
                 "--device", "1",
             ]
         },
@@ -94,7 +98,7 @@
             },
             "args": [
                 "--model", "selfmodel",
-                "--train-with-text"
+                "--train-with-extrainfo"
             ]
         },
         {
@@ -121,7 +125,7 @@
             },
             "args": [
                 "--model", "lstm",
-                "--train-with-text"
+                "--train-with-extrainfo"
             ]
         },
         {

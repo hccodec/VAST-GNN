@@ -1,7 +1,11 @@
-import os, shutil
+import os, shutil, argparse
 from utils.custom_datetime import *
 
-result_dir = 'results'
+parser = argparse.ArgumentParser()
+parser.add_argument('--resdir', default='results', help='目录')
+args = parser.parse_args()
+
+result_dir = args.resdir
 res = dict()
 
 for subdir in os.listdir(result_dir)[:-1]:

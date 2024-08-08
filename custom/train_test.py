@@ -1,6 +1,6 @@
 import torch, time
 from torch import nn
-from eval import compute, get_correlation, metrices_labels
+from eval import compute_err, compute_metrics, compute_correlation, metrices_labels
 
 from utils.logger import file_logger, logger
 # from utils.tensorboard import writer
@@ -47,7 +47,7 @@ def train_process(
             _lr = opt.param_groups[0]['lr']
             adj_lambda = adjust_lambda(e, graph_lambda_0, graph_lambda_k, graph_lambda_method)
 
-            print(f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr}", end='')
+            print(f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr}, ", end='')
             msg_file_logger += f"[Epoch] {e}/{epochs}, [lr] {_lr}, [adj_lambda] {adj_lambda}, "
             
             if hasattr(model, "graph_learner"):
@@ -58,16 +58,18 @@ def train_process(
             model.train()
             loss_res = []
 
-            for casex, casey, mobility, text, idx in train_loader:
+            for data in train_loader:
                 opt.zero_grad()
 
-                mobility = mobility.to(device)
-                text = text.to(device)
-                casex = casex.to(device)
-                casey = casey.to(device)
-                idx = idx.to(device)
+                data = tuple(d.to(device) for d in data)
 
-                y_hat = model(mobility, text, casex, idx)
+                if len(data) == 3:
+                    casex, casey, mobility = data
+                    y_hat = model(casex, mobility)
+                elif len(data) == 5:
+                    casex, casey, mobility, idx, extra_info = data
+                    y_hat = model(casex, mobility, extra_info, idx)
+
                 y = casey[:,:,:,0].to(device)
 
                 if hasattr(model, "graph_learner"):
@@ -76,7 +78,7 @@ def train_process(
                 else:
                     loss = criterion(y.float(), y_hat.float())
 
-                loss.backward()
+                loss.backward(retain_graph=True)
                 opt.step()
 
                 loss_res.append(loss.data.cpu().numpy())
@@ -128,21 +130,51 @@ def train_process(
             print()
             file_logger.info(msg_file_logger)
 
-            metrices = compute(y_hat_val, y_real_val, y_hat_test, y_real_test, case_normalize_ratio)
+            metrices = compute_metrics(y_hat_val, y_real_val, y_hat_test, y_real_test, case_normalize_ratio)
+            err = compute_err(y_hat_val, y_real_val)
 
             # fw.write(f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,time\n")
             with open(result_paths['csv'], 'a') as fw:
-                fw.write('{},{:.5f},{:.5f},{:.5f},{},{},{},{},{},{:2f}s\n'.format(
-                    e, loss, loss_val, loss_test, *metrices, lr, time2 - time1
+                fw.write('{},{:.5f},{:.5f},{:.5f},{},{},{},{},{},{},{:2f}s\n'.format(
+                    e, loss, loss_val, loss_test, *metrices, err, lr, time2 - time1
                 ))
 
+            # region tensorboard
+
+            # Graph
+            if e == 0:
+                if len(data) == 3:
+                    writer.add_graph(model, (casex, mobility))
+                elif len(data) == 5:
+                    writer.add_graph(model, (casex, mobility, extra_info, idx))
+            # Histogram
+            for name, param in model.named_parameters():
+                writer.add_histogram(name, param, e)
+            # # PR Curve
+            # if e % 5 == 0:
+            #     writer.add_pr_curve_raw(
+            #         'PR Curve',
+            #         y_real_val.reshape(-1).tolist(),
+            #         y_hat_val.reshape(-1).tolist(),
+            #         global_step=e
+            #     )
+            # Text
+            writer.add_text(
+                'Text',
+                f"Epoch: {e}, Loss: {loss:.5f}, Loss_val: {loss_val:.5f}, Loss_test: {loss_test:.5f}, "
+                f"MAE_val: {metrices[0]:.5f}, RMSE_val: {metrices[1]:.5f}, MAE_test: {metrices[2]:.5f}, RMSE_test: {metrices[3]:.5f},"
+                "Err: {err:.5f}, LR: {lr:.5f}, Time(s): {time2 - time1:.5f}",
+                global_step=e)
+            # Scalar
             writer.add_scalar('Loss/train', loss, e)
             writer.add_scalar('Loss/validate', loss_val, e)
             writer.add_scalar('Loss/test', loss_test, e)
             for i, metric_label in enumerate(metrices_labels):
                 writer.add_scalar(f"Metric/{metric_label}", metrices[i], e)
+            writer.add_scalar('Metric/Err', err, e)
             writer.add_scalar('Others/Learning_Rate', lr, e)
             writer.add_scalar('Others/Time(s)', time2 - time1, e)
+            # endregion
             
             if early_stop: break
 
@@ -167,15 +199,17 @@ def validate_test_process(model: nn.Module, criterion, dataloader, device):
     loss_res = []
     y_hat_res, y_real_res = None, None
 
-    for casex, casey, mobility, text, idx in dataloader:
-        mobility = mobility.to(device)
-        text = text.to(device)
-        casex = casex.to(device)
-        casey = casey.to(device)
-        idx = idx.to(device)
+    for data in dataloader:
+        data = tuple(d.to(device) for d in data)
+
+        if len(data) == 3:
+            casex, casey, mobility = data
+            y_hat = model(casex, mobility)
+        elif len(data) == 5:
+            casex, casey, mobility, idx, extra_info = data
+            y_hat = model(casex, mobility, extra_info, idx)
 
         y = casey[:,:,:,0].to(device)
-        y_hat = model(mobility, text, casex, idx)
         if isinstance(y_hat, tuple): y_hat, _ = y_hat # 适配启用图学习器的情况
         loss = criterion(y.float(), y_hat.float())
 
@@ -197,12 +231,15 @@ def eval_process(model, criterion,
     validation_result, validation_hat, validation_real = validate_test_process(trained_model, criterion, validation_loader, device)
     test_result, test_hat, test_real = validate_test_process(trained_model, criterion, test_loader, device)
 
-    metrices = compute(
+    metrices = compute_metrics(
         validation_hat, validation_real,
         test_hat, test_real, case_normalize_ratio
     )
     
     train_result, train_hat, train_real = validate_test_process(trained_model, criterion, train_loader, device)
-    get_correlation(
+    err = compute_err(train_hat, train_real)
+    correlation = compute_correlation(
         train_hat, train_real, validation_hat, validation_real, test_hat, test_real, y_days
         )
+    
+    return metrices, err, correlation
