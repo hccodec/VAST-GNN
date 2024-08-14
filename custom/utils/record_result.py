@@ -31,22 +31,22 @@ for subdir in files:
         if "训练完毕，开始评估" in lines[i]:
             break
     try:
-        test_metrices_latest = re.search(r"\[test.*\]\ (.*)", lines[i + 3]).groups()
-        test_metrices_latest = test_metrices_latest[0].split('/')
+        test_metrics_latest = re.search(r"\[test.*\]\ (.*)", lines[i + 3]).groups()
+        test_metrics_latest = test_metrics_latest[0].split('/')
         epoch, test_loss = re.search(r"\[Epoch\]\ (\d+).*\[Loss.*?/([\d.]+)", lines[i - 3]).groups()
-        # res_latest += (*test_metrices_latest, epoch, test_loss.split('_')[-1])
-        res_latest += (*test_metrices_latest, epoch, subdir.split('_')[-1])
+        # res_latest += (*test_metrics_latest, epoch, test_loss.split('_')[-1])
+        res_latest += (*test_metrics_latest, epoch, subdir.split('_')[-1])
     except Exception as e:
         print(e)
         res_latest += (('-',) * 4)
         
     try:
-        test_metrices_best = re.search(r"\[test.*\]\ (.*)", lines[i + 7]).groups()
-        test_metrices_best = test_metrices_best[0].split('/')
+        test_metrics_best = re.search(r"\[test.*\]\ (.*)", lines[i + 7]).groups()
+        test_metrics_best = test_metrics_best[0].split('/')
         epoch, = re.search(r"epoch (\d+)", lines[i + 6]).groups()
-        res_best += (*test_metrices_best, epoch, subdir.split('_')[-1])
+        res_best += (*test_metrics_best, epoch, subdir.split('_')[-1])
         # epoch, test_loss = re.search(r"epoch (\d+)", lines[i + 6]).groups()
-        # res_best += (*test_metrices_best, epoch, test_loss.split('_')[-1])
+        # res_best += (*test_metrics_best, epoch, test_loss.split('_')[-1])
     except Exception as e:
         print(e)
         res_best += (('-',) * 4)

@@ -5,7 +5,7 @@ import numpy as np
 from utils.logger import logger
 from utils.utils import catch, font_green
 
-metrices_labels = ["MAE_val", "RMSE_val", "MAE_test", "RMSE_test"]
+metrics_labels = ["MAE_val", "RMSE_val", "MAE_test", "RMSE_test"]
 
 @catch("出现错误，无法计算相关性")
 def compute_correlation(
@@ -38,6 +38,8 @@ def compute_correlation(
         correlation_test = [-1]
         logger.info("出现错误，无法计算 train 相关性: " + str(e))
     logger.info(f"Correlation(train/val/test): {correlation_train[0]}, {correlation_val[0]}, {correlation_test[0]}")
+
+    return correlation_train, correlation_val, correlation_test
 
 RMSELoss = lambda _y, y: float(torch.sqrt(torch.mean((_y - y) ** 2)))
 MAELoss = lambda _y, y: float(torch.mean(torch.div(torch.abs(_y - y), 1)))

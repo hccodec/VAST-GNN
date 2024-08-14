@@ -1,41 +1,68 @@
 import torch, time
 from torch import nn
-from eval import compute_err, compute_metrics, compute_correlation, metrices_labels
+from eval import compute_err, compute_metrics, compute_correlation, metrics_labels
 
 from utils.logger import file_logger, logger
+
 # from utils.tensorboard import writer
 from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow
+
 # logger = logger.getLogger()
+
 
 @catch()
 def train_process(
-    model, criterion, epochs, lr, lr_min, lr_scheduler_stepsize, lr_scheduler_gamma, lr_weight_decay,
-    train_loader, validation_loader, test_loader,
-    early_stop_patience, case_normalize_ratio,
-    graph_lambda_0, graph_lambda_k, graph_lambda_method,
-    device, writer, result_paths):
-    
-    opt = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr, betas=(0.9, 0.999), weight_decay=lr_weight_decay)
+    model,
+    criterion,
+    epochs,
+    lr,
+    lr_min,
+    lr_scheduler_stepsize,
+    lr_scheduler_gamma,
+    lr_weight_decay,
+    train_loader,
+    validation_loader,
+    test_loader,
+    early_stop_patience,
+    case_normalize_ratio,
+    graph_lambda_0,
+    graph_lambda_k,
+    graph_lambda_method,
+    device,
+    writer,
+    result_paths,
+):
+
+    opt = torch.optim.Adam(
+        filter(lambda p: p.requires_grad, model.parameters()),
+        lr,
+        betas=(0.9, 0.999),
+        weight_decay=lr_weight_decay,
+    )
     # opt = torch.optim.Adam(model.parameters(), lr, betas=(0.9, 0.999), weight_decay=lr_weight_decay)
-    scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=lr_scheduler_stepsize, gamma=lr_scheduler_gamma)
+    scheduler = torch.optim.lr_scheduler.StepLR(
+        opt, step_size=lr_scheduler_stepsize, gamma=lr_scheduler_gamma
+    )
 
     params_total = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    logger.info(f'# {params_total} params')
+    logger.info(f"# {params_total} params")
 
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        # opt, mode='min', factor=0.7, patience=5, min_lr=1e-5, threshold=1e-4)
-    
-    losses = {'train': [], 'val': [], 'test': []}
+    # opt, mode='min', factor=0.7, patience=5, min_lr=1e-5, threshold=1e-4)
+
+    losses = {"train": [], "val": [], "test": []}
 
     time_start = time.time()
 
-    with open(result_paths['csv'], 'w'): pass
-    with open(result_paths['csv'], "a") as fw:
-        fw.write(f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,lr,time\n")
-    
+    with open(result_paths["csv"], "w"):
+        pass
+    with open(result_paths["csv"], "a") as fw:
+        fw.write(
+            f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,lr,time\n"
+        )
 
     loss_best, model_best, epoch_best = float("inf"), None, 0
-    early_stop_wait = 0 # 控制 early stop 的行为。当其值达到阈值时停止训练
+    early_stop_wait = 0  # 控制 early stop 的行为。当其值达到阈值时停止训练
     early_stop = False
 
     try:
@@ -44,17 +71,23 @@ def train_process(
             msg_file_logger = ""
             time1 = time.time()
 
-            _lr = opt.param_groups[0]['lr']
-            adj_lambda = adjust_lambda(e, graph_lambda_0, graph_lambda_k, graph_lambda_method)
+            _lr = opt.param_groups[0]["lr"]
+            adj_lambda = adjust_lambda(
+                e, graph_lambda_0, graph_lambda_k, graph_lambda_method
+            )
 
-            print(f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr}, ", end='')
-            msg_file_logger += f"[Epoch] {e}/{epochs}, [lr] {_lr}, [adj_lambda] {adj_lambda}, "
-            
+            print(
+                f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr}, ",
+                end="",
+            )
+            msg_file_logger += (
+                f"[Epoch] {e}/{epochs}, [lr] {_lr}, [adj_lambda] {adj_lambda}, "
+            )
+
             if hasattr(model, "graph_learner"):
-                print(f", [adj_lambda] {adj_lambda}\n", end='')
+                print(f", [adj_lambda] {adj_lambda}\n", end="")
                 msg_file_logger += f"[adj_lambda] {adj_lambda}, "
-            
-            
+
             model.train()
             loss_res = []
 
@@ -70,11 +103,13 @@ def train_process(
                     casex, casey, mobility, idx, extra_info = data
                     y_hat = model(casex, mobility, extra_info, idx)
 
-                y = casey[:,:,:,0].to(device)
+                y = casey[:, :, :, 0].to(device)
 
                 if hasattr(model, "graph_learner"):
                     y_hat, adj_hat = y_hat
-                    loss = criterion(y.float(), y_hat.float()) + adj_lambda * criterion(mobility.float(), adj_hat.float())
+                    loss = criterion(y.float(), y_hat.float()) + adj_lambda * criterion(
+                        mobility.float(), adj_hat.float()
+                    )
                 else:
                     loss = criterion(y.float(), y_hat.float())
 
@@ -85,33 +120,36 @@ def train_process(
 
             loss = sum(loss_res) / len(loss_res)
 
-
-            loss *= case_normalize_ratio ** 2
+            loss *= case_normalize_ratio**2
 
             # todo：loss 放缩  ratio ** 2
             msg_file_logger += f"[Loss(train/val/test)] {loss:.3f}/"
-            print(f"[Loss(train/val/test)] {loss:.3f}/", end='')
-            losses['train'].append(loss)
+            print(f"[Loss(train/val/test)] {loss:.3f}/", end="")
+            losses["train"].append(loss)
 
-            loss_val, y_hat_val, y_real_val = validate_test_process(model, criterion, validation_loader, device)
-            loss_test, y_hat_test, y_real_test = validate_test_process(model, criterion, test_loader, device)
-            loss_val *= case_normalize_ratio ** 2
-            loss_test *= case_normalize_ratio ** 2
+            loss_val, y_hat_val, y_real_val = validate_test_process(
+                model, criterion, validation_loader, device
+            )
+            loss_test, y_hat_test, y_real_test = validate_test_process(
+                model, criterion, test_loader, device
+            )
+            loss_val *= case_normalize_ratio**2
+            loss_test *= case_normalize_ratio**2
 
             msg_file_logger += f"{loss_val:.3f}/{loss_test:.3f}"
-            print(f"{font_yellow(loss_val)}/{loss_test:.3f}, ", end='')
-            losses['val'].append(loss_val)
-            losses['test'].append(loss_test)
+            print(f"{font_yellow(loss_val)}/{loss_test:.3f}, ", end="")
+            losses["val"].append(loss_val)
+            losses["test"].append(loss_test)
 
             time2 = time.time()
-            print(f'({time2 - time1:.3f}s)', end='')
-            msg_file_logger += f'({time2 - time1:.3f}s)'
+            print(f"({time2 - time1:.3f}s)", end="")
+            msg_file_logger += f"({time2 - time1:.3f}s)"
 
             if loss_val < loss_best:
                 msg_file_logger += " (Best model saved)"
-                print(font_yellow(" (Best model saved)"), end='')
-                loss_best , model_best, epoch_best = loss_val, model, e
-                torch.save(model_best, result_paths['model'])
+                print(font_yellow(" (Best model saved)"), end="")
+                loss_best, model_best, epoch_best = loss_val, model, e
+                torch.save(model_best, result_paths["model"])
                 early_stop_wait = 0
             # # early stop 规则：连续 args.early_stop_patience 个 epoch没有更优结果，停止训练
             else:
@@ -130,14 +168,18 @@ def train_process(
             print()
             file_logger.info(msg_file_logger)
 
-            metrices = compute_metrics(y_hat_val, y_real_val, y_hat_test, y_real_test, case_normalize_ratio)
+            metrics = compute_metrics(
+                y_hat_val, y_real_val, y_hat_test, y_real_test, case_normalize_ratio
+            )
             err = compute_err(y_hat_val, y_real_val)
 
             # fw.write(f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,time\n")
-            with open(result_paths['csv'], 'a') as fw:
-                fw.write('{},{:.5f},{:.5f},{:.5f},{},{},{},{},{},{},{:2f}s\n'.format(
-                    e, loss, loss_val, loss_test, *metrices, err, lr, time2 - time1
-                ))
+            with open(result_paths["csv"], "a") as fw:
+                fw.write(
+                    "{},{:.5f},{:.5f},{:.5f},{},{},{},{},{},{},{:2f}s\n".format(
+                        e, loss, loss_val, loss_test, *metrics, err, lr, time2 - time1
+                    )
+                )
 
             # region tensorboard
 
@@ -160,36 +202,37 @@ def train_process(
             #     )
             # Text
             writer.add_text(
-                'Text',
+                "Text",
                 f"Epoch: {e}, Loss: {loss:.5f}, Loss_val: {loss_val:.5f}, Loss_test: {loss_test:.5f}, "
-                f"MAE_val: {metrices[0]:.5f}, RMSE_val: {metrices[1]:.5f}, MAE_test: {metrices[2]:.5f}, RMSE_test: {metrices[3]:.5f},"
-                "Err: {err:.5f}, LR: {lr:.5f}, Time(s): {time2 - time1:.5f}",
-                global_step=e)
+                f"MAE_val: {metrics[0]:.5f}, RMSE_val: {metrics[1]:.5f}, MAE_test: {metrics[2]:.5f}, RMSE_test: {metrics[3]:.5f},"
+                f"Err: {err:.5f}, LR: {lr:.5f}, Time(s): {time2 - time1:.5f}",
+                global_step=e,
+            )
             # Scalar
-            writer.add_scalar('Loss/train', loss, e)
-            writer.add_scalar('Loss/validate', loss_val, e)
-            writer.add_scalar('Loss/test', loss_test, e)
-            for i, metric_label in enumerate(metrices_labels):
-                writer.add_scalar(f"Metric/{metric_label}", metrices[i], e)
-            writer.add_scalar('Metric/Err', err, e)
-            writer.add_scalar('Others/Learning_Rate', lr, e)
-            writer.add_scalar('Others/Time(s)', time2 - time1, e)
+            writer.add_scalar("Loss/train", loss, e)
+            writer.add_scalar("Loss/validate", loss_val, e)
+            writer.add_scalar("Loss/test", loss_test, e)
+            for i, metric_label in enumerate(metrics_labels):
+                writer.add_scalar(f"Metric/{metric_label}", metrics[i], e)
+            writer.add_scalar("Metric/Err", err, e)
+            writer.add_scalar("Others/Learning_Rate", lr, e)
+            writer.add_scalar("Others/Time(s)", time2 - time1, e)
             # endregion
-            
-            if early_stop: break
+
+            if early_stop:
+                break
 
             scheduler.step()
 
             for group in opt.param_groups:
-                if group['lr'] < lr_min:
-                    group['lr'] = lr_min
+                if group["lr"] < lr_min:
+                    group["lr"] = lr_min
 
             # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0) # 梯度剪裁
 
     except KeyboardInterrupt:
         logger.info("已手动停止训练")
-        
-    
+
     return losses, model, epoch_best, loss_best
 
 
@@ -209,37 +252,69 @@ def validate_test_process(model: nn.Module, criterion, dataloader, device):
             casex, casey, mobility, idx, extra_info = data
             y_hat = model(casex, mobility, extra_info, idx)
 
-        y = casey[:,:,:,0].to(device)
-        if isinstance(y_hat, tuple): y_hat, _ = y_hat # 适配启用图学习器的情况
+        y = casey[:, :, :, 0].to(device)
+        if isinstance(y_hat, tuple):
+            y_hat, _ = y_hat  # 适配启用图学习器的情况
         loss = criterion(y.float(), y_hat.float())
 
         loss_res.append(loss.item())
-        if y_hat_res is None: y_hat_res = y_hat
-        else: y_hat_res = torch.cat([y_hat_res, y_hat], 0)
-        if y_real_res is None: y_real_res = y
-        else: y_real_res = torch.cat([y_real_res, y], 0)
+        if y_hat_res is None:
+            y_hat_res = y_hat
+        else:
+            y_hat_res = torch.cat([y_hat_res, y_hat], 0)
+        if y_real_res is None:
+            y_real_res = y
+        else:
+            y_real_res = torch.cat([y_real_res, y], 0)
 
     return sum(loss_res) / len(loss_res), y_hat_res, y_real_res
 
 
-def eval_process(model, criterion,
-                 train_loader, validation_loader, test_loader,
-                 y_days, case_normalize_ratio, device):
-    
+def eval_process(
+    model,
+    criterion,
+    train_loader,
+    validation_loader,
+    test_loader,
+    y_days,
+    case_normalize_ratio,
+    device,
+):
+
     trained_model = torch.load(model) if isinstance(model, str) else model
 
-    validation_result, validation_hat, validation_real = validate_test_process(trained_model, criterion, validation_loader, device)
-    test_result, test_hat, test_real = validate_test_process(trained_model, criterion, test_loader, device)
-
-    metrices = compute_metrics(
-        validation_hat, validation_real,
-        test_hat, test_real, case_normalize_ratio
+    validation_result, validation_hat, validation_real = validate_test_process(
+        trained_model, criterion, validation_loader, device
     )
-    
-    train_result, train_hat, train_real = validate_test_process(trained_model, criterion, train_loader, device)
+    test_result, test_hat, test_real = validate_test_process(
+        trained_model, criterion, test_loader, device
+    )
+
+    metrics = compute_metrics(
+        validation_hat, validation_real, test_hat, test_real, case_normalize_ratio
+    )
+
+    train_result, train_hat, train_real = validate_test_process(
+        trained_model, criterion, train_loader, device
+    )
     err = compute_err(train_hat, train_real)
     correlation = compute_correlation(
-        train_hat, train_real, validation_hat, validation_real, test_hat, test_real, y_days
-        )
-    
-    return metrices, err, correlation
+        train_hat,
+        train_real,
+        validation_hat,
+        validation_real,
+        test_hat,
+        test_real,
+        y_days,
+    )
+
+    return {
+        "mae_val": metrics[0],
+        "rmse_val": metrics[1],
+        "mae_test": metrics[2],
+        "rmse_test": metrics[3],
+        "err": err,
+        "correlation_train": correlation[0][0],
+        "correlation_val": correlation[1][0],
+        "correlation_test": correlation[2][0],
+    }
