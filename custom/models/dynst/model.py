@@ -38,56 +38,62 @@ class CNN(nn.Module):
                 m.bias.data.zero_()
 
     def forward(self, inputs):
-        x = self.cnn(inputs)
+        x = self.cnn(inputs.float())
         pred = self.out(x)
         attention = self.att(x).softmax(2)
         edge_prob = (pred * attention).mean(dim=2)
         return edge_prob
 
+
 class DynGraphEncoder(nn.Module):
-    def  __init__(self, num_nodes, in_dim, hidden, num_heads, num_layers, dropout):
+    def  __init__(self, in_dim, hidden, num_heads, num_layers, dropout, device):
         super().__init__()
-        self.num_nodes = num_nodes
         self.dropout = dropout
-        self.tcn = CNN(in_dim, hidden,hidden)
+        self.tcn = CNN(1, hidden, hidden).to(device)
         self.hidden = hidden
         self.num_heads = 4
         self.global_attention = nn.MultiheadAttention(embed_dim = hidden, num_heads=num_heads)
         self.lstm = nn.LSTM(self.hidden * 2, self.hidden, num_layers, batch_first=True)
         self.fc = nn.Linear(self.hidden, 1)
+        self.device = device
 
     ## 32,28,47,1
     ## (32,14,47,1)  (32,7,47,1)
     ## 32 7 47 14
     def forward(self, x, gt, adp_g=None):
-        batchsize = x.size(0)
-        obs_len = x.size(1)
+        batch_size, obs_len, num_nodes, feature_len = x.size()
         pred_len = gt.size(1)
-        seq = torch.cat((x, gt), dim=1).squeeze()
-        adjust_x = torch.zeros((batchsize, pred_len, self.num_nodes, obs_len))
 
-        for i in range(pred_len):
-            adjust_x[:, i] = seq[:, i:i + obs_len].permute(0, 2, 1).contiguous()
-        # (32,7,47,14)
-        adjust_x = adjust_x.reshape(-1, obs_len).unsqueeze(1)
+        # seq = torch.cat((x, gt), dim=1).squeeze(-1)
+        _seq = torch.cat([x[:, 0, :, :-1], x[:,:,:,-1].transpose(1, 2), gt.squeeze(-1).transpose(1, 2)], dim=-1)
+        adjust_x = torch.zeros((batch_size, obs_len + pred_len, num_nodes, feature_len)).to(self.device)
+
+        # for i in range(pred_len): adjust_x[:, i] = _seq[:, :, i : i + obs_len].permute(0, 2, 1).contiguous()
+        for i in range(obs_len + pred_len):
+            adjust_x[:, i] = _seq[:, :, i : i + feature_len]
+        # adjust_x.shape == torch.Size([5, 28, 105, 21])
+
+
+        adjust_x = adjust_x.flatten(0, -2).unsqueeze(1)
         x_tcn = self.tcn(adjust_x)
-        x_tcn = x_tcn.reshape(batchsize, pred_len, self.num_nodes, self.hidden)
-        x_tcn = x_tcn.permute(2, 0, 1, 3).reshape(self.num_nodes, batchsize * pred_len, self.hidden)
+        x_tcn = x_tcn.reshape(batch_size, pred_len + obs_len, num_nodes, self.hidden)
+        x_tcn = x_tcn.permute(2, 0, 1, 3).reshape(num_nodes, batch_size * (pred_len + obs_len), self.hidden)
         x_global, attn_weights = self.global_attention(x_tcn, x_tcn, x_tcn)
-        x_global = x_global.reshape(self.num_nodes, batchsize, pred_len, self.hidden).permute(1, 2, 0, 3)
-        edge_features = torch.cat([x_global.unsqueeze(3).expand(-1, -1, -1, self.num_nodes, -1),
-                                   x_global.unsqueeze(2).expand(-1, -1, self.num_nodes, -1, -1)], dim=-1)
+        x_global = x_global.reshape(num_nodes, batch_size, (pred_len + obs_len), self.hidden).permute(1, 2, 0, 3)
+        edge_features = torch.cat([x_global.unsqueeze(3).expand(-1, -1, -1, num_nodes, -1),
+                                   x_global.unsqueeze(2).expand(-1, -1, num_nodes, -1, -1)], dim=-1)
         # lstm
-        edge_features = edge_features.reshape(-1, pred_len, 2 * self.hidden)
+        edge_features = edge_features.reshape(-1, (pred_len + obs_len), 2 * self.hidden)
         edge_features, _ = self.lstm(edge_features)
-        edge_features = edge_features.reshape(batchsize, pred_len, self.num_nodes, self.num_nodes, self.hidden)
+        edge_features = edge_features.reshape(batch_size, (pred_len + obs_len), num_nodes, num_nodes, self.hidden)
 
         edge_features = torch.sigmoid(self.fc(edge_features))
 
-        mask = torch.eye(self.num_nodes).unsqueeze(0).unsqueeze(0).unsqueeze(-1).repeat(batchsize, pred_len, 1, 1, 1)
+        mask = torch.eye(num_nodes).unsqueeze(0).unsqueeze(0).unsqueeze(-1).repeat(batch_size, (pred_len + obs_len), 1, 1, 1).to(self.device)
         edge_features = edge_features * (1 - mask)
 
         return edge_features
+
 
 class GraphConvLayer(nn.Module):
     def __init__(self, in_features, out_features, bias=True):
@@ -112,6 +118,7 @@ class GraphConvLayer(nn.Module):
             return self.act(output + self.bias)
         else:
             return self.act(output)
+
 
 def getLaplaceMat(adj):
     batch_size, m, _ = adj.size()
@@ -144,35 +151,36 @@ def getLaplaceMat(adj):
 
 
 class Decoder(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden, graph_layers, dropout):
+    def __init__(self, in_dim, out_dim, hidden, graph_layers, dropout, device):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.hidden = hidden
         self.graph_layers = graph_layers
-        self.tcn = CNN(in_dim, hidden, hidden)
+        self.tcn = CNN(1, hidden, hidden).to(device)
         self.GNNBlocks = nn.ModuleList(
             [GraphConvLayer(in_features=hidden, out_features=hidden) for i in range(graph_layers)])
         self.fc = nn.Linear(hidden * (graph_layers + 1), hidden)
         self.gru_cell = nn.GRUCell(hidden, hidden)
         self.out = nn.Linear(hidden, out_dim)
+        self.device = device
 
     def forward(self, x, gt, adj_t, use_predict=False):
-        batchsize = x.size(0)
+        batch_size = x.size(0)
         obs_len = x.size(1)
         num_nodes = x.size(2)
         pred_len = gt.size(1)
-        seq = torch.cat((x, gt), dim=1).squeeze()
-        current_x = x
-        gru_hidden = torch.zeros(batchsize * num_nodes, self.hidden)
+
+        _seq = torch.cat([x[:, 0, :, :-1], x[:, :, :, -1].transpose(1, 2), gt.squeeze(-1).transpose(1, 2)], dim=-1)
+
+        current_x = x[:, -1]
+        gru_hidden = torch.zeros(batch_size * num_nodes, self.hidden).to(self.device)
         predict_list = []
         for i in range(pred_len):
-            print(current_x.shape)
-            current_x = current_x.permute(0, 2, 3, 1).contiguous()
-            current_x = current_x.reshape(-1, 1, obs_len)
-            x_tcn = self.tcn(current_x)
-            x_tcn = x_tcn.reshape(batchsize, num_nodes, -1)
-            adj = adj_t[:, i].squeeze()
+            # current_x = current_x.permute(0, 2, 3, 1).contiguous()
+            x_tcn = self.tcn(current_x.flatten(0, -2).unsqueeze(1))
+            x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
+            adj = adj_t[:, i].squeeze(-1)
             laplace_adj = getLaplaceMat(adj)
             node_state_list = [x_tcn]
             node_state = x_tcn
@@ -180,20 +188,41 @@ class Decoder(nn.Module):
                 node_state = layer(node_state, laplace_adj)
                 node_state_list.append(node_state)
             node_state = torch.cat(node_state_list, dim=-1)
-            node_state = node_state.reshape(-1, node_state.size(-1))
+            node_state = node_state.flatten(0, -2)
 
             node_state = self.fc(node_state)
 
             gru_hidden = self.gru_cell(node_state, gru_hidden)
             predict = self.out(gru_hidden)
-            predict = predict.reshape(batchsize, num_nodes, -1)
+            predict = predict.reshape(batch_size, num_nodes, -1)
 
             if use_predict:
-                current_x = torch.cat((current_x[:, 1:], predict), dim=1).unsqueeze(-1)
+                current_x = torch.cat((current_x[:, :, 1:], predict), dim=-1)
             else:
-                current_x = seq[:, i + 1: i + obs_len + 1].unsqueeze(-1)
+                current_x = _seq[:, :, i + 1: i + obs_len + 1]
             predict_list.append(predict)
         predict_list = torch.stack(predict_list, dim=1)
         return predict_list
 
 
+class dynst(nn.Module):
+    def __init__(self, in_dim, out_dim, hidden, num_nodes, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), enable_graph_learner = False):
+        super().__init__()
+        self.in_dim = in_dim
+        self.out_dim = out_dim
+        self.hidden = hidden
+        self.num_nodes = num_nodes
+        self.num_heads = num_heads
+        self.num_layers = num_layers
+        self.graph_layers = graph_layers
+
+        self.device = device
+        self.enable_graph_learner = enable_graph_learner
+
+        self.enc = DynGraphEncoder(in_dim, hidden, num_heads, num_layers, dropout, device).to(device)
+        self.dec = Decoder(in_dim, out_dim, hidden, graph_layers, dropout, device).to(device)
+
+    def forward(self, x, gt, adj_gt, use_predict = False):
+        adj = self.enc(x, gt)
+        y = self.dec(x, gt, adj, use_predict)
+        return (y, adj[:, :adj_gt.size(1)].squeeze(-1)) if self.enable_graph_learner else y

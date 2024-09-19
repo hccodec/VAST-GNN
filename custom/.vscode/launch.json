@@ -4,15 +4,60 @@
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "compounds": [
-        {
-            "name": "Compound",
-            "configurations": [
-                "MAIN(self,3,21-7)",
-                "MAIN"
-            ]
-        }
+        // {
+        //     "name": "Compound",
+        //     "configurations": [
+        //         "MAIN(self,3,21-7)",
+        //         "MAIN()"
+        //     ]
+        // }
     ],
     "configurations": [
+        {
+            "name": "MAIN(mpnn_lstm)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--model", "mpnn_lstm",
+                "--dataset", "dataforgood",
+                // "--enable-graph-learner"
+            ]
+        },
+        {
+            "name": "MAIN(dynst)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--model", "dynst",
+                "--dataset", "dataforgood",
+                "--enable-graph-learner"
+            ]
+        },
+        {
+            "name": "MepoGNN",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "Main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/extrasources/MepoGNN/model",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                // "-graph", "Adaptive"
+                "-out", "outputDynamic"
+            ]
+        },
         {
             "name": "MAIN(YJ_COVID-19)",
             "type": "debugpy",
@@ -84,7 +129,7 @@
                 "--ydays", "7",
                 "--enable-graph-learner",
                 "--train-with-extrainfo",
-                "--device", "1",
+                "--device", "1"
             ]
         },
         {

@@ -5,7 +5,8 @@ from eval import compute_err, compute_metrics, compute_correlation, metrics_labe
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
-from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow
+from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, run_model, hits_at_k
+from models.dynst.model import dynst
 
 # logger = logger.getLogger()
 
@@ -31,6 +32,7 @@ def train_process(
     device,
     writer,
     result_paths,
+    enable_graph_learner
 ):
 
     opt = torch.optim.Adam(
@@ -40,15 +42,15 @@ def train_process(
         weight_decay=lr_weight_decay,
     )
     # opt = torch.optim.Adam(model.parameters(), lr, betas=(0.9, 0.999), weight_decay=lr_weight_decay)
-    scheduler = torch.optim.lr_scheduler.StepLR(
-        opt, step_size=lr_scheduler_stepsize, gamma=lr_scheduler_gamma
-    )
+    # scheduler = torch.optim.lr_scheduler.StepLR(
+    #     opt, step_size=lr_scheduler_stepsize, gamma=lr_scheduler_gamma
+    # )
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    opt, mode='min', factor=lr_scheduler_gamma, patience=lr_scheduler_stepsize, min_lr=lr_min, threshold=1e-4)
 
     params_total = sum(p.numel() for p in model.parameters() if p.requires_grad)
     logger.info(f"# {params_total} params")
 
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    # opt, mode='min', factor=0.7, patience=5, min_lr=1e-5, threshold=1e-4)
 
     losses = {"train": [], "val": [], "test": []}
 
@@ -58,7 +60,7 @@ def train_process(
         pass
     with open(result_paths["csv"], "a") as fw:
         fw.write(
-            f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,lr,time\n"
+            f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,err,lr,time\n"
         )
 
     loss_best, model_best, epoch_best = float("inf"), None, 0
@@ -84,7 +86,7 @@ def train_process(
                 f"[Epoch] {e}/{epochs}, [lr] {_lr}, [adj_lambda] {adj_lambda}, "
             )
 
-            if hasattr(model, "graph_learner"):
+            if enable_graph_learner:
                 print(f", [adj_lambda] {adj_lambda}\n", end="")
                 msg_file_logger += f"[adj_lambda] {adj_lambda}, "
 
@@ -96,22 +98,17 @@ def train_process(
 
                 data = tuple(d.to(device) for d in data)
 
-                if len(data) == 3:
-                    casex, casey, mobility = data
-                    y_hat = model(casex, mobility)
-                elif len(data) == 5:
-                    casex, casey, mobility, idx, extra_info = data
-                    y_hat = model(casex, mobility, extra_info, idx)
+                y_hat, casex, casey, mobility, extra_info, idx = run_model(data, model)
 
-                y = casey[:, :, :, 0].to(device)
 
-                if hasattr(model, "graph_learner"):
+                if enable_graph_learner:
                     y_hat, adj_hat = y_hat
-                    loss = criterion(y.float(), y_hat.float()) + adj_lambda * criterion(
+                    loss = criterion(casey.float(), y_hat.float()) + adj_lambda * criterion(
                         mobility.float(), adj_hat.float()
                     )
+                    hits10 = hits_at_k(mobility, adj_hat)
                 else:
-                    loss = criterion(y.float(), y_hat.float())
+                    loss = criterion(casey.float(), y_hat.float())
 
                 loss.backward(retain_graph=True)
                 opt.step()
@@ -150,20 +147,21 @@ def train_process(
                 print(font_yellow(" (Best model saved)"), end="")
                 loss_best, model_best, epoch_best = loss_val, model, e
                 torch.save(model_best, result_paths["model"])
-                early_stop_wait = 0
             # # early stop 规则：连续 args.early_stop_patience 个 epoch没有更优结果，停止训练
-            else:
-                early_stop_wait += 1
-                if early_stop_wait == early_stop_patience:
-                    early_stop = True
+            #     early_stop_wait = 0
+            # else:
+            #     early_stop_wait += 1
+            #     if early_stop_wait == early_stop_patience:
+            #         early_stop = True
 
-            # early stop 规则：loss val 连续 2 次差值小于 1e-2
-            # last = 3
-            # last_losses = losses['val'][-min(last, len(losses['val'])):]
-            # if len(losses['val']) > 2 and max(last_losses) - min(last_losses) < 1e-2:
-            #     msg_file_logger += " (Early stop)"
-            #     print(" (Early stop)")
-            #     early_stop = True
+            # early stop 规则：loss val 连续 3 次差值小于 1e-2
+            else:
+                last = 3
+                last_losses = losses['val'][-min(last, len(losses['val'])):]
+                if len(losses['val']) > 2 and max(last_losses) - min(last_losses) < 1e-2:
+                    msg_file_logger += " (Early stop)"
+                    print(" (Early stop)")
+                    early_stop = True
 
             print()
             file_logger.info(msg_file_logger)
@@ -186,9 +184,9 @@ def train_process(
             # Graph
             if e == 0:
                 if len(data) == 3:
-                    writer.add_graph(model, (casex, mobility))
+                    writer.add_graph(model, (casex, casey, mobility))
                 elif len(data) == 5:
-                    writer.add_graph(model, (casex, mobility, extra_info, idx))
+                    writer.add_graph(model, (casex, casey, mobility, extra_info, idx))
             # Histogram
             for name, param in model.named_parameters():
                 writer.add_histogram(name, param, e)
@@ -222,7 +220,8 @@ def train_process(
             if early_stop:
                 break
 
-            scheduler.step()
+            scheduler.step(loss_val)
+            # scheduler.step()
 
             for group in opt.param_groups:
                 if group["lr"] < lr_min:
@@ -245,17 +244,11 @@ def validate_test_process(model: nn.Module, criterion, dataloader, device):
     for data in dataloader:
         data = tuple(d.to(device) for d in data)
 
-        if len(data) == 3:
-            casex, casey, mobility = data
-            y_hat = model(casex, mobility)
-        elif len(data) == 5:
-            casex, casey, mobility, idx, extra_info = data
-            y_hat = model(casex, mobility, extra_info, idx)
+        y_hat, casex, casey, mobility, extra_info, idx = run_model(data, model, "test")
 
-        y = casey[:, :, :, 0].to(device)
         if isinstance(y_hat, tuple):
             y_hat, _ = y_hat  # 适配启用图学习器的情况
-        loss = criterion(y.float(), y_hat.float())
+        loss = criterion(casey.float(), y_hat.float())
 
         loss_res.append(loss.item())
         if y_hat_res is None:
@@ -263,9 +256,9 @@ def validate_test_process(model: nn.Module, criterion, dataloader, device):
         else:
             y_hat_res = torch.cat([y_hat_res, y_hat], 0)
         if y_real_res is None:
-            y_real_res = y
+            y_real_res = casey
         else:
-            y_real_res = torch.cat([y_real_res, y], 0)
+            y_real_res = torch.cat([y_real_res, casey], 0)
 
     return sum(loss_res) / len(loss_res), y_hat_res, y_real_res
 
@@ -298,15 +291,15 @@ def eval_process(
         trained_model, criterion, train_loader, device
     )
     err = compute_err(train_hat, train_real)
-    correlation = compute_correlation(
-        train_hat,
-        train_real,
-        validation_hat,
-        validation_real,
-        test_hat,
-        test_real,
-        y_days,
-    )
+    # correlation = compute_correlation(
+    #     train_hat,
+    #     train_real,
+    #     validation_hat,
+    #     validation_real,
+    #     test_hat,
+    #     test_real,
+    #     y_days,
+    # )
 
     return {
         "mae_val": metrics[0],
@@ -314,7 +307,7 @@ def eval_process(
         "mae_test": metrics[2],
         "rmse_test": metrics[3],
         "err": err,
-        "correlation_train": correlation[0][0],
-        "correlation_val": correlation[1][0],
-        "correlation_test": correlation[2][0],
+        # "correlation_train": correlation[0][0],
+        # "correlation_val": correlation[1][0],
+        # "correlation_test": correlation[2][0],
     }

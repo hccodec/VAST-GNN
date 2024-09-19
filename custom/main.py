@@ -1,10 +1,9 @@
 import os, sys, torch
 
 sys.path.append(os.getcwd())
-from torch.utils.tensorboard import SummaryWriter
+from tensorboardX import SummaryWriter
 
 from train_test import train_process, validate_test_process, eval_process
-from eval import compute_correlation, compute_metrics
 
 from utils.logger import logger
 from utils.utils import font_yellow, select_model, set_random_seed, parse_args
@@ -147,7 +146,7 @@ def exp_dataforgood(args):
             (train_indices, validation_indices, test_indices),
         ) = meta_data[country_name]
 
-        logger.info(f"开始评估 {country_name}")
+        logger.info(f"开始训练 {country_name}")
 
         # 记录实验参数
         result_paths.update(
@@ -181,100 +180,118 @@ def exp_dataforgood(args):
             f.write(str(model_args) + "\n")
 
         # 初始化 tensorboard 记录器
-        writer = SummaryWriter(result_paths["tensorboard"])
+        with SummaryWriter(result_paths["tensorboard"]) as writer:
 
-        lr = args.lr
-        lr_min = args.lr_min
-        lr_scheduler_stepsize = args.lr_scheduler_stepsize
-        lr_weight_decay = args.lr_weight_decay
-        lr_scheduler_gamma = args.lr_scheduler_gamma
-        epochs = args.epochs
-        device = args.device
-        early_stop_patience = args.early_stop_patience
-        case_normalize_ratio = args.case_normalize_ratio
-        (
-            graph_lambda_0,
-            graph_lambda_k,
-            graph_lambda_method,
-        ) = (
-            args.graph_lambda_0,
-            args.graph_lambda_k,
-            args.graph_lambda_method,
-        )
+            lr = args.lr
+            lr_min = args.lr_min
+            lr_scheduler_stepsize = args.lr_scheduler_stepsize
+            lr_weight_decay = args.lr_weight_decay
+            lr_scheduler_gamma = args.lr_scheduler_gamma
+            epochs = args.epochs
+            device = args.device
+            early_stop_patience = args.early_stop_patience
+            case_normalize_ratio = args.case_normalize_ratio
+            enable_graph_learner = args.enable_graph_learner
+            (
+                graph_lambda_0,
+                graph_lambda_k,
+                graph_lambda_method,
+            ) = (
+                args.graph_lambda_0,
+                args.graph_lambda_k,
+                args.graph_lambda_method,
+            )
 
-        # start_date, end_date, x_days, y_days = args.startdate, args.enddate, args.xdays, args.ydays
-        # data_dir, case_normalize_ratio, text_normalize_ratio = args.data_dir, args.case_normalize_ratio, args.text_normalize_ratio
+            # start_date, end_date, x_days, y_days = args.startdate, args.enddate, args.xdays, args.ydays
+            # data_dir, case_normalize_ratio, text_normalize_ratio = args.data_dir, args.case_normalize_ratio, args.text_normalize_ratio
 
-        losses, trained_model, epoch_best, loss_best = train_process(
-            model,
-            criterion,
-            epochs,
-            lr,
-            lr_min,
-            lr_scheduler_stepsize,
-            lr_scheduler_gamma,
-            lr_weight_decay,
-            train_loader,
-            validation_loader,
-            test_loader,
-            early_stop_patience,
-            case_normalize_ratio,
-            graph_lambda_0,
-            graph_lambda_k,
-            graph_lambda_method,
-            device,
-            writer,
-            result_paths,
-        )
+            losses, trained_model, epoch_best, loss_best = train_process(
+                model,
+                criterion,
+                epochs,
+                lr,
+                lr_min,
+                lr_scheduler_stepsize,
+                lr_scheduler_gamma,
+                lr_weight_decay,
+                train_loader,
+                validation_loader,
+                test_loader,
+                early_stop_patience,
+                case_normalize_ratio,
+                graph_lambda_0,
+                graph_lambda_k,
+                graph_lambda_method,
+                device,
+                writer,
+                result_paths,
+            enable_graph_learner
+            )
 
-        # writer.close()
+            # writer.close()
 
-        logger.info("")
-        logger.info("训练完毕，开始评估: ")
+            logger.info("")
+            logger.info(f"训练完毕，开始评估: {country_name}")
 
-        logger.info("-" * 20)
-        logger.info(font_yellow("[最新]"))
-        metrics_latest = eval_process(
-            trained_model,
-            criterion,
-            train_loader,
-            validation_loader,
-            test_loader,
-            args.ydays,
-            case_normalize_ratio,
-            device,
-        )
+            logger.info("-" * 20)
+            logger.info(font_yellow(f"[最新 (epoch {len(losses['train']) - 1})]"))
+            metrics_latest = eval_process(
+                trained_model,
+                criterion,
+                train_loader,
+                validation_loader,
+                test_loader,
+                args.ydays,
+                case_normalize_ratio,
+                device,
+            )
 
-        logger.info("-" * 20)
-        logger.info(font_yellow(f"[最小 val loss (epoch {epoch_best})]"))
-        metrics_minvalloss = eval_process(
-            result_paths["model"],
-            criterion,
-            train_loader,
-            validation_loader,
-            test_loader,
-            args.ydays,
-            case_normalize_ratio,
-            device,
-        )
+            logger.info("-" * 20)
+            logger.info(font_yellow(f"[最小 val loss (epoch {epoch_best})]"))
+            metrics_minvalloss = eval_process(
+                result_paths["model"],
+                criterion,
+                train_loader,
+                validation_loader,
+                test_loader,
+                args.ydays,
+                case_normalize_ratio,
+                device,
+            )
 
-        writer.add_hparams(
-            {
-                k: (
-                    v
-                    if isinstance(v, (int, float, str, bool, torch.Tensor))
-                    else str(v)
-                )
-                for k, v in vars(args).items()
-            },
-            {
-                **{f"{k}_latest": v for k, v in metrics_latest.items()},
-                **{f"{k}_minvalloss": v for k, v in metrics_minvalloss.items()},
-            },
-        )
-        writer.close()
+            writer.add_hparams(
+                {
+                    **{
+                        k: (
+                            v
+                            if isinstance(v, (int, float, str, bool, torch.Tensor))
+                            else str(v)
+                        )
+                        for k, v in vars(args).items()
+                        if k
+                        in [
+                            "xdays",
+                            "ydays",
+                            "window",
+                            "batchsize",
+                            "lr",
+                            "lr_min",
+                            "seed",
+                        ]
+                    },
+                    **{"country_name": country_name, "country_code": country_code},
+                },
+                {
+                    **{
+                        f"{k}_minvalloss": float(v)
+                        for k, v in metrics_minvalloss.items()
+                    },
+                    **{f"{k}_latest": float(v) for k, v in metrics_latest.items()},
+                },
+            )
+            # writer.close()
 
-    logger.info(f"实验 dataforgood（ 预测范围 {args.xdays}->{args.ydays}）结束")
+    logger.info(f"实验 dataforgood（ 预测范围 {args.xdays}->{args.ydays} w{args.window}）结束")
 
 
 def main():

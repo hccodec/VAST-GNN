@@ -44,13 +44,17 @@ def compute_correlation(
 RMSELoss = lambda _y, y: float(torch.sqrt(torch.mean((_y - y) ** 2)))
 MAELoss = lambda _y, y: float(torch.mean(torch.div(torch.abs(_y - y), 1)))
 
-def compute_err(output, y_test, model_str='self'):
-    
+def compute_err(output, y_test, mode='total', model_str='self'):
+    assert mode in ['total', 'last']
     o = (output.view(-1) if(model_str=="LSTM") else output).cpu().detach().numpy()
-    l = y_test[0].view(-1).cpu().numpy()
+    l = (y_test.view(-1) if(model_str=="LSTM") else y_test).cpu().numpy()
 
+    if mode == "last": o, l = o[:, -1], l[:, -1]
     #--------------- Average error per region
-    error = np.mean(np.sum(abs(o - l), -1) / output.size(-1))
+    # error = np.mean(np.sum(abs(o - l), -1) / output.size(-1))
+    assert o.shape == l.shape
+
+    error = np.average(abs(o - l))
     logger.info(f"[err] {font_green(error)}")
 
     return error
@@ -59,6 +63,7 @@ def compute_metrics(
         validation_hat, validation_real,
         test_hat, test_real, case_normalize_ratio
 ):
+    assert validation_hat.shape == validation_real.shape
     mae_val, mae_test, rmse_val, rmse_test = [], [], [], []
     for i in range(len(validation_hat)):
         mae_val.append(MAELoss(validation_hat[i],validation_real[i]))

@@ -1,10 +1,14 @@
 import os, torch, numpy as np, random
 from models.LSTM_ONLY import LSTM_MODEL
+from models.MPNN_LSTM import MPNN_LSTM
 from models.SAB_GNN import Multiwave_SpecGCN_LSTM
 from models.SAB_GNN_case_trained import Multiwave_SpecGCN_LSTM_CASE_TRAINED
 # from models.SELF_MODEL import SelfModel
 # from models.self.SELF_MODEL_20240715 import SelfModel
-from models.self.SELF_MODEL_20240728 import SelfModel
+# from models.self.SELF_MODEL_20240718 import SelfModel
+# from models.self.SELF_MODEL_20240728 import SelfModel
+from models.self.SELF_MODEL_20240828 import SelfModel
+from models.dynst.model import dynst
 from utils.logger import logger
 import traceback, functools, yaml
 from argparse import ArgumentParser
@@ -135,7 +139,7 @@ def catch(msg="出现错误，中断训练"):
     def decorator(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
-            if os.getenv("DEBUG_MODE") == "true":
+            if os.getenv("DEBUG_MODE") == "true" or os.getenv("DEBUG_MODE") == "1":
                 return f(*args, **kwargs)
             try:
                 return f(*args, **kwargs)
@@ -169,6 +173,17 @@ def select_model(args, train_loader):
         "lstm": {"hid": [6, 3]},
         "shape": shape,
     }
+    dynst_model_args = {
+        "in_dim": shape[0][-1],
+        "out_dim": 1,
+        "hidden": 16,
+        "num_nodes": shape[0][1],
+        "num_heads": 4,
+        "num_layers": 1,
+        "graph_layers": 1,
+        "dropout": 0.5,
+        "device": args.device
+    }
     lstm_model_args = {
         # 'in': train_loader.dataset[0][2].shape[-1],
         "lstm": {"hid": 128},
@@ -177,6 +192,8 @@ def select_model(args, train_loader):
         # 'out': 32,
         "shape": shape,
     }
+    mpnn_lstm_model_args = dict(nfeat=shape[0][-1], nhid=64, nout=1,
+                              n_nodes=shape[0][1], window=shape[0][0], dropout=0.5)
 
     assert args.model in models
     index = models.index(args.model)
@@ -194,13 +211,31 @@ def select_model(args, train_loader):
     elif index == 3:
         model_args = lstm_model_args
         model = LSTM_MODEL(args, model_args).to(args.device)
+    elif index == 4:
+        model_args = dynst_model_args
+        model = dynst(*model_args.values(), args.enable_graph_learner).to(args.device)
+    elif index == 5:
+        model_args = mpnn_lstm_model_args
+        model = MPNN_LSTM(*model_args.values()).to(args.device)
     else:
-        raise IndexError("请选择模型：" + ", ".join(models))
+        raise ValueError("请选择模型：" + ", ".join(models))
 
     return model, model_args
 
 
-models = ["selfmodel", "sabgnn", "sabgnn_case_only", "lstm"]
+models = ["selfmodel", "sabgnn", "sabgnn_case_only", "lstm", "dynst", "mpnn_lstm"]
+
+
+def run_model(data, model, mode='train'):
+    use_predict = mode == 'test'
+    y_hat, casex, casey, mobility, extra_info, idx = None, None, None, None, None, None
+    if len(data) == 3:
+        casex, casey, mobility = data
+        y_hat = model(casex, casey, mobility, use_predict)
+    elif len(data) == 5:
+        casex, casey, mobility, extra_info, idx = data
+        y_hat = model(casex, casey, mobility, idx, use_predict)
+    return y_hat, casex, casey, mobility, extra_info, idx
 
 
 def parse_args():
@@ -209,12 +244,12 @@ def parse_args():
         "--config", type=str, default="cfg/config.yaml", help="配置文件路径"
     )
     parser.add_argument("--data-dir", default="data", help="数据集目录")
-    parser.add_argument("--dataset", default='YJ_COVID19', help="选择的数据集")
+    parser.add_argument("--dataset", default='dataforgood', help="选择的数据集")
     parser.add_argument(
         "--databinfile",
         type=str,
         default="dataset",
-        help="处理后的数据集文件名称。其实际文件名为 parser.databinfile_wave_xdays_ydays.bin",
+        help="处理后的数据集文件名称。其实际文件名为 parser.databinfile_xdays_ydays.bin",
     )
     parser.add_argument(
         "--preprocessed-data-dir",
@@ -223,14 +258,15 @@ def parse_args():
     )
     parser.add_argument("--exp", default="-1", help="实验编号.-1 表示不编号")
     parser.add_argument(
-        "--model", default="selfmodel", choices=models, help="设置实验所用模型"
+        "--model", default="dynst", choices=models, help="设置实验所用模型"
     )
     parser.add_argument("--result-dir", default="results_test", help="")
     parser.add_argument("--seed", default=5, help="随机种子")
     parser.add_argument("--device", default=7, help="GPU号")
     parser.add_argument("--xdays", type=int, default=21, help="预测所需历史天数")
     parser.add_argument("--ydays", type=int, default=7, help="预测未来天数")
-    parser.add_argument("--wave", type=int, default=4, choices=[3, 4], help="预测波次")
+    parser.add_argument("--window", type=int, default=-1, help="作为特征的历史天数窗口大小")
+    # parser.add_argument("--wave", type=int, default=4, choices=[3, 4], help="预测波次")
     parser.add_argument(
         "--case-normalize-ratio", type=float, default=100.0, help="训练集比例百分点"
     )
@@ -241,13 +277,13 @@ def parse_args():
     parser.add_argument(
         "--validateratio", type=int, default=10, help="验证集比例百分点"
     )
-    parser.add_argument("--epochs", type=int, default=1000)
-    parser.add_argument("--batchsize", type=int, default=16)
-    parser.add_argument("--lr", type=float, default=6e-3)
+    parser.add_argument("--epochs", type=int, default=500)
+    parser.add_argument("--batchsize", type=int, default=8)
+    parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--lr-min", type=float, default=1e-3)
     parser.add_argument("--lr-weight-decay", type=float, default=5e-4)
-    parser.add_argument("--lr-scheduler-stepsize", type=float, default=50)
-    parser.add_argument("--lr-scheduler-gamma", type=float, default=0.8)
+    parser.add_argument("--lr-scheduler-stepsize", type=float, default=10)
+    parser.add_argument("--lr-scheduler-gamma", type=float, default=0.7)
     parser.add_argument("--early-stop-patience", type=float, default=100)
     parser.add_argument("--graph-lambda-0", type=float, default=1.0)
     parser.add_argument("--graph-lambda-k", type=float, default=1e-2)
@@ -268,8 +304,11 @@ def parse_args():
         cfg = yaml.safe_load(f)
 
     now = date2str(datetime.now(), "%Y%m%d%H%M%S")
+
+    args.window = args.xdays if args.window == -1 else args.window
     
-    subdir = f"{args.wave}_{args.xdays}_{args.ydays}_{args.model}"
+    # subdir = f"{args.wave}_{args.xdays}_{args.ydays}_{args.model}"
+    subdir = f"{args.xdays}_{args.ydays}_w{args.window}_{args.model}"
     if args.train_with_extrainfo: subdir += "_text"
     if args.enable_graph_learner: subdir += "_graphlearner"
     subdir += f"_{now}"
@@ -284,16 +323,17 @@ def parse_args():
         )
     os.makedirs(args.result_dir, exist_ok=True)
 
-    set_logger(os.path.join(args.result_dir, "log.txt"))
+    set_logger(args.result_dir)
 
     args.device = set_device(args.device)
-    args.databinfile = f"{args.databinfile}_{args.wave}_{args.xdays}_{args.ydays}.bin"
+    # args.databinfile = f"{args.databinfile}_{args.wave}_{args.xdays}_{args.ydays}.bin"
+    args.databinfile = f"{args.databinfile}_{args.dataset}_{args.xdays}_{args.ydays}_w{args.window}.bin"
 
     args.trainratio /= 100
     args.validateratio /= 100
 
-    args.startdate = "20200414" if args.wave == 3 else "20200720"
-    args.enddate = "20210207" if args.wave == 3 else "20210515"
+    # args.startdate = "20200414" if args.wave == 3 else "20200720"
+    # args.enddate = "20210207" if args.wave == 3 else "20210515"
 
     if args.dataset == 'dataforgood':
         args.case_normalize_ratio = 1
@@ -308,3 +348,59 @@ def adjust_lambda(epoch, lambda_0, k, method='exp'):
         return lambda_0 * np.exp(-k * epoch)
     else:
         raise IndexError("请选择正确的 adjency matrix lambda 策略")
+
+def hits_at_k(A_hat_batch, A_batch, k=10, threshold_ratio=0.1):
+    """
+    计算带有按比例阈值的 HITS@k
+    A_hat_batch: 预测的邻接矩阵，大小为 (batch_size, day, n, n)，包含小数值
+    A_batch: 实际的邻接矩阵，大小为 (batch_size, day, n, n)
+    k: 考虑前k个最高置信度的边
+    threshold_ratio: 用于确定局部阈值的比例 (例如 0.1 表示取前 10% 的值作为阈值)
+    
+    返回:
+        HITS@k 的平均值
+    """
+    A_hat_batch, A_batch = A_hat_batch.detach().cpu().numpy(), A_batch.detach().cpu().numpy()
+
+    batch_size, day, n, _ = A_hat_batch.shape
+    total_hits = 0
+    total_edges = 0
+    
+    for b in range(batch_size):
+        for d in range(day):
+            A_hat = A_hat_batch[b, d]  # 第 b 个batch的第d天的预测邻接矩阵
+            A = A_batch[b, d]          # 第 b 个batch的第d天的实际邻接矩阵
+            
+            hits = 0
+            for i in range(n):
+                # 预测矩阵中第i行的边置信度（从i节点出发的所有边）
+                preds = A_hat[i]
+                
+                # 使用局部比例法，设定该节点的阈值
+                local_threshold = np.percentile(preds, 100 * (1 - threshold_ratio))
+                
+                # 大于阈值的边被视为存在
+                valid_indices = np.where(preds >= local_threshold)[0]
+                
+                # 如果 k 大于有效边数量，则调整 k 的值
+                top_k_count = min(k, len(valid_indices))
+                
+                # 找出置信度最高的 top_k_count 个边
+                if top_k_count > 0:
+                    top_k_indices = preds[valid_indices].argsort()[-top_k_count:][::-1]
+                    top_k_indices = valid_indices[top_k_indices]
+                else:
+                    top_k_indices = []
+                
+                # 实际矩阵中，第i行的边，看看哪些是真实存在的
+                true_edges = np.where(A[i] > 0)[0]
+                
+                # 计算命中的数量
+                hits += len(set(top_k_indices).intersection(set(true_edges)))
+            
+            # 记录当前batch和天数的命中
+            total_hits += hits
+            total_edges += (n * k)
+    
+    # 计算所有批次和天数的平均 HITS@k
+    return total_hits / total_edges
