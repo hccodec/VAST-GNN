@@ -178,7 +178,7 @@ def select_model(args, train_loader):
         "out_dim": 1,
         "hidden": 64,
         "num_heads": 4,
-        "num_layers": 1,
+        "num_layers": 2,
         "graph_layers": 1,
         "dropout": 0.5,
         "device": args.device
@@ -393,18 +393,36 @@ def hits_at_k(A_hat_batch, A_batch, k=10, threshold_ratio=0.1):
 
 def run_model(data, model, mode='train'):
     use_predict = mode == 'test'
-    y_hat, casex, casey, mobility, extra_info, idx = None, None, None, None, None, None
-    if len(data) == 3:
-        casex, casey, mobility = data
-        y_hat = model(casex, casey, mobility, use_predict)
-    elif len(data) == 5:
-        casex, casey, mobility, extra_info, idx = data
-        y_hat = model(casex, casey, mobility, idx, use_predict)
+    data = random_mask(data)
+    casex, casey, mobility, extra_info, idx = data
+    y_hat = model(casex, casey, mobility, extra_info, use_predict)
 
-    if casey.shape != y_hat.shape: casey = casey[:, -y_hat.size(1):]
-    assert y_hat.shape == casey.shape
+    y_hat_shape = y_hat[0].shape if isinstance(y_hat, tuple) else y_hat.shape # 适应模型同时输出图结构的情况
+
+    if casey.shape != y_hat_shape: casey = casey[:, -y_hat_shape[1]]
+    assert y_hat_shape == casey.shape
 
     return y_hat, casex, casey, mobility, extra_info, idx
 
-def random_mask(data):
+def random_mask(data, observed_ratio = 0.8):
+    assert observed_ratio > 0 and observed_ratio <= 1
+
+    casex, casey, mobility, extra_info, idx = None, None, None, None, None
+    if len(data) == 3:
+        casex, casey, mobility = data
+    elif len(data) == 5:
+        casex, casey, mobility, extra_info, idx = data
+    (batch_size, num_xdays, num_nodes, num_features), num_ydays = casex.size(), casey.size(1)
+
+    mask = torch.cat([torch.ones(int(num_nodes * observed_ratio)), torch.zeros(num_nodes - int(num_nodes * observed_ratio))])
+    mask = mask[torch.randperm(num_nodes)]
+    # mask = mask.unsqueeze(0).unsqueeze(0).expand(batch_size, num_xdays, -1)
+    selected_indices = torch.nonzero(mask).squeeze()
     
+    if casex is not None: casex = casex[:, :, selected_indices]
+    if casey is not None: casey = casey[:, :, selected_indices]
+    if mobility is not None: mobility = mobility[:, :, selected_indices][:, :, :, selected_indices]
+    if extra_info is not None: extra_info = extra_info[:, :, selected_indices]
+    if idx is not None: idx = idx[:, :, selected_indices]
+
+    return casex, casey, mobility, extra_info, idx

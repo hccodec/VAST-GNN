@@ -48,12 +48,12 @@ class CNN(nn.Module):
 class DynGraphEncoder(nn.Module):
     def  __init__(self, in_dim, hidden, num_heads, num_layers, dropout, device):
         super().__init__()
-        self.dropout = dropout
-        self.tcn = CNN(1, hidden, hidden).to(device)
+        # self.dropout = dropout
+        self.tcn = CNN(1, hidden, hidden, dropout).to(device)
         self.hidden = hidden
         self.num_heads = 4
         self.global_attention = nn.MultiheadAttention(embed_dim = hidden, num_heads=num_heads)
-        self.lstm = nn.LSTM(self.hidden * 2, self.hidden, num_layers, batch_first=True)
+        self.lstm = nn.LSTM(self.hidden * 2, self.hidden, num_layers, batch_first=True, dropout=dropout)
         self.fc = nn.Linear(self.hidden, 1)
         self.device = device
 
@@ -157,7 +157,7 @@ class Decoder(nn.Module):
         self.out_dim = out_dim
         self.hidden = hidden
         self.graph_layers = graph_layers
-        self.tcn = CNN(1, hidden, hidden).to(device)
+        self.tcn = CNN(1, hidden, hidden, dropout).to(device)
         self.GNNBlocks = nn.ModuleList(
             [GraphConvLayer(in_features=hidden, out_features=hidden) for i in range(graph_layers)])
         self.fc = nn.Linear(hidden * (graph_layers + 1), hidden)
@@ -221,7 +221,8 @@ class dynst(nn.Module):
         self.enc = DynGraphEncoder(in_dim, hidden, num_heads, num_layers, dropout, device).to(device)
         self.dec = Decoder(in_dim, out_dim, hidden, graph_layers, dropout, device).to(device)
 
-    def forward(self, x, gt, adj_gt, use_predict = False):
-        adj = self.enc(x, gt)
-        y = self.dec(x, gt, adj, use_predict)
-        return (y, adj[:, :adj_gt.size(1)].squeeze(-1)) if self.enable_graph_learner else y
+    def forward(self, X, y, A, extra_info=None, use_predict = False):
+        adj_hat = self.enc(X, y)
+        y_hat = self.dec(X, y, adj_hat, use_predict)
+        adj_hat = adj_hat[:, :A.size(1)].squeeze(-1)
+        return (y_hat, adj_hat) if self.enable_graph_learner else y_hat
