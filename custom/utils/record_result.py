@@ -4,6 +4,7 @@ from custom_datetime import str2date
 
 pattern_subdir = re.compile(r"^(\d+)_(\d+)_w(\d+)_(.*)_(\d+)$")
 countries = ["England", "France", "Italy", "Spain"]
+pattern_subdir = re.compile(r"^(\d+)_(\d+)_w(\d+)_(.*)_(\d+)$")
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -24,6 +25,7 @@ def extract_results(args):
         exps = os.listdir(os.path.join(dir, dataset))
         exp_result = []
         for exp in exps:
+            xdays, ydays, window, model, timestr = pattern_subdir.search(exp).groups()
             xdays, ydays, window, model, timestr = pattern_subdir.search(exp).groups()
 
             log_path = os.path.join(dir, dataset, exp,  "log.txt")
@@ -63,6 +65,7 @@ def process_log_segment(lines):
     pattern_country = re.compile(r"训练完毕，开始评估: (\w+)")
     pattern_loss = re.compile(r"\[val\(MAE/RMSE\)\] (\d+\.\d+)/(\d+\.\d+), \[test\(MAE/RMSE\)\] (\d+\.\d+)/(\d+\.\d+)")
     pattern_err = re.compile(r"\[err_val\] (\d+\.\d+), \[err_test\] (\d+\.\d+)")
+    pattern_err = re.compile(r"\[err_val\] (\d+\.\d+), \[err_test\] (\d+\.\d+)")
     pattern_latest_epoch = re.compile(r"\[最新 \(epoch (\d+)\)\]")
     pattern_min_val_epoch = re.compile(r"\[最小 val loss \(epoch (\d+)\)\]")
 
@@ -86,6 +89,8 @@ def process_log_segment(lines):
         elif i == 4 or i == 8:
             err_val, err_test = list(map(float, match.groups()))
             res["latest" if i == 4 else "minvalloss"].update(dict(err_val=err_val, err_test=err_test))
+            err_val, err_test = list(map(float, match.groups()))
+            res["latest" if i == 4 else "minvalloss"].update(dict(err_val=err_val, err_test=err_test))
     # print(lines)
     return {country: res}
 
@@ -93,6 +98,13 @@ def print_err(args, results, _model):
     s = {'minvalloss': {}, 'latest': {}}
 
     for result in results:
+        x, y, window, model, timestr = result['xdays'], result['ydays'], result['window'], result['model'], result['timestr']
+        if model != _model: continue
+        r = result['res']
+
+        if args.subdir:
+            if not args.subdir.split("/")[-1] == f"{x}_{y}_w{window}_{model}_{timestr}": continue
+
         x, y, window, model, timestr = result['xdays'], result['ydays'], result['window'], result['model'], result['timestr']
         if model != _model: continue
         r = result['res']
@@ -117,10 +129,27 @@ def print_err(args, results, _model):
                 )
                 continue
 
+            if not country in r:
+                s['minvalloss'][key][country] = dict(
+                    err_val="-",
+                    err_test="-",
+                    epoch="-"
+                )
+                s['latest'][key][country] = dict(
+                    err_val="-",
+                    err_test="-",
+                    epoch="-"
+                )
+                continue
+
             epoch_minvalloss = r[country]['minvalloss']['epoch']
             err_val_minvalloss = r[country]['minvalloss']['err_val']
             err_test_minvalloss = r[country]['minvalloss']['err_test']
+            err_val_minvalloss = r[country]['minvalloss']['err_val']
+            err_test_minvalloss = r[country]['minvalloss']['err_test']
             epoch_latest = r[country]['latest']['epoch']
+            err_val_latest = r[country]['latest']['err_val']
+            err_test_latest = r[country]['latest']['err_test']
             err_val_latest = r[country]['latest']['err_val']
             err_test_latest = r[country]['latest']['err_test']
 
