@@ -1,0 +1,30 @@
+[2024-09-16 23:36:39,167      exp_logger INFO] 使用 GPU 7 进行计算
+[2024-09-16 23:36:39,170      exp_logger INFO] 运行结果将保存至 results/results_test/tmp/dataforgood/14_3_w7_dynst_20240916233638
+[2024-09-16 23:36:39,497      exp_logger INFO] 已从数据文件读取 dataforgood 数据集
+[2024-09-16 23:36:39,497      exp_logger INFO] 开始评估 Italy
+[2024-09-16 23:36:41,923      exp_logger INFO] # 8612 params
+[2024-09-16 23:41:21,656 exp_file_logger INFO] [Epoch] 0/500, [lr] 0.001, [adj_lambda] 1.0, [Loss(train/val/test)] 1646.807/1136.529/3565.067(279.708s) (Best model saved)
+[2024-09-16 23:41:21,659      exp_logger INFO] [val(MAE/RMSE)] 10.449/30.125, [test(MAE/RMSE)] 22.460/59.708
+[2024-09-16 23:41:21,659      exp_logger INFO] [err] 4.695
+[2024-09-16 23:41:23,099 exp_file_logger INFO] [Epoch] 1/500, [lr] 0.001, [adj_lambda] 0.9900498337491681, [Loss(train/val/test)] 1646.182/1135.370/3562.569(0.129s) (Best model saved)
+[2024-09-16 23:41:23,101      exp_logger INFO] [val(MAE/RMSE)] 10.441/30.106, [test(MAE/RMSE)] 22.446/59.687
+[2024-09-16 23:41:23,102      exp_logger INFO] [err] 4.692
+[2024-09-16 23:41:23,415 exp_file_logger INFO] [Epoch] 2/500, [lr] 0.001, [adj_lambda] 0.9801986733067554, [Loss(train/val/test)] 1645.560/1134.434/3559.048(0.115s) (Best model saved)
+[2024-09-16 23:41:23,416      exp_logger INFO] [val(MAE/RMSE)] 10.435/30.091, [test(MAE/RMSE)] 22.432/59.658
+[2024-09-16 23:41:23,417      exp_logger INFO] [err] 4.689
+[2024-09-16 23:41:23,451      exp_logger INFO] 已手动停止训练
+[2024-09-16 23:41:23,454      exp_logger INFO] 
+[2024-09-16 23:41:23,454      exp_logger INFO] 训练完毕，开始评估: Italy
+[2024-09-16 23:41:23,454      exp_logger INFO] --------------------
+[2024-09-16 23:41:23,454      exp_logger INFO] [最新]
+[2024-09-16 23:41:23,495      exp_logger INFO] [val(MAE/RMSE)] 10.435/30.091, [test(MAE/RMSE)] 22.432/59.658
+[2024-09-16 23:41:23,516      exp_logger INFO] [err] 12.277
+[2024-09-16 23:41:23,516      exp_logger INFO] --------------------
+[2024-09-16 23:41:23,516      exp_logger INFO] [最小 val loss (epoch 2)]
+[2024-09-16 23:41:23,574      exp_logger INFO] [val(MAE/RMSE)] 10.435/30.091, [test(MAE/RMSE)] 22.432/59.658
+[2024-09-16 23:41:23,595      exp_logger INFO] [err] 19.053
+[2024-09-16 23:41:23,605      exp_logger INFO] 开始评估 Spain
+[2024-09-16 23:41:23,621      exp_logger INFO] # 8612 params
+[2024-09-16 23:41:23,808 exp_file_logger INFO] [Epoch] 0/500, [lr] 0.001, [adj_lambda] 1.0, [Loss(train/val/test)] 69533.430/64369.180/55895.602(0.165s) (Best model saved)
+[2024-09-16 23:41:23,810      exp_logger INFO] [val(MAE/RMSE)] 88.724/250.220, [test(MAE/RMSE)] 103.479/236.422
+[2024-09-16 23:41:23,810      exp_logger INFO] [err] 57.309

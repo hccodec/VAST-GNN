@@ -1,0 +1,5 @@
+[2024-09-18 09:42:55,622      exp_logger INFO] 使用 GPU 7 进行计算
+[2024-09-18 09:42:55,624      exp_logger INFO] 运行结果将保存至 results/results_test/tmp/dataforgood/21_7_w21_dynst_20240918094255
+[2024-09-18 09:42:56,169      exp_logger INFO] 已从数据文件读取 dataforgood 数据集
+[2024-09-18 09:42:56,169      exp_logger INFO] 开始训练 Italy
+[2024-09-18 09:42:58,727      exp_logger INFO] # 8612 params

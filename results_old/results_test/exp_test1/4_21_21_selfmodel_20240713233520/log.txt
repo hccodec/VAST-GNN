@@ -1,0 +1,320 @@
+[2024-07-13 23:35:22,073      exp_logger INFO] 使用 GPU 2 进行计算
+[2024-07-13 23:35:22,074      exp_logger INFO] 运行结果将保存至 results/results_test/exp_test1/4_21_21_selfmodel_20240713233520
+[2024-07-13 23:35:22,074      exp_logger INFO] 尝试从 data_preprocessed/dataset_4_21_21.bin 中读取数据文件
+[2024-07-13 23:35:22,153      exp_logger INFO] 已从 data_preprocessed/dataset_4_21_21.bin 中读取数据文件
+[2024-07-13 23:35:22,165      exp_logger INFO] 数据准备完成，开始训练
+[2024-07-13 23:35:57,913 exp_file_logger INFO] [Epoch] 0/1000, [lr] 0.0001, [Loss(train/val/test)] 567.401/408.466/527.272 (Best model saved)
+[2024-07-13 23:35:57,946      exp_logger INFO] [val(MAE/RMSE)] 14.967/19.881, [test(MAE/RMSE)] 17.433/22.795
+[2024-07-13 23:36:41,134 exp_file_logger INFO] [Epoch] 1/1000, [lr] 0.0001, [Loss(train/val/test)] 553.918/396.084/512.152 (Best model saved)
+[2024-07-13 23:36:41,168      exp_logger INFO] [val(MAE/RMSE)] 14.694/19.561, [test(MAE/RMSE)] 17.125/22.459
+[2024-07-13 23:37:26,650 exp_file_logger INFO] [Epoch] 2/1000, [lr] 0.0001, [Loss(train/val/test)] 541.170/384.340/497.724 (Best model saved)
+[2024-07-13 23:37:26,681      exp_logger INFO] [val(MAE/RMSE)] 14.435/19.253, [test(MAE/RMSE)] 16.830/22.133
+[2024-07-13 23:38:16,547 exp_file_logger INFO] [Epoch] 3/1000, [lr] 0.0001, [Loss(train/val/test)] 529.010/373.131/483.858 (Best model saved)
+[2024-07-13 23:38:16,585      exp_logger INFO] [val(MAE/RMSE)] 14.188/18.955, [test(MAE/RMSE)] 16.544/21.816
+[2024-07-13 23:39:05,552 exp_file_logger INFO] [Epoch] 4/1000, [lr] 0.0001, [Loss(train/val/test)] 517.347/362.377/470.463 (Best model saved)
+[2024-07-13 23:39:05,585      exp_logger INFO] [val(MAE/RMSE)] 13.953/18.664, [test(MAE/RMSE)] 16.267/21.505
+[2024-07-13 23:40:28,572 exp_file_logger INFO] [Epoch] 5/1000, [lr] 0.0001, [Loss(train/val/test)] 506.113/352.016/457.473 (Best model saved)
+[2024-07-13 23:40:28,698      exp_logger INFO] [val(MAE/RMSE)] 13.727/18.380, [test(MAE/RMSE)] 15.997/21.199
+[2024-07-13 23:44:26,807 exp_file_logger INFO] [Epoch] 6/1000, [lr] 0.0001, [Loss(train/val/test)] 495.253/341.997/444.834 (Best model saved)
+[2024-07-13 23:44:26,946      exp_logger INFO] [val(MAE/RMSE)] 13.511/18.101, [test(MAE/RMSE)] 15.734/20.897
+[2024-07-13 23:49:01,267 exp_file_logger INFO] [Epoch] 7/1000, [lr] 0.0001, [Loss(train/val/test)] 484.723/332.284/432.495 (Best model saved)
+[2024-07-13 23:49:01,536      exp_logger INFO] [val(MAE/RMSE)] 13.304/17.826, [test(MAE/RMSE)] 15.477/20.598
+[2024-07-13 23:52:01,630 exp_file_logger INFO] [Epoch] 8/1000, [lr] 0.0001, [Loss(train/val/test)] 474.483/322.847/420.410 (Best model saved)
+[2024-07-13 23:52:01,762      exp_logger INFO] [val(MAE/RMSE)] 13.104/17.556, [test(MAE/RMSE)] 15.225/20.301
+[2024-07-13 23:54:36,107 exp_file_logger INFO] [Epoch] 9/1000, [lr] 0.0001, [Loss(train/val/test)] 464.504/313.667/408.550 (Best model saved)
+[2024-07-13 23:54:36,223      exp_logger INFO] [val(MAE/RMSE)] 12.911/17.288, [test(MAE/RMSE)] 14.979/20.006
+[2024-07-13 23:57:02,181 exp_file_logger INFO] [Epoch] 10/1000, [lr] 0.0001, [Loss(train/val/test)] 454.763/304.723/396.898 (Best model saved)
+[2024-07-13 23:57:02,289      exp_logger INFO] [val(MAE/RMSE)] 12.724/17.024, [test(MAE/RMSE)] 14.739/19.711
+[2024-07-13 23:58:27,730 exp_file_logger INFO] [Epoch] 11/1000, [lr] 0.0001, [Loss(train/val/test)] 445.240/295.998/385.430 (Best model saved)
+[2024-07-13 23:58:27,801      exp_logger INFO] [val(MAE/RMSE)] 12.543/16.763, [test(MAE/RMSE)] 14.504/19.417
+[2024-07-13 23:59:23,911 exp_file_logger INFO] [Epoch] 12/1000, [lr] 0.0001, [Loss(train/val/test)] 435.916/287.477/374.126 (Best model saved)
+[2024-07-13 23:59:23,951      exp_logger INFO] [val(MAE/RMSE)] 12.367/16.504, [test(MAE/RMSE)] 14.273/19.123
+[2024-07-14 00:00:40,630 exp_file_logger INFO] [Epoch] 13/1000, [lr] 0.0001, [Loss(train/val/test)] 426.774/279.146/362.966 (Best model saved)
+[2024-07-14 00:00:40,688      exp_logger INFO] [val(MAE/RMSE)] 12.195/16.247, [test(MAE/RMSE)] 14.046/18.828
+[2024-07-14 00:01:58,646 exp_file_logger INFO] [Epoch] 14/1000, [lr] 0.0001, [Loss(train/val/test)] 417.799/270.994/351.933 (Best model saved)
+[2024-07-14 00:01:58,711      exp_logger INFO] [val(MAE/RMSE)] 12.028/15.992, [test(MAE/RMSE)] 13.822/18.532
+[2024-07-14 00:03:17,543 exp_file_logger INFO] [Epoch] 15/1000, [lr] 0.0001, [Loss(train/val/test)] 408.975/263.010/341.015 (Best model saved)
+[2024-07-14 00:03:17,589      exp_logger INFO] [val(MAE/RMSE)] 11.864/15.739, [test(MAE/RMSE)] 13.599/18.234
+[2024-07-14 00:04:35,796 exp_file_logger INFO] [Epoch] 16/1000, [lr] 0.0001, [Loss(train/val/test)] 400.294/255.189/330.201 (Best model saved)
+[2024-07-14 00:04:35,855      exp_logger INFO] [val(MAE/RMSE)] 11.703/15.487, [test(MAE/RMSE)] 13.378/17.935
+[2024-07-14 00:05:47,951 exp_file_logger INFO] [Epoch] 17/1000, [lr] 0.0001, [Loss(train/val/test)] 391.748/247.528/319.487 (Best model saved)
+[2024-07-14 00:05:47,984      exp_logger INFO] [val(MAE/RMSE)] 11.545/15.237, [test(MAE/RMSE)] 13.157/17.634
+[2024-07-14 00:06:35,842 exp_file_logger INFO] [Epoch] 18/1000, [lr] 0.0001, [Loss(train/val/test)] 383.335/240.029/308.878 (Best model saved)
+[2024-07-14 00:06:35,884      exp_logger INFO] [val(MAE/RMSE)] 11.388/14.989, [test(MAE/RMSE)] 12.938/17.331
+[2024-07-14 00:07:24,748 exp_file_logger INFO] [Epoch] 19/1000, [lr] 0.0001, [Loss(train/val/test)] 375.057/232.699/298.382 (Best model saved)
+[2024-07-14 00:07:24,786      exp_logger INFO] [val(MAE/RMSE)] 11.231/14.742, [test(MAE/RMSE)] 12.720/17.025
+[2024-07-14 00:08:12,850 exp_file_logger INFO] [Epoch] 20/1000, [lr] 0.0001, [Loss(train/val/test)] 366.922/225.545/288.015 (Best model saved)
+[2024-07-14 00:08:12,888      exp_logger INFO] [val(MAE/RMSE)] 11.075/14.498, [test(MAE/RMSE)] 12.505/16.718
+[2024-07-14 00:09:01,299 exp_file_logger INFO] [Epoch] 21/1000, [lr] 0.0001, [Loss(train/val/test)] 358.942/218.580/277.801 (Best model saved)
+[2024-07-14 00:09:01,332      exp_logger INFO] [val(MAE/RMSE)] 10.920/14.257, [test(MAE/RMSE)] 12.290/16.411
+[2024-07-14 00:09:49,699 exp_file_logger INFO] [Epoch] 22/1000, [lr] 0.0001, [Loss(train/val/test)] 351.132/211.818/267.767 (Best model saved)
+[2024-07-14 00:09:49,732      exp_logger INFO] [val(MAE/RMSE)] 10.767/14.019, [test(MAE/RMSE)] 12.078/16.103
+[2024-07-14 00:10:37,765 exp_file_logger INFO] [Epoch] 23/1000, [lr] 0.0001, [Loss(train/val/test)] 343.512/205.271/257.943 (Best model saved)
+[2024-07-14 00:10:37,800      exp_logger INFO] [val(MAE/RMSE)] 10.616/13.785, [test(MAE/RMSE)] 11.869/15.795
+[2024-07-14 00:11:25,314 exp_file_logger INFO] [Epoch] 24/1000, [lr] 0.0001, [Loss(train/val/test)] 336.102/198.956/248.364 (Best model saved)
+[2024-07-14 00:11:25,352      exp_logger INFO] [val(MAE/RMSE)] 10.467/13.557, [test(MAE/RMSE)] 11.662/15.490
+[2024-07-14 00:12:22,989 exp_file_logger INFO] [Epoch] 25/1000, [lr] 0.0001, [Loss(train/val/test)] 328.922/192.890/239.060 (Best model saved)
+[2024-07-14 00:12:23,048      exp_logger INFO] [val(MAE/RMSE)] 10.321/13.334, [test(MAE/RMSE)] 11.457/15.187
+[2024-07-14 00:13:44,598 exp_file_logger INFO] [Epoch] 26/1000, [lr] 0.0001, [Loss(train/val/test)] 321.996/187.088/230.064 (Best model saved)
+[2024-07-14 00:13:44,713      exp_logger INFO] [val(MAE/RMSE)] 10.178/13.118, [test(MAE/RMSE)] 11.254/14.889
+[2024-07-14 00:14:39,248 exp_file_logger INFO] [Epoch] 27/1000, [lr] 0.0001, [Loss(train/val/test)] 315.342/181.568/221.405 (Best model saved)
+[2024-07-14 00:14:39,283      exp_logger INFO] [val(MAE/RMSE)] 10.037/12.910, [test(MAE/RMSE)] 11.054/14.595
+[2024-07-14 00:15:26,199 exp_file_logger INFO] [Epoch] 28/1000, [lr] 0.0001, [Loss(train/val/test)] 308.980/176.349/213.111 (Best model saved)
+[2024-07-14 00:15:26,234      exp_logger INFO] [val(MAE/RMSE)] 9.898/12.710, [test(MAE/RMSE)] 10.857/14.309
+[2024-07-14 00:16:12,494 exp_file_logger INFO] [Epoch] 29/1000, [lr] 0.0001, [Loss(train/val/test)] 302.930/171.447/205.207 (Best model saved)
+[2024-07-14 00:16:12,527      exp_logger INFO] [val(MAE/RMSE)] 9.760/12.521, [test(MAE/RMSE)] 10.666/14.031
+[2024-07-14 00:16:58,478 exp_file_logger INFO] [Epoch] 30/1000, [lr] 0.0001, [Loss(train/val/test)] 297.210/166.879/197.716 (Best model saved)
+[2024-07-14 00:16:58,512      exp_logger INFO] [val(MAE/RMSE)] 9.622/12.343, [test(MAE/RMSE)] 10.480/13.762
+[2024-07-14 00:17:46,089 exp_file_logger INFO] [Epoch] 31/1000, [lr] 0.0001, [Loss(train/val/test)] 291.834/162.660/190.660 (Best model saved)
+[2024-07-14 00:17:46,137      exp_logger INFO] [val(MAE/RMSE)] 9.486/12.176, [test(MAE/RMSE)] 10.300/13.504
+[2024-07-14 00:18:33,878 exp_file_logger INFO] [Epoch] 32/1000, [lr] 0.0001, [Loss(train/val/test)] 286.817/158.800/184.056 (Best model saved)
+[2024-07-14 00:18:33,909      exp_logger INFO] [val(MAE/RMSE)] 9.355/12.023, [test(MAE/RMSE)] 10.127/13.258
+[2024-07-14 00:19:27,473 exp_file_logger INFO] [Epoch] 33/1000, [lr] 0.0001, [Loss(train/val/test)] 282.169/155.309/177.918 (Best model saved)
+[2024-07-14 00:19:27,527      exp_logger INFO] [val(MAE/RMSE)] 9.232/11.884, [test(MAE/RMSE)] 9.960/13.026
+[2024-07-14 00:24:20,594 exp_file_logger INFO] [Epoch] 34/1000, [lr] 0.0001, [Loss(train/val/test)] 277.898/152.189/172.255 (Best model saved)
+[2024-07-14 00:24:20,947      exp_logger INFO] [val(MAE/RMSE)] 9.118/11.759, [test(MAE/RMSE)] 9.801/12.808
+[2024-07-14 00:28:36,264 exp_file_logger INFO] [Epoch] 35/1000, [lr] 0.0001, [Loss(train/val/test)] 274.005/149.438/167.071 (Best model saved)
+[2024-07-14 00:28:36,548      exp_logger INFO] [val(MAE/RMSE)] 9.020/11.650, [test(MAE/RMSE)] 9.649/12.606
+[2024-07-14 00:31:51,892 exp_file_logger INFO] [Epoch] 36/1000, [lr] 0.0001, [Loss(train/val/test)] 270.488/147.046/162.363 (Best model saved)
+[2024-07-14 00:31:52,003      exp_logger INFO] [val(MAE/RMSE)] 8.936/11.555, [test(MAE/RMSE)] 9.507/12.419
+[2024-07-14 00:34:27,292 exp_file_logger INFO] [Epoch] 37/1000, [lr] 0.0001, [Loss(train/val/test)] 267.338/144.999/158.124 (Best model saved)
+[2024-07-14 00:34:27,430      exp_logger INFO] [val(MAE/RMSE)] 8.869/11.474, [test(MAE/RMSE)] 9.375/12.249
+[2024-07-14 00:36:32,849 exp_file_logger INFO] [Epoch] 38/1000, [lr] 0.0001, [Loss(train/val/test)] 264.543/143.275/154.338 (Best model saved)
+[2024-07-14 00:36:32,964      exp_logger INFO] [val(MAE/RMSE)] 8.820/11.407, [test(MAE/RMSE)] 9.254/12.096
+[2024-07-14 00:37:55,616 exp_file_logger INFO] [Epoch] 39/1000, [lr] 0.0001, [Loss(train/val/test)] 262.083/141.849/150.985 (Best model saved)
+[2024-07-14 00:37:55,678      exp_logger INFO] [val(MAE/RMSE)] 8.786/11.352, [test(MAE/RMSE)] 9.143/11.959
+[2024-07-14 00:39:01,697 exp_file_logger INFO] [Epoch] 40/1000, [lr] 0.0001, [Loss(train/val/test)] 259.936/140.691/148.039 (Best model saved)
+[2024-07-14 00:39:01,731      exp_logger INFO] [val(MAE/RMSE)] 8.766/11.310, [test(MAE/RMSE)] 9.043/11.838
+[2024-07-14 00:39:48,687 exp_file_logger INFO] [Epoch] 41/1000, [lr] 0.0001, [Loss(train/val/test)] 258.075/139.771/145.469 (Best model saved)
+[2024-07-14 00:39:48,721      exp_logger INFO] [val(MAE/RMSE)] 8.756/11.277, [test(MAE/RMSE)] 8.954/11.731
+[2024-07-14 00:40:35,541 exp_file_logger INFO] [Epoch] 42/1000, [lr] 0.0001, [Loss(train/val/test)] 256.473/139.057/143.244 (Best model saved)
+[2024-07-14 00:40:35,573      exp_logger INFO] [val(MAE/RMSE)] 8.756/11.253, [test(MAE/RMSE)] 8.876/11.638
+[2024-07-14 00:41:23,332 exp_file_logger INFO] [Epoch] 43/1000, [lr] 0.0001, [Loss(train/val/test)] 255.100/138.516/141.329 (Best model saved)
+[2024-07-14 00:41:23,363      exp_logger INFO] [val(MAE/RMSE)] 8.760/11.236, [test(MAE/RMSE)] 8.808/11.558
+[2024-07-14 00:42:09,858 exp_file_logger INFO] [Epoch] 44/1000, [lr] 0.0001, [Loss(train/val/test)] 253.928/138.119/139.689 (Best model saved)
+[2024-07-14 00:42:09,892      exp_logger INFO] [val(MAE/RMSE)] 8.769/11.225, [test(MAE/RMSE)] 8.751/11.490
+[2024-07-14 00:42:57,522 exp_file_logger INFO] [Epoch] 45/1000, [lr] 0.0001, [Loss(train/val/test)] 252.927/137.836/138.291 (Best model saved)
+[2024-07-14 00:42:57,556      exp_logger INFO] [val(MAE/RMSE)] 8.782/11.218, [test(MAE/RMSE)] 8.703/11.431
+[2024-07-14 00:43:46,501 exp_file_logger INFO] [Epoch] 46/1000, [lr] 0.0001, [Loss(train/val/test)] 252.071/137.643/137.103 (Best model saved)
+[2024-07-14 00:43:46,535      exp_logger INFO] [val(MAE/RMSE)] 8.796/11.216, [test(MAE/RMSE)] 8.663/11.381
+[2024-07-14 00:44:35,519 exp_file_logger INFO] [Epoch] 47/1000, [lr] 0.0001, [Loss(train/val/test)] 251.337/137.515/136.094 (Best model saved)
+[2024-07-14 00:44:35,547      exp_logger INFO] [val(MAE/RMSE)] 8.809/11.215, [test(MAE/RMSE)] 8.630/11.339
+[2024-07-14 00:45:23,094 exp_file_logger INFO] [Epoch] 48/1000, [lr] 0.0001, [Loss(train/val/test)] 250.700/137.425/135.237 (Best model saved)
+[2024-07-14 00:45:23,127      exp_logger INFO] [val(MAE/RMSE)] 8.823/11.216, [test(MAE/RMSE)] 8.602/11.303
+[2024-07-14 00:46:09,547 exp_file_logger INFO] [Epoch] 49/1000, [lr] 0.0001, [Loss(train/val/test)] 250.137/137.345/134.506 (Best model saved)
+[2024-07-14 00:46:09,580      exp_logger INFO] [val(MAE/RMSE)] 8.834/11.216, [test(MAE/RMSE)] 8.578/11.272
+[2024-07-14 00:46:55,877 exp_file_logger INFO] [Epoch] 50/1000, [lr] 0.0001, [Loss(train/val/test)] 249.620/137.253/133.882 (Best model saved)
+[2024-07-14 00:46:55,910      exp_logger INFO] [val(MAE/RMSE)] 8.841/11.215, [test(MAE/RMSE)] 8.557/11.246
+[2024-07-14 00:47:42,150 exp_file_logger INFO] [Epoch] 51/1000, [lr] 0.0001, [Loss(train/val/test)] 249.142/137.182/133.362 (Best model saved)
+[2024-07-14 00:47:42,182      exp_logger INFO] [val(MAE/RMSE)] 8.849/11.215, [test(MAE/RMSE)] 8.539/11.224
+[2024-07-14 00:48:28,902 exp_file_logger INFO] [Epoch] 52/1000, [lr] 0.0001, [Loss(train/val/test)] 248.715/137.194/132.889
+[2024-07-14 00:48:28,936      exp_logger INFO] [val(MAE/RMSE)] 8.861/11.219, [test(MAE/RMSE)] 8.524/11.205
+[2024-07-14 00:49:16,180 exp_file_logger INFO] [Epoch] 53/1000, [lr] 0.0001, [Loss(train/val/test)] 248.328/137.237/132.463
+[2024-07-14 00:49:16,222      exp_logger INFO] [val(MAE/RMSE)] 8.873/11.224, [test(MAE/RMSE)] 8.510/11.187
+[2024-07-14 00:50:03,412 exp_file_logger INFO] [Epoch] 54/1000, [lr] 0.0001, [Loss(train/val/test)] 247.965/137.288/132.085
+[2024-07-14 00:50:03,447      exp_logger INFO] [val(MAE/RMSE)] 8.884/11.230, [test(MAE/RMSE)] 8.497/11.172
+[2024-07-14 00:50:51,160 exp_file_logger INFO] [Epoch] 55/1000, [lr] 0.0001, [Loss(train/val/test)] 247.618/137.343/131.746
+[2024-07-14 00:50:51,193      exp_logger INFO] [val(MAE/RMSE)] 8.895/11.235, [test(MAE/RMSE)] 8.486/11.158
+[2024-07-14 00:51:37,742 exp_file_logger INFO] [Epoch] 56/1000, [lr] 0.0001, [Loss(train/val/test)] 247.279/137.401/131.437
+[2024-07-14 00:51:37,776      exp_logger INFO] [val(MAE/RMSE)] 8.906/11.240, [test(MAE/RMSE)] 8.475/11.145
+[2024-07-14 00:52:24,902 exp_file_logger INFO] [Epoch] 57/1000, [lr] 0.0001, [Loss(train/val/test)] 246.943/137.462/131.149
+[2024-07-14 00:52:25,084      exp_logger INFO] [val(MAE/RMSE)] 8.916/11.245, [test(MAE/RMSE)] 8.466/11.133
+[2024-07-14 00:53:12,777 exp_file_logger INFO] [Epoch] 58/1000, [lr] 0.0001, [Loss(train/val/test)] 246.606/137.526/130.877
+[2024-07-14 00:53:12,810      exp_logger INFO] [val(MAE/RMSE)] 8.927/11.251, [test(MAE/RMSE)] 8.457/11.122
+[2024-07-14 00:54:00,537 exp_file_logger INFO] [Epoch] 59/1000, [lr] 0.0001, [Loss(train/val/test)] 246.263/137.591/130.616
+[2024-07-14 00:54:00,571      exp_logger INFO] [val(MAE/RMSE)] 8.937/11.256, [test(MAE/RMSE)] 8.448/11.111
+[2024-07-14 00:54:48,510 exp_file_logger INFO] [Epoch] 60/1000, [lr] 0.0001, [Loss(train/val/test)] 245.911/137.659/130.361
+[2024-07-14 00:54:48,548      exp_logger INFO] [val(MAE/RMSE)] 8.947/11.261, [test(MAE/RMSE)] 8.440/11.101
+[2024-07-14 00:55:34,998 exp_file_logger INFO] [Epoch] 61/1000, [lr] 0.0001, [Loss(train/val/test)] 245.545/137.729/130.109
+[2024-07-14 00:55:35,032      exp_logger INFO] [val(MAE/RMSE)] 8.957/11.267, [test(MAE/RMSE)] 8.432/11.090
+[2024-07-14 00:56:21,632 exp_file_logger INFO] [Epoch] 62/1000, [lr] 0.0001, [Loss(train/val/test)] 245.163/137.805/129.856
+[2024-07-14 00:56:21,675      exp_logger INFO] [val(MAE/RMSE)] 8.968/11.273, [test(MAE/RMSE)] 8.423/11.080
+[2024-07-14 00:57:09,682 exp_file_logger INFO] [Epoch] 63/1000, [lr] 0.0001, [Loss(train/val/test)] 244.760/137.888/129.598
+[2024-07-14 00:57:09,715      exp_logger INFO] [val(MAE/RMSE)] 8.979/11.279, [test(MAE/RMSE)] 8.414/11.069
+[2024-07-14 00:57:56,736 exp_file_logger INFO] [Epoch] 64/1000, [lr] 0.0001, [Loss(train/val/test)] 244.334/137.979/129.334
+[2024-07-14 00:57:56,770      exp_logger INFO] [val(MAE/RMSE)] 8.991/11.285, [test(MAE/RMSE)] 8.405/11.058
+[2024-07-14 00:58:44,181 exp_file_logger INFO] [Epoch] 65/1000, [lr] 0.0001, [Loss(train/val/test)] 243.883/138.082/129.062
+[2024-07-14 00:58:44,215      exp_logger INFO] [val(MAE/RMSE)] 9.003/11.292, [test(MAE/RMSE)] 8.396/11.047
+[2024-07-14 00:59:31,769 exp_file_logger INFO] [Epoch] 66/1000, [lr] 0.0001, [Loss(train/val/test)] 243.405/138.199/128.780
+[2024-07-14 00:59:31,804      exp_logger INFO] [val(MAE/RMSE)] 9.017/11.300, [test(MAE/RMSE)] 8.386/11.035
+[2024-07-14 01:00:19,182 exp_file_logger INFO] [Epoch] 67/1000, [lr] 0.0001, [Loss(train/val/test)] 242.899/138.334/128.487
+[2024-07-14 01:00:19,219      exp_logger INFO] [val(MAE/RMSE)] 9.031/11.308, [test(MAE/RMSE)] 8.376/11.023
+[2024-07-14 01:01:06,635 exp_file_logger INFO] [Epoch] 68/1000, [lr] 0.0001, [Loss(train/val/test)] 242.363/138.491/128.183
+[2024-07-14 01:01:06,683      exp_logger INFO] [val(MAE/RMSE)] 9.047/11.318, [test(MAE/RMSE)] 8.366/11.011
+[2024-07-14 01:01:53,498 exp_file_logger INFO] [Epoch] 69/1000, [lr] 0.0001, [Loss(train/val/test)] 241.800/138.674/127.868
+[2024-07-14 01:01:53,533      exp_logger INFO] [val(MAE/RMSE)] 9.065/11.329, [test(MAE/RMSE)] 8.355/10.998
+[2024-07-14 01:02:39,781 exp_file_logger INFO] [Epoch] 70/1000, [lr] 0.0001, [Loss(train/val/test)] 241.210/138.889/127.541
+[2024-07-14 01:02:39,817      exp_logger INFO] [val(MAE/RMSE)] 9.084/11.342, [test(MAE/RMSE)] 8.344/10.984
+[2024-07-14 01:03:26,360 exp_file_logger INFO] [Epoch] 71/1000, [lr] 0.0001, [Loss(train/val/test)] 240.597/139.140/127.203
+[2024-07-14 01:03:26,394      exp_logger INFO] [val(MAE/RMSE)] 9.105/11.356, [test(MAE/RMSE)] 8.332/10.970
+[2024-07-14 01:04:12,399 exp_file_logger INFO] [Epoch] 72/1000, [lr] 0.0001, [Loss(train/val/test)] 239.963/139.432/126.856
+[2024-07-14 01:04:12,433      exp_logger INFO] [val(MAE/RMSE)] 9.129/11.372, [test(MAE/RMSE)] 8.321/10.956
+[2024-07-14 01:04:58,491 exp_file_logger INFO] [Epoch] 73/1000, [lr] 0.0001, [Loss(train/val/test)] 239.312/139.765/126.502
+[2024-07-14 01:04:58,525      exp_logger INFO] [val(MAE/RMSE)] 9.154/11.391, [test(MAE/RMSE)] 8.309/10.942
+[2024-07-14 01:05:46,323 exp_file_logger INFO] [Epoch] 74/1000, [lr] 0.0001, [Loss(train/val/test)] 238.647/140.142/126.143
+[2024-07-14 01:05:46,356      exp_logger INFO] [val(MAE/RMSE)] 9.182/11.411, [test(MAE/RMSE)] 8.296/10.927
+[2024-07-14 01:06:34,886 exp_file_logger INFO] [Epoch] 75/1000, [lr] 0.0001, [Loss(train/val/test)] 237.970/140.565/125.780
+[2024-07-14 01:06:34,926      exp_logger INFO] [val(MAE/RMSE)] 9.212/11.433, [test(MAE/RMSE)] 8.284/10.912
+[2024-07-14 01:07:24,140 exp_file_logger INFO] [Epoch] 76/1000, [lr] 0.0001, [Loss(train/val/test)] 237.285/141.032/125.415
+[2024-07-14 01:07:24,177      exp_logger INFO] [val(MAE/RMSE)] 9.243/11.457, [test(MAE/RMSE)] 8.271/10.897
+[2024-07-14 01:08:12,842 exp_file_logger INFO] [Epoch] 77/1000, [lr] 0.0001, [Loss(train/val/test)] 236.593/141.539/125.051
+[2024-07-14 01:08:12,876      exp_logger INFO] [val(MAE/RMSE)] 9.277/11.483, [test(MAE/RMSE)] 8.259/10.882
+[2024-07-14 01:09:00,965 exp_file_logger INFO] [Epoch] 78/1000, [lr] 0.0001, [Loss(train/val/test)] 235.896/142.084/124.691
+[2024-07-14 01:09:01,003      exp_logger INFO] [val(MAE/RMSE)] 9.312/11.511, [test(MAE/RMSE)] 8.247/10.867
+[2024-07-14 01:09:48,069 exp_file_logger INFO] [Epoch] 79/1000, [lr] 0.0001, [Loss(train/val/test)] 235.194/142.664/124.335
+[2024-07-14 01:09:48,102      exp_logger INFO] [val(MAE/RMSE)] 9.349/11.540, [test(MAE/RMSE)] 8.235/10.852
+[2024-07-14 01:10:36,311 exp_file_logger INFO] [Epoch] 80/1000, [lr] 0.0001, [Loss(train/val/test)] 234.488/143.277/123.984
+[2024-07-14 01:10:36,345      exp_logger INFO] [val(MAE/RMSE)] 9.386/11.570, [test(MAE/RMSE)] 8.223/10.838
+[2024-07-14 01:11:23,277 exp_file_logger INFO] [Epoch] 81/1000, [lr] 0.0001, [Loss(train/val/test)] 233.777/143.917/123.642
+[2024-07-14 01:11:23,311      exp_logger INFO] [val(MAE/RMSE)] 9.424/11.601, [test(MAE/RMSE)] 8.212/10.823
+[2024-07-14 01:12:11,188 exp_file_logger INFO] [Epoch] 82/1000, [lr] 0.0001, [Loss(train/val/test)] 233.063/144.581/123.309
+[2024-07-14 01:12:11,222      exp_logger INFO] [val(MAE/RMSE)] 9.463/11.633, [test(MAE/RMSE)] 8.201/10.809
+[2024-07-14 01:12:59,456 exp_file_logger INFO] [Epoch] 83/1000, [lr] 0.0001, [Loss(train/val/test)] 232.344/145.265/122.986
+[2024-07-14 01:12:59,496      exp_logger INFO] [val(MAE/RMSE)] 9.503/11.666, [test(MAE/RMSE)] 8.190/10.795
+[2024-07-14 01:13:47,734 exp_file_logger INFO] [Epoch] 84/1000, [lr] 0.0001, [Loss(train/val/test)] 231.620/145.965/122.675
+[2024-07-14 01:13:47,773      exp_logger INFO] [val(MAE/RMSE)] 9.543/11.698, [test(MAE/RMSE)] 8.179/10.781
+[2024-07-14 01:14:35,144 exp_file_logger INFO] [Epoch] 85/1000, [lr] 0.0001, [Loss(train/val/test)] 230.891/146.677/122.375
+[2024-07-14 01:14:35,177      exp_logger INFO] [val(MAE/RMSE)] 9.583/11.732, [test(MAE/RMSE)] 8.169/10.768
+[2024-07-14 01:15:22,683 exp_file_logger INFO] [Epoch] 86/1000, [lr] 0.0001, [Loss(train/val/test)] 230.157/147.403/122.088
+[2024-07-14 01:15:22,717      exp_logger INFO] [val(MAE/RMSE)] 9.623/11.765, [test(MAE/RMSE)] 8.159/10.756
+[2024-07-14 01:16:10,046 exp_file_logger INFO] [Epoch] 87/1000, [lr] 0.0001, [Loss(train/val/test)] 229.416/148.140/121.813
+[2024-07-14 01:16:10,081      exp_logger INFO] [val(MAE/RMSE)] 9.663/11.799, [test(MAE/RMSE)] 8.150/10.743
+[2024-07-14 01:16:56,974 exp_file_logger INFO] [Epoch] 88/1000, [lr] 0.0001, [Loss(train/val/test)] 228.669/148.887/121.552
+[2024-07-14 01:16:57,009      exp_logger INFO] [val(MAE/RMSE)] 9.703/11.832, [test(MAE/RMSE)] 8.141/10.732
+[2024-07-14 01:17:44,195 exp_file_logger INFO] [Epoch] 89/1000, [lr] 0.0001, [Loss(train/val/test)] 227.917/149.645/121.304
+[2024-07-14 01:17:44,229      exp_logger INFO] [val(MAE/RMSE)] 9.743/11.866, [test(MAE/RMSE)] 8.132/10.720
+[2024-07-14 01:18:30,509 exp_file_logger INFO] [Epoch] 90/1000, [lr] 0.0001, [Loss(train/val/test)] 227.157/150.413/121.069
+[2024-07-14 01:18:30,543      exp_logger INFO] [val(MAE/RMSE)] 9.783/11.900, [test(MAE/RMSE)] 8.124/10.710
+[2024-07-14 01:19:18,342 exp_file_logger INFO] [Epoch] 91/1000, [lr] 0.0001, [Loss(train/val/test)] 226.391/151.193/120.849
+[2024-07-14 01:19:18,380      exp_logger INFO] [val(MAE/RMSE)] 9.823/11.934, [test(MAE/RMSE)] 8.117/10.699
+[2024-07-14 01:20:04,580 exp_file_logger INFO] [Epoch] 92/1000, [lr] 0.0001, [Loss(train/val/test)] 225.619/151.984/120.643
+[2024-07-14 01:20:04,613      exp_logger INFO] [val(MAE/RMSE)] 9.863/11.968, [test(MAE/RMSE)] 8.110/10.690
+[2024-07-14 01:20:51,157 exp_file_logger INFO] [Epoch] 93/1000, [lr] 0.0001, [Loss(train/val/test)] 224.841/152.789/120.453
+[2024-07-14 01:20:51,198      exp_logger INFO] [val(MAE/RMSE)] 9.903/12.003, [test(MAE/RMSE)] 8.103/10.680
+[2024-07-14 01:21:38,276 exp_file_logger INFO] [Epoch] 94/1000, [lr] 0.0001, [Loss(train/val/test)] 224.056/153.607/120.278
+[2024-07-14 01:21:38,311      exp_logger INFO] [val(MAE/RMSE)] 9.944/12.038, [test(MAE/RMSE)] 8.097/10.672
+[2024-07-14 01:22:24,719 exp_file_logger INFO] [Epoch] 95/1000, [lr] 0.0001, [Loss(train/val/test)] 223.266/154.440/120.120
+[2024-07-14 01:22:24,754      exp_logger INFO] [val(MAE/RMSE)] 9.985/12.072, [test(MAE/RMSE)] 8.092/10.664
+[2024-07-14 01:23:12,697 exp_file_logger INFO] [Epoch] 96/1000, [lr] 0.0001, [Loss(train/val/test)] 222.470/155.287/119.979
+[2024-07-14 01:23:12,733      exp_logger INFO] [val(MAE/RMSE)] 10.026/12.108, [test(MAE/RMSE)] 8.086/10.657
+[2024-07-14 01:23:58,684 exp_file_logger INFO] [Epoch] 97/1000, [lr] 0.0001, [Loss(train/val/test)] 221.669/156.150/119.854
+[2024-07-14 01:23:58,720      exp_logger INFO] [val(MAE/RMSE)] 10.067/12.143, [test(MAE/RMSE)] 8.081/10.650
+[2024-07-14 01:24:45,488 exp_file_logger INFO] [Epoch] 98/1000, [lr] 0.0001, [Loss(train/val/test)] 220.863/157.030/119.749
+[2024-07-14 01:24:45,523      exp_logger INFO] [val(MAE/RMSE)] 10.109/12.179, [test(MAE/RMSE)] 8.077/10.644
+[2024-07-14 01:25:31,781 exp_file_logger INFO] [Epoch] 99/1000, [lr] 0.0001, [Loss(train/val/test)] 220.053/157.926/119.661
+[2024-07-14 01:25:31,815      exp_logger INFO] [val(MAE/RMSE)] 10.150/12.215, [test(MAE/RMSE)] 8.073/10.639
+[2024-07-14 01:26:19,189 exp_file_logger INFO] [Epoch] 100/1000, [lr] 0.0001, [Loss(train/val/test)] 219.240/158.843/119.595
+[2024-07-14 01:26:19,227      exp_logger INFO] [val(MAE/RMSE)] 10.192/12.251, [test(MAE/RMSE)] 8.070/10.635
+[2024-07-14 01:27:05,812 exp_file_logger INFO] [Epoch] 101/1000, [lr] 0.0001, [Loss(train/val/test)] 218.425/159.778/119.549
+[2024-07-14 01:27:05,846      exp_logger INFO] [val(MAE/RMSE)] 10.235/12.288, [test(MAE/RMSE)] 8.068/10.632
+[2024-07-14 01:27:54,361 exp_file_logger INFO] [Epoch] 102/1000, [lr] 0.0001, [Loss(train/val/test)] 217.607/160.734/119.525
+[2024-07-14 01:27:54,396      exp_logger INFO] [val(MAE/RMSE)] 10.278/12.326, [test(MAE/RMSE)] 8.066/10.629
+[2024-07-14 01:28:41,031 exp_file_logger INFO] [Epoch] 103/1000, [lr] 0.0001, [Loss(train/val/test)] 216.787/161.712/119.525
+[2024-07-14 01:28:41,066      exp_logger INFO] [val(MAE/RMSE)] 10.321/12.364, [test(MAE/RMSE)] 8.065/10.628
+[2024-07-14 01:29:28,905 exp_file_logger INFO] [Epoch] 104/1000, [lr] 0.0001, [Loss(train/val/test)] 215.967/162.714/119.550
+[2024-07-14 01:29:28,939      exp_logger INFO] [val(MAE/RMSE)] 10.365/12.402, [test(MAE/RMSE)] 8.065/10.627
+[2024-07-14 01:30:15,636 exp_file_logger INFO] [Epoch] 105/1000, [lr] 0.0001, [Loss(train/val/test)] 215.147/163.741/119.602
+[2024-07-14 01:30:15,669      exp_logger INFO] [val(MAE/RMSE)] 10.409/12.441, [test(MAE/RMSE)] 8.066/10.628
+[2024-07-14 01:31:02,102 exp_file_logger INFO] [Epoch] 106/1000, [lr] 0.0001, [Loss(train/val/test)] 214.327/164.794/119.681
+[2024-07-14 01:31:02,136      exp_logger INFO] [val(MAE/RMSE)] 10.453/12.480, [test(MAE/RMSE)] 8.069/10.630
+[2024-07-14 01:31:48,237 exp_file_logger INFO] [Epoch] 107/1000, [lr] 0.0001, [Loss(train/val/test)] 213.508/165.875/119.788
+[2024-07-14 01:31:48,270      exp_logger INFO] [val(MAE/RMSE)] 10.498/12.521, [test(MAE/RMSE)] 8.072/10.633
+[2024-07-14 01:32:34,496 exp_file_logger INFO] [Epoch] 108/1000, [lr] 0.0001, [Loss(train/val/test)] 212.691/166.983/119.923
+[2024-07-14 01:32:34,529      exp_logger INFO] [val(MAE/RMSE)] 10.544/12.561, [test(MAE/RMSE)] 8.076/10.637
+[2024-07-14 01:33:22,936 exp_file_logger INFO] [Epoch] 109/1000, [lr] 0.0001, [Loss(train/val/test)] 211.873/168.122/120.089
+[2024-07-14 01:33:22,976      exp_logger INFO] [val(MAE/RMSE)] 10.589/12.603, [test(MAE/RMSE)] 8.082/10.643
+[2024-07-14 01:34:09,547 exp_file_logger INFO] [Epoch] 110/1000, [lr] 0.0001, [Loss(train/val/test)] 211.053/169.299/120.279
+[2024-07-14 01:34:09,588      exp_logger INFO] [val(MAE/RMSE)] 10.635/12.645, [test(MAE/RMSE)] 8.088/10.650
+[2024-07-14 01:34:56,385 exp_file_logger INFO] [Epoch] 111/1000, [lr] 0.0001, [Loss(train/val/test)] 210.230/170.512/120.492
+[2024-07-14 01:34:56,418      exp_logger INFO] [val(MAE/RMSE)] 10.682/12.688, [test(MAE/RMSE)] 8.095/10.657
+[2024-07-14 01:35:42,732 exp_file_logger INFO] [Epoch] 112/1000, [lr] 0.0001, [Loss(train/val/test)] 209.404/171.759/120.725
+[2024-07-14 01:35:42,765      exp_logger INFO] [val(MAE/RMSE)] 10.728/12.732, [test(MAE/RMSE)] 8.102/10.666
+[2024-07-14 01:36:30,315 exp_file_logger INFO] [Epoch] 113/1000, [lr] 0.0001, [Loss(train/val/test)] 208.572/173.035/120.987
+[2024-07-14 01:36:30,347      exp_logger INFO] [val(MAE/RMSE)] 10.774/12.775, [test(MAE/RMSE)] 8.111/10.675
+[2024-07-14 01:37:17,027 exp_file_logger INFO] [Epoch] 114/1000, [lr] 0.0001, [Loss(train/val/test)] 207.740/174.339/121.281
+[2024-07-14 01:37:17,061      exp_logger INFO] [val(MAE/RMSE)] 10.821/12.820, [test(MAE/RMSE)] 8.121/10.686
+[2024-07-14 01:38:04,086 exp_file_logger INFO] [Epoch] 115/1000, [lr] 0.0001, [Loss(train/val/test)] 206.911/175.667/121.609
+[2024-07-14 01:38:04,124      exp_logger INFO] [val(MAE/RMSE)] 10.867/12.864, [test(MAE/RMSE)] 8.132/10.698
+[2024-07-14 01:38:51,160 exp_file_logger INFO] [Epoch] 116/1000, [lr] 0.0001, [Loss(train/val/test)] 206.090/177.011/121.976
+[2024-07-14 01:38:51,192      exp_logger INFO] [val(MAE/RMSE)] 10.913/12.908, [test(MAE/RMSE)] 8.145/10.712
+[2024-07-14 01:39:37,871 exp_file_logger INFO] [Epoch] 117/1000, [lr] 0.0001, [Loss(train/val/test)] 205.281/178.367/122.380
+[2024-07-14 01:39:37,906      exp_logger INFO] [val(MAE/RMSE)] 10.959/12.953, [test(MAE/RMSE)] 8.159/10.728
+[2024-07-14 01:40:24,590 exp_file_logger INFO] [Epoch] 118/1000, [lr] 0.0001, [Loss(train/val/test)] 204.490/179.737/122.820
+[2024-07-14 01:40:24,624      exp_logger INFO] [val(MAE/RMSE)] 11.005/12.997, [test(MAE/RMSE)] 8.175/10.745
+[2024-07-14 01:41:11,745 exp_file_logger INFO] [Epoch] 119/1000, [lr] 0.0001, [Loss(train/val/test)] 203.724/181.110/123.287
+[2024-07-14 01:41:11,782      exp_logger INFO] [val(MAE/RMSE)] 11.051/13.042, [test(MAE/RMSE)] 8.191/10.763
+[2024-07-14 01:41:58,486 exp_file_logger INFO] [Epoch] 120/1000, [lr] 0.0001, [Loss(train/val/test)] 202.982/182.481/123.776
+[2024-07-14 01:41:58,519      exp_logger INFO] [val(MAE/RMSE)] 11.096/13.086, [test(MAE/RMSE)] 8.209/10.782
+[2024-07-14 01:42:45,227 exp_file_logger INFO] [Epoch] 121/1000, [lr] 0.0001, [Loss(train/val/test)] 202.267/183.840/124.280
+[2024-07-14 01:42:45,260      exp_logger INFO] [val(MAE/RMSE)] 11.141/13.129, [test(MAE/RMSE)] 8.227/10.802
+[2024-07-14 01:43:31,565 exp_file_logger INFO] [Epoch] 122/1000, [lr] 0.0001, [Loss(train/val/test)] 201.578/185.182/124.796
+[2024-07-14 01:43:31,599      exp_logger INFO] [val(MAE/RMSE)] 11.185/13.172, [test(MAE/RMSE)] 8.245/10.822
+[2024-07-14 01:44:18,773 exp_file_logger INFO] [Epoch] 123/1000, [lr] 0.0001, [Loss(train/val/test)] 200.915/186.497/125.319
+[2024-07-14 01:44:18,817      exp_logger INFO] [val(MAE/RMSE)] 11.228/13.214, [test(MAE/RMSE)] 8.264/10.842
+[2024-07-14 01:45:06,516 exp_file_logger INFO] [Epoch] 124/1000, [lr] 0.0001, [Loss(train/val/test)] 200.275/187.784/125.848
+[2024-07-14 01:45:06,549      exp_logger INFO] [val(MAE/RMSE)] 11.269/13.255, [test(MAE/RMSE)] 8.283/10.863
+[2024-07-14 01:45:54,124 exp_file_logger INFO] [Epoch] 125/1000, [lr] 0.0001, [Loss(train/val/test)] 199.658/189.036/126.378
+[2024-07-14 01:45:54,157      exp_logger INFO] [val(MAE/RMSE)] 11.309/13.294, [test(MAE/RMSE)] 8.302/10.883
+[2024-07-14 01:46:41,020 exp_file_logger INFO] [Epoch] 126/1000, [lr] 0.0001, [Loss(train/val/test)] 199.064/190.252/126.907
+[2024-07-14 01:46:41,053      exp_logger INFO] [val(MAE/RMSE)] 11.348/13.332, [test(MAE/RMSE)] 8.322/10.904
+[2024-07-14 01:47:28,058 exp_file_logger INFO] [Epoch] 127/1000, [lr] 0.0001, [Loss(train/val/test)] 198.492/191.429/127.432
+[2024-07-14 01:47:28,096      exp_logger INFO] [val(MAE/RMSE)] 11.386/13.369, [test(MAE/RMSE)] 8.341/10.925
+[2024-07-14 01:48:14,000 exp_file_logger INFO] [Epoch] 128/1000, [lr] 0.0001, [Loss(train/val/test)] 197.941/192.565/127.951
+[2024-07-14 01:48:14,034      exp_logger INFO] [val(MAE/RMSE)] 11.422/13.403, [test(MAE/RMSE)] 8.360/10.945
+[2024-07-14 01:49:02,243 exp_file_logger INFO] [Epoch] 129/1000, [lr] 0.0001, [Loss(train/val/test)] 197.411/193.661/128.463
+[2024-07-14 01:49:02,275      exp_logger INFO] [val(MAE/RMSE)] 11.456/13.437, [test(MAE/RMSE)] 8.379/10.965
+[2024-07-14 01:49:49,434 exp_file_logger INFO] [Epoch] 130/1000, [lr] 0.0001, [Loss(train/val/test)] 196.900/194.715/128.966
+[2024-07-14 01:49:49,469      exp_logger INFO] [val(MAE/RMSE)] 11.489/13.469, [test(MAE/RMSE)] 8.398/10.984
+[2024-07-14 01:50:36,304 exp_file_logger INFO] [Epoch] 131/1000, [lr] 0.0001, [Loss(train/val/test)] 196.408/195.728/129.459
+[2024-07-14 01:50:36,338      exp_logger INFO] [val(MAE/RMSE)] 11.520/13.499, [test(MAE/RMSE)] 8.416/11.003
+[2024-07-14 01:51:24,242 exp_file_logger INFO] [Epoch] 132/1000, [lr] 0.0001, [Loss(train/val/test)] 195.933/196.700/129.940
+[2024-07-14 01:51:24,283      exp_logger INFO] [val(MAE/RMSE)] 11.550/13.528, [test(MAE/RMSE)] 8.434/11.022
+[2024-07-14 01:52:10,452 exp_file_logger INFO] [Epoch] 133/1000, [lr] 0.0001, [Loss(train/val/test)] 195.476/197.632/130.409
+[2024-07-14 01:52:10,493      exp_logger INFO] [val(MAE/RMSE)] 11.579/13.556, [test(MAE/RMSE)] 8.451/11.040
+[2024-07-14 01:52:56,625 exp_file_logger INFO] [Epoch] 134/1000, [lr] 0.0001, [Loss(train/val/test)] 195.035/198.525/130.865
+[2024-07-14 01:52:56,659      exp_logger INFO] [val(MAE/RMSE)] 11.606/13.582, [test(MAE/RMSE)] 8.468/11.058
+[2024-07-14 01:53:44,818 exp_file_logger INFO] [Epoch] 135/1000, [lr] 0.0001, [Loss(train/val/test)] 194.608/199.378/131.308
+[2024-07-14 01:53:44,852      exp_logger INFO] [val(MAE/RMSE)] 11.632/13.607, [test(MAE/RMSE)] 8.484/11.075
+[2024-07-14 01:54:31,947 exp_file_logger INFO] [Epoch] 136/1000, [lr] 0.0001, [Loss(train/val/test)] 194.196/200.194/131.739
+[2024-07-14 01:54:31,991      exp_logger INFO] [val(MAE/RMSE)] 11.657/13.630, [test(MAE/RMSE)] 8.499/11.091
+[2024-07-14 01:55:19,172 exp_file_logger INFO] [Epoch] 137/1000, [lr] 0.0001, [Loss(train/val/test)] 193.798/200.972/132.156
+[2024-07-14 01:55:19,207      exp_logger INFO] [val(MAE/RMSE)] 11.680/13.653, [test(MAE/RMSE)] 8.515/11.107
+[2024-07-14 01:56:07,714 exp_file_logger INFO] [Epoch] 138/1000, [lr] 0.0001, [Loss(train/val/test)] 193.414/201.716/132.560
+[2024-07-14 01:56:07,748      exp_logger INFO] [val(MAE/RMSE)] 11.702/13.674, [test(MAE/RMSE)] 8.529/11.122
+[2024-07-14 01:56:55,605 exp_file_logger INFO] [Epoch] 139/1000, [lr] 0.0001, [Loss(train/val/test)] 193.041/202.426/132.950
+[2024-07-14 01:56:55,639      exp_logger INFO] [val(MAE/RMSE)] 11.723/13.694, [test(MAE/RMSE)] 8.543/11.137
+[2024-07-14 01:57:43,255 exp_file_logger INFO] [Epoch] 140/1000, [lr] 0.0001, [Loss(train/val/test)] 192.681/203.104/133.328
+[2024-07-14 01:57:43,295      exp_logger INFO] [val(MAE/RMSE)] 11.743/13.713, [test(MAE/RMSE)] 8.557/11.151
+[2024-07-14 01:58:30,998 exp_file_logger INFO] [Epoch] 141/1000, [lr] 0.0001, [Loss(train/val/test)] 192.332/203.751/133.693
+[2024-07-14 01:58:31,031      exp_logger INFO] [val(MAE/RMSE)] 11.762/13.730, [test(MAE/RMSE)] 8.570/11.164
+[2024-07-14 01:59:18,394 exp_file_logger INFO] [Epoch] 142/1000, [lr] 0.0001, [Loss(train/val/test)] 191.993/204.369/134.047
+[2024-07-14 01:59:18,429      exp_logger INFO] [val(MAE/RMSE)] 11.780/13.747, [test(MAE/RMSE)] 8.583/11.177
+[2024-07-14 02:00:05,194 exp_file_logger INFO] [Epoch] 143/1000, [lr] 0.0001, [Loss(train/val/test)] 191.664/204.959/134.389
+[2024-07-14 02:00:05,227      exp_logger INFO] [val(MAE/RMSE)] 11.797/13.763, [test(MAE/RMSE)] 8.595/11.190
+[2024-07-14 02:00:51,985 exp_file_logger INFO] [Epoch] 144/1000, [lr] 0.0001, [Loss(train/val/test)] 191.345/205.524/134.720
+[2024-07-14 02:00:52,019      exp_logger INFO] [val(MAE/RMSE)] 11.814/13.778, [test(MAE/RMSE)] 8.607/11.202
+[2024-07-14 02:01:37,917 exp_file_logger INFO] [Epoch] 145/1000, [lr] 0.0001, [Loss(train/val/test)] 191.036/206.064/135.041
+[2024-07-14 02:01:37,951      exp_logger INFO] [val(MAE/RMSE)] 11.829/13.793, [test(MAE/RMSE)] 8.618/11.214
+[2024-07-14 02:02:25,120 exp_file_logger INFO] [Epoch] 146/1000, [lr] 0.0001, [Loss(train/val/test)] 190.734/206.580/135.352
+[2024-07-14 02:02:25,162      exp_logger INFO] [val(MAE/RMSE)] 11.844/13.806, [test(MAE/RMSE)] 8.629/11.225
+[2024-07-14 02:03:12,561 exp_file_logger INFO] [Epoch] 147/1000, [lr] 0.0001, [Loss(train/val/test)] 190.442/207.075/135.654
+[2024-07-14 02:03:12,594      exp_logger INFO] [val(MAE/RMSE)] 11.858/13.819, [test(MAE/RMSE)] 8.640/11.236
+[2024-07-14 02:04:00,238 exp_file_logger INFO] [Epoch] 148/1000, [lr] 0.0001, [Loss(train/val/test)] 190.157/207.550/135.947
+[2024-07-14 02:04:00,271      exp_logger INFO] [val(MAE/RMSE)] 11.871/13.832, [test(MAE/RMSE)] 8.651/11.246
+[2024-07-14 02:04:47,803 exp_file_logger INFO] [Epoch] 149/1000, [lr] 0.0001, [Loss(train/val/test)] 189.881/208.005/136.231
+[2024-07-14 02:04:47,837      exp_logger INFO] [val(MAE/RMSE)] 11.884/13.843, [test(MAE/RMSE)] 8.661/11.256
+[2024-07-14 02:05:35,285 exp_file_logger INFO] [Epoch] 150/1000, [lr] 0.0001, [Loss(train/val/test)] 189.612/208.442/136.507
+[2024-07-14 02:05:35,329      exp_logger INFO] [val(MAE/RMSE)] 11.896/13.854, [test(MAE/RMSE)] 8.671/11.266
+[2024-07-14 02:06:22,051 exp_file_logger INFO] [Epoch] 151/1000, [lr] 0.0001, [Loss(train/val/test)] 189.350/208.862/136.775
+[2024-07-14 02:06:22,084      exp_logger INFO] [val(MAE/RMSE)] 11.908/13.865, [test(MAE/RMSE)] 8.680/11.275
+[2024-07-14 02:06:22,087      exp_logger INFO] 训练完毕，开始评估: 
+[2024-07-14 02:06:22,087      exp_logger INFO] --------------------
+[2024-07-14 02:06:22,087      exp_logger INFO] 最新
+[2024-07-14 02:06:33,703      exp_logger INFO] [val(MAE/RMSE)] 11.908/13.865, [test(MAE/RMSE)] 8.680/11.275
+[2024-07-14 02:07:00,673      exp_logger INFO] Correlation(train/val/test): 0.8855093696815328, -0.046495865558976515, -0.15399095473843588
+[2024-07-14 02:07:00,673      exp_logger INFO] --------------------
+[2024-07-14 02:07:00,673      exp_logger INFO] Loss validate 最小 (epoch 51)
+[2024-07-14 02:07:12,768      exp_logger INFO] [val(MAE/RMSE)] 8.849/11.215, [test(MAE/RMSE)] 8.539/11.224
+[2024-07-14 02:07:40,068      exp_logger INFO] Correlation(train/val/test): 0.8688385996138179, 0.34745757293915913, -0.371867556042912
+[2024-07-14 02:07:40,068      exp_logger INFO] 实验（波次 4, 预测范围 21->21）结束
+[2024-07-14 02:07:40,068      exp_logger INFO] 实验结果已保存至 results/results_test/exp_test1/4_21_21_selfmodel_20240713233520

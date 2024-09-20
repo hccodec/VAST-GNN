@@ -1,8 +1,0 @@
-geopandas==0.13.2
-matplotlib==3.7.5
-pandas==2.0.3
-tensorboard==2.14.0
-tensorboardX==2.6.2.2
-pyyaml==6.0.1
-scipy==1.10.1
-torch_geometric==2.6.0

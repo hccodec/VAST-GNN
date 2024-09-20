@@ -1,0 +1,2 @@
+model_args
+{'lstm': {'hid': 128}, 'linear': {'hid': 64}, 'with_text': False, 'dropout': 0.5, 'shape': [(21, 23, 23), (21, 23, 8), (21, 23, 21), (21, 23, 21), ()]}

@@ -1,0 +1,134 @@
+[2024-09-20 09:38:44,514      exp_logger INFO] 使用 GPU 7 进行计算
+[2024-09-20 09:38:44,516      exp_logger INFO] 运行结果将保存至 results/results_test/tmp/dataforgood/21_7_w21_mpnn_lstm_20240920093844
+[2024-09-20 09:38:45,992      exp_logger INFO] 正在读取国家 Italy 的数据...
+[2024-09-20 09:38:54,072      exp_logger INFO] 正在读取国家 Spain 的数据...
+[2024-09-20 09:38:55,609      exp_logger INFO] 正在读取国家 England 的数据...
+[2024-09-20 09:39:15,965      exp_logger INFO] 正在读取国家 France 的数据...
+[2024-09-20 09:39:23,733      exp_logger INFO] 开始训练 Italy
+[2024-09-20 09:39:35,449      exp_logger INFO] # 125313 params
+[2024-09-20 09:39:36,460 exp_file_logger INFO] [Epoch] 0/500, [lr] 0.001, [adj_lambda] 1.0, [Loss(train/val/test)] 4130.373/3049.716/4757.671(0.996s) (Best model saved)
+[2024-09-20 09:39:36,463      exp_logger INFO] [val(MAE/RMSE)] 21.263/51.572, [test(MAE/RMSE)] 32.741000/68.976000
+[2024-09-20 09:39:36,463      exp_logger INFO] [err_val] 21.262868, [err_test] 32.741
+[2024-09-20 09:39:38,613 exp_file_logger INFO] [Epoch] 1/500, [lr] 0.001, [adj_lambda] 0.9900498337491681, [Loss(train/val/test)] 4103.128/3014.361/4578.738(0.309s) (Best model saved)
+[2024-09-20 09:39:38,619      exp_logger INFO] [val(MAE/RMSE)] 21.092/51.276, [test(MAE/RMSE)] 32.123000/67.666000
+[2024-09-20 09:39:38,619      exp_logger INFO] [err_val] 21.092002, [err_test] 32.123
+[2024-09-20 09:39:39,025 exp_file_logger INFO] [Epoch] 2/500, [lr] 0.001, [adj_lambda] 0.9801986733067554, [Loss(train/val/test)] 4061.625/2961.514/4388.576(0.249s) (Best model saved)
+[2024-09-20 09:39:39,027      exp_logger INFO] [val(MAE/RMSE)] 20.879/50.848, [test(MAE/RMSE)] 31.435000/66.246000
+[2024-09-20 09:39:39,028      exp_logger INFO] [err_val] 20.879096, [err_test] 31.435
+[2024-09-20 09:39:39,638 exp_file_logger INFO] [Epoch] 3/500, [lr] 0.001, [adj_lambda] 0.9704455335485083, [Loss(train/val/test)] 3961.505/2906.105/4202.664(0.437s) (Best model saved)
+[2024-09-20 09:39:39,640      exp_logger INFO] [val(MAE/RMSE)] 20.654/50.397, [test(MAE/RMSE)] 30.735000/64.828000
+[2024-09-20 09:39:39,640      exp_logger INFO] [err_val] 20.654419, [err_test] 30.735
+[2024-09-20 09:39:40,035 exp_file_logger INFO] [Epoch] 4/500, [lr] 0.001, [adj_lambda] 0.9607894391523233, [Loss(train/val/test)] 3913.999/2850.022/4021.742(0.250s) (Best model saved)
+[2024-09-20 09:39:40,037      exp_logger INFO] [val(MAE/RMSE)] 20.424/49.938, [test(MAE/RMSE)] 30.017000/63.417000
+[2024-09-20 09:39:40,038      exp_logger INFO] [err_val] 20.424487, [err_test] 30.017
+[2024-09-20 09:39:40,733 exp_file_logger INFO] [Epoch] 5/500, [lr] 0.001, [adj_lambda] 0.951229424500714, [Loss(train/val/test)] 3849.849/2793.896/3844.536(0.425s) (Best model saved)
+[2024-09-20 09:39:40,735      exp_logger INFO] [val(MAE/RMSE)] 20.224/49.474, [test(MAE/RMSE)] 29.298000/62.004000
+[2024-09-20 09:39:40,735      exp_logger INFO] [err_val] 20.223649, [err_test] 29.298
+[2024-09-20 09:39:41,345 exp_file_logger INFO] [Epoch] 6/500, [lr] 0.001, [adj_lambda] 0.9417645335842487, [Loss(train/val/test)] 3772.096/2738.562/3678.308(0.403s) (Best model saved)
+[2024-09-20 09:39:41,347      exp_logger INFO] [val(MAE/RMSE)] 20.018/49.011, [test(MAE/RMSE)] 28.714000/60.649000
+[2024-09-20 09:39:41,347      exp_logger INFO] [err_val] 20.017559, [err_test] 28.714
+[2024-09-20 09:39:42,011 exp_file_logger INFO] [Epoch] 7/500, [lr] 0.001, [adj_lambda] 0.9323938199059483, [Loss(train/val/test)] 3706.309/2684.370/3519.038(0.482s) (Best model saved)
+[2024-09-20 09:39:42,017      exp_logger INFO] [val(MAE/RMSE)] 19.810/48.553, [test(MAE/RMSE)] 28.176000/59.321000
+[2024-09-20 09:39:42,018      exp_logger INFO] [err_val] 19.810115, [err_test] 28.176
+[2024-09-20 09:39:42,521 exp_file_logger INFO] [Epoch] 8/500, [lr] 0.001, [adj_lambda] 0.9231163463866358, [Loss(train/val/test)] 3638.812/2629.969/3364.333(0.373s) (Best model saved)
+[2024-09-20 09:39:42,523      exp_logger INFO] [val(MAE/RMSE)] 19.601/48.089, [test(MAE/RMSE)] 27.620000/58.003000
+[2024-09-20 09:39:42,523      exp_logger INFO] [err_val] 19.601220, [err_test] 27.620
+[2024-09-20 09:39:42,931 exp_file_logger INFO] [Epoch] 9/500, [lr] 0.001, [adj_lambda] 0.9139311852712282, [Loss(train/val/test)] 3606.647/2575.577/3214.940(0.225s) (Best model saved)
+[2024-09-20 09:39:42,934      exp_logger INFO] [val(MAE/RMSE)] 19.384/47.619, [test(MAE/RMSE)] 27.040000/56.700000
+[2024-09-20 09:39:42,935      exp_logger INFO] [err_val] 19.384121, [err_test] 27.040
+[2024-09-20 09:39:43,511 exp_file_logger INFO] [Epoch] 10/500, [lr] 0.001, [adj_lambda] 0.9048374180359595, [Loss(train/val/test)] 3582.022/2521.147/3073.244(0.400s) (Best model saved)
+[2024-09-20 09:39:43,514      exp_logger INFO] [val(MAE/RMSE)] 19.157/47.145, [test(MAE/RMSE)] 26.442000/55.437000
+[2024-09-20 09:39:43,514      exp_logger INFO] [err_val] 19.157436, [err_test] 26.442
+[2024-09-20 09:39:43,976 exp_file_logger INFO] [Epoch] 11/500, [lr] 0.001, [adj_lambda] 0.8958341352965282, [Loss(train/val/test)] 3519.936/2467.069/2938.635(0.249s) (Best model saved)
+[2024-09-20 09:39:43,982      exp_logger INFO] [val(MAE/RMSE)] 18.925/46.668, [test(MAE/RMSE)] 25.824000/54.209000
+[2024-09-20 09:39:43,982      exp_logger INFO] [err_val] 18.925341, [err_test] 25.824
+[2024-09-20 09:39:44,237 exp_file_logger INFO] [Epoch] 12/500, [lr] 0.001, [adj_lambda] 0.8869204367171575, [Loss(train/val/test)] 3375.204/2412.927/2809.411(0.122s) (Best model saved)
+[2024-09-20 09:39:44,239      exp_logger INFO] [val(MAE/RMSE)] 18.706/46.183, [test(MAE/RMSE)] 25.175000/53.004000
+[2024-09-20 09:39:44,239      exp_logger INFO] [err_val] 18.706171, [err_test] 25.175
+[2024-09-20 09:39:44,806 exp_file_logger INFO] [Epoch] 13/500, [lr] 0.001, [adj_lambda] 0.8780954309205613, [Loss(train/val/test)] 3311.648/2359.203/2687.007(0.386s) (Best model saved)
+[2024-09-20 09:39:44,808      exp_logger INFO] [val(MAE/RMSE)] 18.481/45.695, [test(MAE/RMSE)] 24.494000/51.836000
+[2024-09-20 09:39:44,808      exp_logger INFO] [err_val] 18.481486, [err_test] 24.494
+[2024-09-20 09:39:45,387 exp_file_logger INFO] [Epoch] 14/500, [lr] 0.001, [adj_lambda] 0.8693582353988057, [Loss(train/val/test)] 3284.958/2306.248/2574.450(0.396s) (Best model saved)
+[2024-09-20 09:39:45,390      exp_logger INFO] [val(MAE/RMSE)] 18.256/45.207, [test(MAE/RMSE)] 23.797000/50.739000
+[2024-09-20 09:39:45,390      exp_logger INFO] [err_val] 18.255685, [err_test] 23.797
+[2024-09-20 09:39:45,886 exp_file_logger INFO] [Epoch] 15/500, [lr] 0.001, [adj_lambda] 0.8607079764250578, [Loss(train/val/test)] 3227.388/2254.511/2473.051(0.308s) (Best model saved)
+[2024-09-20 09:39:45,888      exp_logger INFO] [val(MAE/RMSE)] 18.043/44.722, [test(MAE/RMSE)] 23.133000/49.730000
+[2024-09-20 09:39:45,888      exp_logger INFO] [err_val] 18.043177, [err_test] 23.133
+[2024-09-20 09:39:46,532 exp_file_logger INFO] [Epoch] 16/500, [lr] 0.001, [adj_lambda] 0.8521437889662113, [Loss(train/val/test)] 3084.204/2203.878/2382.721(0.420s) (Best model saved)
+[2024-09-20 09:39:46,537      exp_logger INFO] [val(MAE/RMSE)] 17.824/44.241, [test(MAE/RMSE)] 22.452000/48.813000
+[2024-09-20 09:39:46,537      exp_logger INFO] [err_val] 17.824393, [err_test] 22.452
+[2024-09-20 09:39:47,079 exp_file_logger INFO] [Epoch] 17/500, [lr] 0.001, [adj_lambda] 0.8436648165963836, [Loss(train/val/test)] 3136.842/2155.088/2304.994(0.341s) (Best model saved)
+[2024-09-20 09:39:47,081      exp_logger INFO] [val(MAE/RMSE)] 17.600/43.769, [test(MAE/RMSE)] 21.840000/48.010000
+[2024-09-20 09:39:47,081      exp_logger INFO] [err_val] 17.599639, [err_test] 21.840
+[2024-09-20 09:40:28,725 exp_file_logger INFO] [Epoch] 18/500, [lr] 0.001, [adj_lambda] 0.835270211411272, [Loss(train/val/test)] 3149.913/2108.142/2239.767(41.484s) (Best model saved)
+[2024-09-20 09:40:28,732      exp_logger INFO] [val(MAE/RMSE)] 17.382/43.308, [test(MAE/RMSE)] 21.333000/47.326000
+[2024-09-20 09:40:28,732      exp_logger INFO] [err_val] 17.381917, [err_test] 21.333
+[2024-09-20 09:40:29,332 exp_file_logger INFO] [Epoch] 19/500, [lr] 0.001, [adj_lambda] 0.8269591339433623, [Loss(train/val/test)] 3076.127/2062.983/2186.556(0.461s) (Best model saved)
+[2024-09-20 09:40:29,348      exp_logger INFO] [val(MAE/RMSE)] 17.168/42.857, [test(MAE/RMSE)] 21.079000/46.761000
+[2024-09-20 09:40:29,348      exp_logger INFO] [err_val] 17.167766, [err_test] 21.079
+[2024-09-20 09:40:29,918 exp_file_logger INFO] [Epoch] 20/500, [lr] 0.001, [adj_lambda] 0.8187307530779818, [Loss(train/val/test)] 2928.424/2019.319/2144.733(0.407s) (Best model saved)
+[2024-09-20 09:40:29,920      exp_logger INFO] [val(MAE/RMSE)] 16.984/42.412, [test(MAE/RMSE)] 20.911000/46.311000
+[2024-09-20 09:40:29,920      exp_logger INFO] [err_val] 16.984084, [err_test] 20.911
+[2024-09-20 09:40:30,560 exp_file_logger INFO] [Epoch] 21/500, [lr] 0.001, [adj_lambda] 0.8105842459701871, [Loss(train/val/test)] 3019.537/1977.647/2114.232(0.452s) (Best model saved)
+[2024-09-20 09:40:30,563      exp_logger INFO] [val(MAE/RMSE)] 16.797/41.979, [test(MAE/RMSE)] 20.734000/45.981000
+[2024-09-20 09:40:30,564      exp_logger INFO] [err_val] 16.797278, [err_test] 20.734
+[2024-09-20 09:40:31,014 exp_file_logger INFO] [Epoch] 22/500, [lr] 0.001, [adj_lambda] 0.8025187979624785, [Loss(train/val/test)] 2859.255/1937.927/2093.444(0.266s) (Best model saved)
+[2024-09-20 09:40:31,019      exp_logger INFO] [val(MAE/RMSE)] 16.609/41.557, [test(MAE/RMSE)] 20.640000/45.754000
+[2024-09-20 09:40:31,019      exp_logger INFO] [err_val] 16.609104, [err_test] 20.640
+[2024-09-20 09:40:31,594 exp_file_logger INFO] [Epoch] 23/500, [lr] 0.001, [adj_lambda] 0.7945336025033339, [Loss(train/val/test)] 2988.023/1900.210/2081.580(0.411s) (Best model saved)
+[2024-09-20 09:40:31,598      exp_logger INFO] [val(MAE/RMSE)] 16.438/41.149, [test(MAE/RMSE)] 20.670000/45.624000
+[2024-09-20 09:40:31,598      exp_logger INFO] [err_val] 16.437528, [err_test] 20.670
+[2024-09-20 09:40:32,038 exp_file_logger INFO] [Epoch] 24/500, [lr] 0.001, [adj_lambda] 0.7866278610665534, [Loss(train/val/test)] 2788.164/1864.888/2078.490(0.282s) (Best model saved)
+[2024-09-20 09:40:32,040      exp_logger INFO] [val(MAE/RMSE)] 16.301/40.762, [test(MAE/RMSE)] 20.706000/45.590000
+[2024-09-20 09:40:32,040      exp_logger INFO] [err_val] 16.301129, [err_test] 20.706
+[2024-09-20 09:40:32,656 exp_file_logger INFO] [Epoch] 25/500, [lr] 0.001, [adj_lambda] 0.7788007830714049, [Loss(train/val/test)] 3009.181/1833.003/2080.135(0.431s) (Best model saved)
+[2024-09-20 09:40:32,660      exp_logger INFO] [val(MAE/RMSE)] 16.201/40.410, [test(MAE/RMSE)] 20.745000/45.608000
+[2024-09-20 09:40:32,660      exp_logger INFO] [err_val] 16.200510, [err_test] 20.745
+[2024-09-20 09:40:33,308 exp_file_logger INFO] [Epoch] 26/500, [lr] 0.001, [adj_lambda] 0.7710515858035663, [Loss(train/val/test)] 2804.994/1803.463/2086.325(0.449s) (Best model saved)
+[2024-09-20 09:40:33,311      exp_logger INFO] [val(MAE/RMSE)] 16.114/40.082, [test(MAE/RMSE)] 20.844000/45.676000
+[2024-09-20 09:40:33,311      exp_logger INFO] [err_val] 16.114044, [err_test] 20.844
+[2024-09-20 09:40:33,915 exp_file_logger INFO] [Epoch] 27/500, [lr] 0.001, [adj_lambda] 0.7633794943368531, [Loss(train/val/test)] 2666.848/1776.009/2096.841(0.457s) (Best model saved)
+[2024-09-20 09:40:33,917      exp_logger INFO] [val(MAE/RMSE)] 16.051/39.775, [test(MAE/RMSE)] 21.009000/45.791000
+[2024-09-20 09:40:33,917      exp_logger INFO] [err_val] 16.050549, [err_test] 21.009
+[2024-09-20 09:40:34,431 exp_file_logger INFO] [Epoch] 28/500, [lr] 0.001, [adj_lambda] 0.7557837414557255, [Loss(train/val/test)] 2838.416/1750.444/2108.362(0.303s) (Best model saved)
+[2024-09-20 09:40:34,435      exp_logger INFO] [val(MAE/RMSE)] 16.000/39.487, [test(MAE/RMSE)] 21.156000/45.917000
+[2024-09-20 09:40:34,436      exp_logger INFO] [err_val] 15.999614, [err_test] 21.156
+[2024-09-20 09:40:35,012 exp_file_logger INFO] [Epoch] 29/500, [lr] 0.001, [adj_lambda] 0.7482635675785653, [Loss(train/val/test)] 2632.987/1726.611/2118.836(0.406s) (Best model saved)
+[2024-09-20 09:40:35,014      exp_logger INFO] [val(MAE/RMSE)] 15.974/39.218, [test(MAE/RMSE)] 21.289000/46.031000
+[2024-09-20 09:40:35,015      exp_logger INFO] [err_val] 15.973792, [err_test] 21.289
+[2024-09-20 09:40:35,545 exp_file_logger INFO] [Epoch] 30/500, [lr] 0.001, [adj_lambda] 0.7408182206817179, [Loss(train/val/test)] 2610.166/1703.975/2128.177(0.358s) (Best model saved)
+[2024-09-20 09:40:35,547      exp_logger INFO] [val(MAE/RMSE)] 15.960/38.962, [test(MAE/RMSE)] 21.439000/46.132000
+[2024-09-20 09:40:35,547      exp_logger INFO] [err_val] 15.959790, [err_test] 21.439
+[2024-09-20 09:40:36,214 exp_file_logger INFO] [Epoch] 31/500, [lr] 0.001, [adj_lambda] 0.7334469562242893, [Loss(train/val/test)] 2719.826/1682.986/2134.719(0.460s) (Best model saved)
+[2024-09-20 09:40:36,216      exp_logger INFO] [val(MAE/RMSE)] 15.963/38.726, [test(MAE/RMSE)] 21.596000/46.203000
+[2024-09-20 09:40:36,217      exp_logger INFO] [err_val] 15.963044, [err_test] 21.596
+[2024-09-20 09:40:36,719 exp_file_logger INFO] [Epoch] 32/500, [lr] 0.001, [adj_lambda] 0.7261490370736909, [Loss(train/val/test)] 2632.903/1663.346/2139.154(0.296s) (Best model saved)
+[2024-09-20 09:40:36,722      exp_logger INFO] [val(MAE/RMSE)] 15.996/38.505, [test(MAE/RMSE)] 21.744000/46.251000
+[2024-09-20 09:40:36,722      exp_logger INFO] [err_val] 15.995897, [err_test] 21.744
+[2024-09-20 09:40:37,239 exp_file_logger INFO] [Epoch] 33/500, [lr] 0.001, [adj_lambda] 0.7189237334319262, [Loss(train/val/test)] 2900.077/1644.910/2134.750(0.326s) (Best model saved)
+[2024-09-20 09:40:37,268      exp_logger INFO] [val(MAE/RMSE)] 16.051/38.300, [test(MAE/RMSE)] 21.883000/46.203000
+[2024-09-20 09:40:37,268      exp_logger INFO] [err_val] 16.051172, [err_test] 21.883
+[2024-09-20 09:40:37,872 exp_file_logger INFO] [Epoch] 34/500, [lr] 0.001, [adj_lambda] 0.7117703227626098, [Loss(train/val/test)] 2764.320/1627.745/2122.194(0.400s) (Best model saved)
+[2024-09-20 09:40:37,876      exp_logger INFO] [val(MAE/RMSE)] 16.122/38.112, [test(MAE/RMSE)] 21.993000/46.067000
+[2024-09-20 09:40:37,876      exp_logger INFO] [err_val] 16.122067, [err_test] 21.993
+[2024-09-20 09:40:38,424 exp_file_logger INFO] [Epoch] 35/500, [lr] 0.001, [adj_lambda] 0.7046880897187134, [Loss(train/val/test)] 2430.934/1611.509/2108.785(0.424s) (Best model saved)
+[2024-09-20 09:40:38,426      exp_logger INFO] [val(MAE/RMSE)] 16.212/37.935, [test(MAE/RMSE)] 22.101000/45.922000
+[2024-09-20 09:40:38,426      exp_logger INFO] [err_val] 16.212427, [err_test] 22.101
+[2024-09-20 09:40:38,953 exp_file_logger INFO] [Epoch] 36/500, [lr] 0.001, [adj_lambda] 0.697676326071031, [Loss(train/val/test)] 2593.344/1596.237/2089.292(0.364s) (Best model saved)
+[2024-09-20 09:40:38,955      exp_logger INFO] [val(MAE/RMSE)] 16.297/37.770, [test(MAE/RMSE)] 22.163000/45.709000
+[2024-09-20 09:40:38,956      exp_logger INFO] [err_val] 16.297096, [err_test] 22.163
+[2024-09-20 09:40:39,479 exp_file_logger INFO] [Epoch] 37/500, [lr] 0.001, [adj_lambda] 0.6907343306373547, [Loss(train/val/test)] 2504.398/1581.357/2067.549(0.343s) (Best model saved)
+[2024-09-20 09:40:39,482      exp_logger INFO] [val(MAE/RMSE)] 16.374/37.609, [test(MAE/RMSE)] 22.204000/45.470000
+[2024-09-20 09:40:39,483      exp_logger INFO] [err_val] 16.373599, [err_test] 22.204
+[2024-09-20 09:40:40,068 exp_file_logger INFO] [Epoch] 38/500, [lr] 0.001, [adj_lambda] 0.6838614092123558, [Loss(train/val/test)] 2384.233/1566.787/2045.649(0.399s) (Best model saved)
+[2024-09-20 09:40:40,070      exp_logger INFO] [val(MAE/RMSE)] 16.436/37.452, [test(MAE/RMSE)] 22.239000/45.229000
+[2024-09-20 09:40:40,070      exp_logger INFO] [err_val] 16.436054, [err_test] 22.239
+[2024-09-20 09:40:40,623 exp_file_logger INFO] [Epoch] 39/500, [lr] 0.001, [adj_lambda] 0.6770568744981647, [Loss(train/val/test)] 2586.713/1552.555/2021.364(0.401s) (Best model saved)
+[2024-09-20 09:40:40,626      exp_logger INFO] [val(MAE/RMSE)] 16.491/37.298, [test(MAE/RMSE)] 22.254000/44.960000
+[2024-09-20 09:40:40,626      exp_logger INFO] [err_val] 16.491175, [err_test] 22.254
+[2024-09-20 09:40:41,138 exp_file_logger INFO] [Epoch] 40/500, [lr] 0.001, [adj_lambda] 0.6703200460356392, [Loss(train/val/test)] 2422.012/1538.740/1994.991(0.302s) (Best model saved)
+[2024-09-20 09:40:41,140      exp_logger INFO] [val(MAE/RMSE)] 16.532/37.149, [test(MAE/RMSE)] 22.246000/44.665000
+[2024-09-20 09:40:41,141      exp_logger INFO] [err_val] 16.531962, [err_test] 22.246
+[2024-09-20 09:40:41,831 exp_file_logger INFO] [Epoch] 41/500, [lr] 0.001, [adj_lambda] 0.6636502501363194, [Loss(train/val/test)] 2520.601/1525.272/1960.859(0.513s) (Best model saved)
+[2024-09-20 09:40:47,684      exp_logger INFO] [val(MAE/RMSE)] 16.558/37.003, [test(MAE/RMSE)] 22.183000/44.282000
+[2024-09-20 09:40:50,559      exp_logger INFO] [err_val] 16.557634, [err_test] 22.183

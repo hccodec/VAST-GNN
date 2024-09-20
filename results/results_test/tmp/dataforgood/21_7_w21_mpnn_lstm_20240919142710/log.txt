@@ -1,0 +1,33 @@
+[2024-09-19 14:27:10,303      exp_logger INFO] 使用 GPU 7 进行计算
+[2024-09-19 14:27:10,305      exp_logger INFO] 运行结果将保存至 results/results_test/tmp/dataforgood/21_7_w21_mpnn_lstm_20240919142710
+[2024-09-19 14:27:10,775      exp_logger INFO] 正在读取国家 Italy 的数据...
+[2024-09-19 14:27:18,568      exp_logger INFO] 正在读取国家 Spain 的数据...
+[2024-09-19 14:27:20,027      exp_logger INFO] 正在读取国家 England 的数据...
+[2024-09-19 14:27:34,234      exp_logger INFO] 正在读取国家 France 的数据...
+[2024-09-19 14:27:40,356      exp_logger INFO] 开始训练 Italy
+[2024-09-19 14:27:43,885      exp_logger INFO] # 125313 params
+[2024-09-19 14:27:44,352 exp_file_logger INFO] [Epoch] 0/500, [lr] 0.001, [adj_lambda] 1.0, [Loss(train/val/test)] 2450.405/2027.059/4579.082(0.456s) (Best model saved)
+[2024-09-19 14:28:03,308      exp_logger INFO] [val(MAE/RMSE)] 15.077/42.251, [test(MAE/RMSE)] 27.894/67.669
+[2024-09-19 14:28:03,310      exp_logger INFO] [err] 15.077
+[2024-09-19 14:28:05,885 exp_file_logger INFO] [Epoch] 1/500, [lr] 0.001, [adj_lambda] 0.9900498337491681, [Loss(train/val/test)] 2423.172/1996.993/4393.664(0.104s) (Best model saved)
+[2024-09-19 14:28:05,887      exp_logger INFO] [val(MAE/RMSE)] 14.911/41.949, [test(MAE/RMSE)] 27.296/66.285
+[2024-09-19 14:28:05,887      exp_logger INFO] [err] 14.911
+[2024-09-19 14:28:06,163 exp_file_logger INFO] [Epoch] 2/500, [lr] 0.001, [adj_lambda] 0.9801986733067554, [Loss(train/val/test)] 2381.604/1954.379/4198.038(0.094s) (Best model saved)
+[2024-09-19 14:28:06,165      exp_logger INFO] [val(MAE/RMSE)] 14.709/41.531, [test(MAE/RMSE)] 26.635/64.792
+[2024-09-19 14:28:06,166      exp_logger INFO] [err] 14.709
+[2024-09-19 14:28:06,447 exp_file_logger INFO] [Epoch] 3/500, [lr] 0.001, [adj_lambda] 0.9704455335485083, [Loss(train/val/test)] 2287.720/1909.896/4005.327(0.092s) (Best model saved)
+[2024-09-19 14:28:06,449      exp_logger INFO] [val(MAE/RMSE)] 14.499/41.091, [test(MAE/RMSE)] 25.965/63.288
+[2024-09-19 14:28:06,449      exp_logger INFO] [err] 14.499
+[2024-09-19 14:28:06,697 exp_file_logger INFO] [Epoch] 4/500, [lr] 0.001, [adj_lambda] 0.9607894391523233, [Loss(train/val/test)] 2250.872/1865.330/3816.257(0.087s) (Best model saved)
+[2024-09-19 14:28:06,699      exp_logger INFO] [val(MAE/RMSE)] 14.290/40.644, [test(MAE/RMSE)] 25.285/61.776
+[2024-09-19 14:28:06,700      exp_logger INFO] [err] 14.290
+[2024-09-19 14:28:07,007 exp_file_logger INFO] [Epoch] 5/500, [lr] 0.001, [adj_lambda] 0.951229424500714, [Loss(train/val/test)] 2200.866/1821.420/3634.443(0.099s) (Best model saved)
+[2024-09-19 14:28:07,010      exp_logger INFO] [val(MAE/RMSE)] 14.085/40.196, [test(MAE/RMSE)] 24.679/60.286
+[2024-09-19 14:28:07,010      exp_logger INFO] [err] 14.085
+[2024-09-19 14:28:07,352 exp_file_logger INFO] [Epoch] 6/500, [lr] 0.001, [adj_lambda] 0.9417645335842487, [Loss(train/val/test)] 2136.743/1778.312/3462.171(0.101s) (Best model saved)
+[2024-09-19 14:28:07,354      exp_logger INFO] [val(MAE/RMSE)] 13.880/39.751, [test(MAE/RMSE)] 24.124/58.840
+[2024-09-19 14:28:07,354      exp_logger INFO] [err] 13.880
+[2024-09-19 14:28:07,650 exp_file_logger INFO] [Epoch] 7/500, [lr] 0.001, [adj_lambda] 0.9323938199059483, [Loss(train/val/test)] 2084.041/1736.481/3297.978(0.097s) (Best model saved)
+[2024-09-19 14:28:07,652      exp_logger INFO] [val(MAE/RMSE)] 13.687/39.312, [test(MAE/RMSE)] 23.572/57.428
+[2024-09-19 14:28:07,653      exp_logger INFO] [err] 13.687
+[2024-09-19 14:28:07,938 exp_file_logger INFO] [Epoch] 8/500, [lr] 0.001, [adj_lambda] 0.9231163463866358, [Loss(train/val/test)] 2015.223/1695.445/3139.863(0.091s) (Best model saved)

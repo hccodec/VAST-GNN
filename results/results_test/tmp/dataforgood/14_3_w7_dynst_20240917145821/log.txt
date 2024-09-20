@@ -1,0 +1,25 @@
+[2024-09-17 14:58:22,561      exp_logger INFO] 使用 GPU 7 进行计算
+[2024-09-17 14:58:22,562      exp_logger INFO] 运行结果将保存至 results/results_test/tmp/dataforgood/14_3_w7_dynst_20240917145821
+[2024-09-17 14:58:22,856      exp_logger INFO] 已从数据文件读取 dataforgood 数据集
+[2024-09-17 14:58:22,857      exp_logger INFO] 开始训练 Italy
+[2024-09-17 14:58:25,098      exp_logger INFO] # 8612 params
+[2024-09-17 14:58:26,484 exp_file_logger INFO] [Epoch] 0/500, [lr] 0.001, [adj_lambda] 1.0, [Loss(train/val/test)] 1646.807/1136.529/3565.067(1.372s) (Best model saved)
+[2024-09-17 14:58:26,486      exp_logger INFO] [val(MAE/RMSE)] 10.449/30.125, [test(MAE/RMSE)] 22.460/59.708
+[2024-09-17 14:58:26,486      exp_logger INFO] [err] 10.449
+[2024-09-17 14:58:27,613 exp_file_logger INFO] [Epoch] 1/500, [lr] 0.001, [adj_lambda] 0.9900498337491681, [Loss(train/val/test)] 1646.182/1135.370/3562.569(0.116s) (Best model saved)
+[2024-09-17 14:58:27,615      exp_logger INFO] [val(MAE/RMSE)] 10.441/30.106, [test(MAE/RMSE)] 22.446/59.687
+[2024-09-17 14:58:27,615      exp_logger INFO] [err] 10.441
+[2024-09-17 14:58:28,044 exp_file_logger INFO] [Epoch] 2/500, [lr] 0.001, [adj_lambda] 0.9801986733067554, [Loss(train/val/test)] 1645.560/1134.434/3559.048(0.119s) (Best model saved)
+[2024-09-17 14:58:28,046      exp_logger INFO] [val(MAE/RMSE)] 10.435/30.091, [test(MAE/RMSE)] 22.432/59.658
+[2024-09-17 14:58:28,046      exp_logger INFO] [err] 10.435
+[2024-09-17 14:58:28,504 exp_file_logger INFO] [Epoch] 3/500, [lr] 0.001, [adj_lambda] 0.9704455335485083, [Loss(train/val/test)] 1644.936/1133.464/3556.354(0.128s) (Best model saved)
+[2024-09-17 14:58:28,506      exp_logger INFO] [val(MAE/RMSE)] 10.428/30.075, [test(MAE/RMSE)] 22.418/59.635
+[2024-09-17 14:58:28,507      exp_logger INFO] [err] 10.428
+[2024-09-17 14:58:28,970 exp_file_logger INFO] [Epoch] 4/500, [lr] 0.001, [adj_lambda] 0.9607894391523233, [Loss(train/val/test)] 1644.310/1132.578/3553.929(0.118s) (Best model saved)
+[2024-09-17 14:58:28,972      exp_logger INFO] [val(MAE/RMSE)] 10.421/30.060, [test(MAE/RMSE)] 22.404/59.615
+[2024-09-17 14:58:28,972      exp_logger INFO] [err] 10.421
+[2024-09-17 14:58:29,213      exp_logger INFO] 已手动停止训练
+[2024-09-17 14:58:29,221      exp_logger INFO] 
+[2024-09-17 14:58:29,221      exp_logger INFO] 训练完毕，开始评估: Italy
+[2024-09-17 14:58:29,221      exp_logger INFO] --------------------
+[2024-09-17 14:58:29,224      exp_logger INFO] 实验结果已保存至 results/results_test/tmp/dataforgood/14_3_w7_dynst_20240917145821

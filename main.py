@@ -1,193 +1,320 @@
-import argparse, json, os
-from train import *
-import torch, pickle
-from utils.debugtools import tmpload, tmpsave
+import os, sys, torch
 
-import random, numpy as np, time
+sys.path.append(os.getcwd())
+from tensorboardX import SummaryWriter
 
-# 设置随机种子
-seed = 5
-# random.seed(seed)
-# np.random.seed(seed)
-# torch.manual_seed(seed)
-torch.manual_seed(seed)
-torch.cuda.manual_seed(seed)#让显卡产生的随机数一致
-torch.cuda.manual_seed_all(seed)#多卡模式下，让所有显卡生成的随机数一致？这个待验证
-np.random.seed(seed)#numpy产生的随机数一致
-random.seed(seed)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
+from train_test import train_process, validate_test_process, eval_process
 
-from utils.datetime import datetime
-now = datetime.now()
+from utils.logger import logger
+from utils.utils import font_green, font_yellow, select_model, set_random_seed, parse_args
 
-dataset_lst = ["eu", "jp"]
 
-def make_results_dir(dataset: str):
-    results_dir = os.path.join("results", now.strftime("%Y%m%d%H%M%S"), str(dataset)) + "_incomplete"
-    os.makedirs(results_dir, exist_ok=True)
-    return results_dir
+def exp_YJ_Covid(args):
 
-def experiment_tgnn(args, config):
-    print('\n=== Europe ===\n')
-    import preprocess_tgnn
+    preprocessed_data_dir, databinfile = args.preprocessed_data_dir, args.databinfile
 
-    results_dir = make_results_dir(dataset_lst[0])
+    from utils.data_process.YJ_COVID19 import load_data
 
-    config_tgnn = config['pandemic_tgnn_dataset']
+    (
+        (train_loader, validation_loader, test_loader),
+        (train_origin, validation_origin, test_origin),
+        (train_indices, validation_indices, test_indices),
+        (data_origin, date_all),
+    ) = load_data(args)
 
-    # 使用数据集对应文章的方法加载数据集 - pandemic tgnn
-    # meta_labs, meta_graphs, meta_features, meta_y = \
-    meta_dataset = preprocess_tgnn.read_meta_datasets(args.window, config_tgnn)
-    
-    nfeat = meta_dataset[2][0][0].shape[1] # `meta_dataset[2]` is features
-    
-    country_idx = dict(config_tgnn['country_idx'])
-    for i, country in enumerate(country_idx.keys()):
-        
-        print("Training country", config_tgnn['countries'][i], '...')
+    # 记录实验参数
+    result_paths = {
+        "model": os.path.join(args.result_dir, "model_jp_best.pth"),
+        "model_latest": os.path.join(args.result_dir, "model_jp_latest.pth"),
+        "csv": os.path.join(args.result_dir, "results_jp.csv"),
+        "log": os.path.join(args.result_dir, "log.txt"),
+        "help": os.path.join(args.result_dir, "help.txt"),
+    }
 
-        idx = country_idx[country]
+    with open(result_paths["help"], "w") as f:
+        f.write("[args]\n")
+        for k, v in args._get_kwargs():
+            f.write("{}: {}\n".format(k, v))
 
-        labels, gs_adj, features, y = (item[idx] for item in meta_dataset)
+    # 选择模型
+    model, model_args = select_model(args, train_loader)
+    criterion = torch.nn.MSELoss()
 
-        n_samples= len(gs_adj)
-        
-        n_nodes = gs_adj[0].shape[0]
-        
-        test_sample, window, sep = 15, args.window, args.sep
-        shift, batch_size, device = 1, 8, torch.device('cuda:0')
-        
-        idx_train = list(range(window - 1, test_sample - sep))
-        
-        idx_val = list(range(test_sample - sep, test_sample, 2)) 
-                        
-        idx_train = idx_train + list(range(test_sample - sep + 1, test_sample, 2))
+    # 记录模型参数
+    with open(result_paths["help"], "a") as f:
+        f.write("\n[model_args]\n")
+        f.write(str(model_args) + "\n")
 
-        train_among_epochs, val_among_epochs, err_among_epochs, best_model_path, err = run_tgnn_model(
-            gs_adj, features, y, idx_train, idx_val, args.graph_window, shift, batch_size, device, test_sample,
-            results_dir, country)
-        # graphs        : list,
-        # features      : list,
-        # y             : list,
-        # idx_train     : list,
-        # idx_val       : list,
-        # graph_window  : int,
-        # shift         : int,
-        # batch_size    : int,
-        # device        : torch.device,
-        # test_sample   : int,
+    # 初始化 tensorboard 记录器
+    writer = SummaryWriter(args.result_dir)
+
+    lr = args.lr
+    lr_min = args.lr_min
+    lr_scheduler_stepsize = args.lr_scheduler_stepsize
+    lr_weight_decay = args.lr_weight_decay
+    lr_scheduler_gamma = args.lr_scheduler_gamma
+    epochs = args.epochs
+    device = args.device
+    early_stop_patience = args.early_stop_patience
+    case_normalize_ratio = args.case_normalize_ratio
+    (
+        graph_lambda_0,
+        graph_lambda_k,
+        graph_lambda_method,
+    ) = (
+        args.graph_lambda_0,
+        args.graph_lambda_k,
+        args.graph_lambda_method,
+    )
+
+    # start_date, end_date, x_days, y_days = args.startdate, args.enddate, args.xdays, args.ydays
+    # data_dir, case_normalize_ratio, text_normalize_ratio = args.data_dir, args.case_normalize_ratio, args.text_normalize_ratio
+
+    losses, trained_model, epoch_best, loss_best = train_process(
+        model,
+        criterion,
+        epochs,
+        lr,
+        lr_min,
+        lr_scheduler_stepsize,
+        lr_scheduler_gamma,
+        lr_weight_decay,
+        train_loader,
+        validation_loader,
+        test_loader,
+        early_stop_patience,
+        case_normalize_ratio,
+        graph_lambda_0,
+        graph_lambda_k,
+        graph_lambda_method,
+        device,
+        writer,
+        result_paths,
+    )
+    writer.close()
+
+    logger.info("")
+    logger.info("训练完毕，开始评估: ")
+
+    logger.info("-" * 20)
+    logger.info(font_yellow("[最新]"))
+    eval_process(
+        trained_model,
+        criterion,
+        train_loader,
+        validation_loader,
+        test_loader,
+        args.ydays,
+        case_normalize_ratio,
+        device,
+    )
+
+    logger.info("-" * 20)
+    logger.info(font_yellow(f"[最小 val loss (epoch {epoch_best})]"))
+    eval_process(
+        result_paths["model"],
+        criterion,
+        train_loader,
+        validation_loader,
+        test_loader,
+        args.ydays,
+        case_normalize_ratio,
+        device,
+    )
+
+    logger.info(f"实验（波次 {args.wave}, 预测范围 {args.xdays}->{args.ydays}）结束")
+
+
+def exp_dataforgood(args):
+
+    from utils.data_process.dataforgood import load_data, meta_info
+
+    meta_data = load_data(args)
+
+    result_paths = {
+        "log": os.path.join(args.result_dir, "log.txt"),
+        "help": os.path.join(args.result_dir, "help.txt"),
+    }
+
+    for i_country in range(len(meta_data)):
+        country_name = meta_info["name"][i_country]
+        country_code = meta_info["code"][i_country]
+
+        (
+            (train_loader, validation_loader, test_loader),
+            (train_origin, validation_origin, test_origin),
+            (train_indices, validation_indices, test_indices),
+        ) = meta_data[country_name]
+
+        logger.info(f"开始训练 {country_name}")
+
+        # 记录实验参数
+        result_paths.update(
+            {
+                "model": os.path.join(
+                    args.result_dir, f"model_{country_code}_best.pth"
+                ),
+                "model_latest": os.path.join(
+                    args.result_dir, f"model_{country_code}_latest.pth"
+                ),
+                "csv": os.path.join(args.result_dir, f"results_{country_code}.csv"),
+                "tensorboard": os.path.join(
+                    args.result_dir, f"tensorboard_{country_code}"
+                ),
+            }
+        )
+
+        with open(result_paths["help"], "w") as f:
+            f.write("[args]\n")
+            for k, v in args._get_kwargs():
+                f.write("{}: {}\n".format(k, v))
+
+        # 选择模型
+        model, model_args = select_model(args, train_loader)
+        # criterion = torch.nn.MSELoss()
+        criterion = torch.nn.functional.mse_loss
+
+        # 记录模型参数
+        with open(result_paths["help"], "a") as f:
+            f.write("\n[model_args]\n")
+            f.write(str(model_args) + "\n")
+
+        # 初始化 tensorboard 记录器
+        with SummaryWriter(result_paths["tensorboard"]) as writer:
+
+            lr = args.lr
+            lr_min = args.lr_min
+            lr_scheduler_stepsize = args.lr_scheduler_stepsize
+            lr_weight_decay = args.lr_weight_decay
+            lr_scheduler_gamma = args.lr_scheduler_gamma
+            epochs = args.epochs
+            device = args.device
+            early_stop_patience = args.early_stop_patience
+            case_normalize_ratio = args.case_normalize_ratio
+            enable_graph_learner = args.enable_graph_learner
+            (
+                graph_lambda_0,
+                graph_lambda_k,
+                graph_lambda_method,
+            ) = (
+                args.graph_lambda_0,
+                args.graph_lambda_k,
+                args.graph_lambda_method,
+            )
+
+            # start_date, end_date, x_days, y_days = args.startdate, args.enddate, args.xdays, args.ydays
+            # data_dir, case_normalize_ratio, text_normalize_ratio = args.data_dir, args.case_normalize_ratio, args.text_normalize_ratio
+
+            losses, trained_model, epoch_best, loss_best = train_process(
+                model,
+                criterion,
+                epochs,
+                lr,
+                lr_min,
+                lr_scheduler_stepsize,
+                lr_scheduler_gamma,
+                lr_weight_decay,
+                train_loader,
+                validation_loader,
+                test_loader,
+                early_stop_patience,
+                case_normalize_ratio,
+                graph_lambda_0,
+                graph_lambda_k,
+                graph_lambda_method,
+                device,
+                writer,
+                result_paths,
+            enable_graph_learner
+            )
+
+            # writer.close()
+
+            logger.info("")
+            logger.info(f"训练完毕，开始评估: {country_name}")
+
+            logger.info("-" * 20)
+            logger.info(font_yellow(f"[最新 (epoch {len(losses['train']) - 1})]"))
+            metrics_latest = eval_process(
+                trained_model,
+                criterion,
+                train_loader,
+                validation_loader,
+                test_loader,
+                args.ydays,
+                case_normalize_ratio,
+                device,
+            )
             
-        # torch.save(model.state_dict(), os.path.join(results_dir, f'model_best_{country}.pth.tar'))
-        # 存到文件中
-        with open(os.path.join(results_dir, f'losses_{country}.bin'), 'wb') as f:
-            pickle.dump((train_among_epochs, val_among_epochs), f)
+            logger.info("[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*list(metrics_latest.values())[:4]))
+            logger.info(f"[err_val] {metrics_latest['err_val']:.3f}, [err_test] {font_green(metrics_latest['err_test'])}")
 
-        print('Training completed. Best model save in {}/:\n[best_val_loss {}({}), best_val_err {}({})]'.format(
-            results_dir,
-            min(val_among_epochs), val_among_epochs.index(min(val_among_epochs)),
-            min(err_among_epochs), err_among_epochs.index(min(err_among_epochs))
-        ))
-    
-    os.rename(results_dir, results_dir.split('_')[0])
+            logger.info("-" * 20)
+            logger.info(font_yellow(f"[最小 val loss (epoch {epoch_best})]"))
+            metrics_minvalloss = eval_process(
+                result_paths["model"],
+                criterion,
+                train_loader,
+                validation_loader,
+                test_loader,
+                args.ydays,
+                case_normalize_ratio,
+                device,
+            )
+            
+            
+            logger.info("[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*list(metrics_minvalloss.values())[:4]))
+            logger.info(f"[err_val] {metrics_minvalloss['err_val']:.3f}, [err_test] {font_green(metrics_minvalloss['err_test'])}")
 
-def experiment_multiwave(args):
-    print('\n=== Japan  ===\n')
-    from preprocess_multiwave import read_data, device
+            writer.add_hparams(
+                {
+                    **{
+                        k: (
+                            v
+                            if isinstance(v, (int, float, str, bool, torch.Tensor))
+                            else str(v)
+                        )
+                        for k, v in vars(args).items()
+                        if k
+                        in [
+                            "xdays",
+                            "ydays",
+                            "window",
+                            "batchsize",
+                            "lr",
+                            "lr_min",
+                            "seed",
+                        ]
+                    },
+                    **{"country_name": country_name, "country_code": country_code},
+                },
+                {
+                    **{
+                        f"{k}_minvalloss": float(v)
+                        for k, v in metrics_minvalloss.items()
+                    },
+                    **{f"{k}_latest": float(v) for k, v in metrics_latest.items()},
+                },
+            )
+            # writer.close()
 
-    results_dir = make_results_dir(dataset_lst[1])
-
-    print(f'results save in {results_dir}')
-
-    #4.1
-    #read the data
-    # train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list =read_data()
-    tokyo_datafile = 'dataset_tokyo.bin'
-    if not os.path.exists(tokyo_datafile):
-        res = read_data()
-        with open(tokyo_datafile, 'wb') as f:
-            print(f'Reading original data from dataset files...')
-            pickle.dump(res, f)
-            del res
-    else:
-        print(f'Reading processed data from bin file [{tokyo_datafile}]...')
-    with open(tokyo_datafile, 'rb') as f:
-        try:
-            train_x_y, validate_x_y, test_x_y, all_mobility, all_infection, train_original, validate_original, test_original, train_list, validation_list = pickle.load(f)
-        except Exception as e:
-            msg = "- Failed: "
-            if isinstance(e, EOFError): msg += 'File collapsed'
-            elif isinstance(e, pickle.UnpicklingError): msg = 'File irregular'
-            else: msg = e
-            print(msg)
-            os.remove(tokyo_datafile)
-            return experiment_multiwave(args)
-
-    with open(os.path.join(results_dir, 'args.txt'), 'w') as f:
-        f.write(str(args))
-
-    e_losses, trained_model = run_tokyo_model(train_x_y, validate_x_y, test_x_y, device, results_dir, args)
-
-
-
-    os.rename(results_dir, results_dir.split('_')[0])
-
-
+    logger.info(f"实验 dataforgood（ 预测范围 {args.xdays}->{args.ydays} w{args.window}）结束")
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=1000,
-                        help='Number of epochs to train.')
-    parser.add_argument('--lr', type=float, default=0.001,
-                        help='Initial learning rate.')
-    parser.add_argument('--hidden', type=int, default=64,
-                        help='Number of hidden units.')
-    parser.add_argument('--batch-size', type=int, default=8,
-                        help='Size of batch.')
-    parser.add_argument('--dropout', type=float, default=0.5,
-                        help='Dropout rate.')
-    parser.add_argument('--window', type=int, default=7,
-                        help='Size of window for features.')
-    parser.add_argument('--graph-window', type=int, default=7,
-                        help='Size of window for graphs in MPNN LSTM.')
-    parser.add_argument('--recur',  default=False,
-                        help='True or False.')
-    parser.add_argument('--early-stop', type=int, default=100,
-                        help='How many epochs to wait before stopping.')
-    parser.add_argument('--start-exp', type=int, default=15,
-                        help='The first day to start the predictions.')
-    parser.add_argument('--ahead', type=int, default=14,
-                        help='The number of days ahead of the train set the predictions should reach.')
-    parser.add_argument('--sep', type=int, default=10,
-                        help='Seperator for validation and train set.')
-    parser.add_argument('--exp', type=str, choices=dataset_lst, required=True,
-                        help='Which experiment to perform.')
-    parser.add_argument('--use-graph-learner', default=False, help='是否使用图学习器替代原图结构')
-    parser.add_argument('--graph-learner-decay', choices=['linear', 'square', 'step', 'exp'], default='square', help='设置使用图学习器评估loss的衰减')
-    parser.add_argument('--graph-learner-decay-k', default=1e-2, help='lambda_T = k * lambda_0')
-    parser.add_argument('--graph-learner-decay-start-epoch', default=10, help='衰减开始epoch')
-    parser.add_argument('--graph-learner-decay-start-lambda', default=1., help='衰减开始值')
-
-    with open('config.json', 'r') as config_file:
-        config = json.load(config_file)
-    args = parser.parse_args()
-
-    assert args.graph_learner_decay_k > 0 and args.graph_learner_decay_k < 1
-
-    if args.exp in dataset_lst:
-        idx = dataset_lst.index(args.exp)
-        if idx == 0:
-            experiment_tgnn(args, config)
-        elif idx == 1:
-            experiment_multiwave(args)
+    args = parse_args()
+    set_random_seed(args.seed)
+    logger.info(f"运行结果将保存至 {args.result_dir}")
+    try:
+        if args.dataset == "YJ_COVID19":
+            exp_YJ_Covid(args)
+        elif args.dataset == "dataforgood":
+            exp_dataforgood(args)
         else:
-            print('Unimplemented exp: %s(%d)' % (args.exp, idx))
-    else:
-        print('Unknown exp:', args.exp)
+            raise ValueError(f"数据集 {args.dataset} 不存在")
+    finally:
+        logger.info(f"实验结果已保存至 {args.result_dir}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
-    
-    # from preprocess_multiwave import read_data
-    # read_data()

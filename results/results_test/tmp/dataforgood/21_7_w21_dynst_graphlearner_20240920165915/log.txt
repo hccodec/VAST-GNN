@@ -1,0 +1,59 @@
+[2024-09-20 16:59:15,292      exp_logger INFO] 使用 GPU 7 进行计算
+[2024-09-20 16:59:15,293      exp_logger INFO] 运行结果将保存至 results/results_test/tmp/dataforgood/21_7_w21_dynst_graphlearner_20240920165915
+[2024-09-20 16:59:15,769      exp_logger INFO] 已从数据文件读取 dataforgood 数据集
+[2024-09-20 16:59:15,769      exp_logger INFO] 开始训练 Italy
+[2024-09-20 16:59:19,411      exp_logger INFO] # 129668 params
+[2024-09-20 16:59:22,722 exp_file_logger INFO] [Epoch] 0/500, [lr] 0.001, [adj_lambda] 1.0, [adj_lambda] 1.0, [Loss(train/val/test)] 184859376.000/2217.239/3931.669(3.283s) (Best model saved)
+[2024-09-20 16:59:22,729      exp_logger INFO] [val(MAE/RMSE)] 14.909/44.015, [test(MAE/RMSE)] 27.769/62.703
+[2024-09-20 16:59:22,730      exp_logger INFO] [err_val] 14.909, [err_test] 27.769
+[2024-09-20 16:59:26,675 exp_file_logger INFO] [Epoch] 1/500, [lr] 0.001, [adj_lambda] 0.9900498337491681, [adj_lambda] 0.9900498337491681, [Loss(train/val/test)] 285731104.000/1554.500/2953.611(1.243s) (Best model saved)
+[2024-09-20 16:59:26,676      exp_logger INFO] [val(MAE/RMSE)] 13.375/36.573, [test(MAE/RMSE)] 23.364/54.347
+[2024-09-20 16:59:26,676      exp_logger INFO] [err_val] 13.375, [err_test] 23.364
+[2024-09-20 16:59:28,168 exp_file_logger INFO] [Epoch] 2/500, [lr] 0.001, [adj_lambda] 0.9801986733067554, [adj_lambda] 0.9801986733067554, [Loss(train/val/test)] 296652288.000/1319.883/4000.159(1.360s) (Best model saved)
+[2024-09-20 16:59:28,169      exp_logger INFO] [val(MAE/RMSE)] 11.728/33.429, [test(MAE/RMSE)] 28.587/63.247
+[2024-09-20 16:59:28,169      exp_logger INFO] [err_val] 11.728, [err_test] 28.587
+[2024-09-20 16:59:29,599 exp_file_logger INFO] [Epoch] 3/500, [lr] 0.001, [adj_lambda] 0.9704455335485083, [adj_lambda] 0.9704455335485083, [Loss(train/val/test)] 298022016.000/1679.002/5528.771(1.285s)
+[2024-09-20 16:59:29,600      exp_logger INFO] [val(MAE/RMSE)] 13.743/38.643, [test(MAE/RMSE)] 30.497/74.356
+[2024-09-20 16:59:29,601      exp_logger INFO] [err_val] 13.743, [err_test] 30.497
+[2024-09-20 16:59:31,117 exp_file_logger INFO] [Epoch] 4/500, [lr] 0.001, [adj_lambda] 0.9607894391523233, [adj_lambda] 0.9607894391523233, [Loss(train/val/test)] 232670528.000/2458.315/5277.754(1.330s)
+[2024-09-20 16:59:31,118      exp_logger INFO] [val(MAE/RMSE)] 16.959/46.541, [test(MAE/RMSE)] 27.877/72.648
+[2024-09-20 16:59:31,118      exp_logger INFO] [err_val] 16.959, [err_test] 27.877
+[2024-09-20 16:59:31,831      exp_logger INFO] 已手动停止训练
+[2024-09-20 16:59:31,832      exp_logger INFO] 
+[2024-09-20 16:59:31,832      exp_logger INFO] 训练完毕，开始评估: Italy
+[2024-09-20 16:59:31,832      exp_logger INFO] --------------------
+[2024-09-20 16:59:31,832      exp_logger INFO] [最新 (epoch 4)]
+[2024-09-20 16:59:31,946      exp_logger INFO] [val(MAE/RMSE)] 14.702/39.274, [test(MAE/RMSE)] 29.252/73.378
+[2024-09-20 16:59:31,946      exp_logger INFO] [err_val] 14.702, [err_test] 29.252
+[2024-09-20 16:59:31,946      exp_logger INFO] --------------------
+[2024-09-20 16:59:31,946      exp_logger INFO] [最小 val loss (epoch 2)]
+[2024-09-20 16:59:32,065      exp_logger INFO] [val(MAE/RMSE)] 15.883/44.184, [test(MAE/RMSE)] 25.980/61.367
+[2024-09-20 16:59:32,065      exp_logger INFO] [err_val] 15.883, [err_test] 25.980
+[2024-09-20 16:59:32,128      exp_logger INFO] 开始训练 Spain
+[2024-09-20 16:59:32,138      exp_logger INFO] # 129668 params
+[2024-09-20 16:59:32,576 exp_file_logger INFO] [Epoch] 0/500, [lr] 0.001, [adj_lambda] 1.0, [adj_lambda] 1.0, [Loss(train/val/test)] 1496979328.000/87958.016/80544.969(0.432s) (Best model saved)
+[2024-09-20 16:59:32,578      exp_logger INFO] [val(MAE/RMSE)] 111.912/296.143, [test(MAE/RMSE)] 120.681/283.804
+[2024-09-20 16:59:32,578      exp_logger INFO] [err_val] 111.912, [err_test] 120.681
+[2024-09-20 16:59:33,017      exp_logger INFO] 已手动停止训练
+[2024-09-20 16:59:33,019      exp_logger INFO] 
+[2024-09-20 16:59:33,019      exp_logger INFO] 训练完毕，开始评估: Spain
+[2024-09-20 16:59:33,019      exp_logger INFO] --------------------
+[2024-09-20 16:59:33,019      exp_logger INFO] [最新 (epoch 0)]
+[2024-09-20 16:59:33,084      exp_logger INFO] [val(MAE/RMSE)] 102.219/293.619, [test(MAE/RMSE)] 122.049/284.467
+[2024-09-20 16:59:33,084      exp_logger INFO] [err_val] 102.219, [err_test] 122.049
+[2024-09-20 16:59:33,084      exp_logger INFO] --------------------
+[2024-09-20 16:59:33,084      exp_logger INFO] [最小 val loss (epoch 0)]
+[2024-09-20 16:59:33,154      exp_logger INFO] [val(MAE/RMSE)] 59.432/91.066, [test(MAE/RMSE)] 111.897/272.995
+[2024-09-20 16:59:33,154      exp_logger INFO] [err_val] 59.432, [err_test] 111.897
+[2024-09-20 16:59:33,159      exp_logger INFO] 开始训练 England
+[2024-09-20 16:59:33,166      exp_logger INFO] # 129668 params
+[2024-09-20 16:59:33,732      exp_logger INFO] 已手动停止训练
+[2024-09-20 16:59:33,733      exp_logger INFO] 
+[2024-09-20 16:59:33,733      exp_logger INFO] 训练完毕，开始评估: England
+[2024-09-20 16:59:33,733      exp_logger INFO] --------------------
+[2024-09-20 16:59:33,733      exp_logger INFO] [最新 (epoch -1)]
+[2024-09-20 16:59:33,902      exp_logger INFO] [val(MAE/RMSE)] 15.916/21.733, [test(MAE/RMSE)] 23.686/31.291
+[2024-09-20 16:59:33,902      exp_logger INFO] [err_val] 15.916, [err_test] 23.686
+[2024-09-20 16:59:33,902      exp_logger INFO] --------------------
+[2024-09-20 16:59:33,902      exp_logger INFO] [最小 val loss (epoch 0)]
+[2024-09-20 16:59:33,903      exp_logger INFO] 实验结果已保存至 results/results_test/tmp/dataforgood/21_7_w21_dynst_graphlearner_20240920165915
