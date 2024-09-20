@@ -4,8 +4,8 @@
 To prepare the environment, the following commands are recommended.
 
 ```bash
-conda create -n theenv python 3.8
-pip install -r  requireents.txt
+conda create -n <env_name> python 3.8
+pip install -r  requirements.txt
 ```
 
 

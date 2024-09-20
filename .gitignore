@@ -1,4 +1,6 @@
 __pycache__
-results*/
+results/
+results_old/
+results_original/
 *.bin
 history_codes/

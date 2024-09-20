@@ -166,7 +166,7 @@ def print_err(args, results, _model):
     _ = 1
     if args.subdir: print(args.subdir)
     for k in s:
-        print(k)
+        print(f"{k:10s}", ' ' * 10, ' | '.join(list(s[k].keys())))
         print('[err_test]', ' | '.join([' '.join(map(lambda c: c['err_test'], v.values())) for v in s[k].values()]))
         print('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
         # print(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))
