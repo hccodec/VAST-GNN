@@ -1,2 +1,0 @@
-Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,err,lr,time
-0,955.39160,853.33685,1214.99683,12.19,28.525,16.15,34.857,15.619256346681972,0.001,0.191697s

@@ -1,6 +1,0 @@
-[2024-09-16 23:25:22,226      exp_logger INFO] 使用 GPU 7 进行计算
-[2024-09-16 23:25:22,227      exp_logger INFO] 运行结果将保存至 results/results_test/tmp/dataforgood/14_3_w7_dynst_20240916232521
-[2024-09-16 23:25:22,555      exp_logger INFO] 已从数据文件读取 dataforgood 数据集
-[2024-09-16 23:25:22,555      exp_logger INFO] 开始评估 Italy
-[2024-09-16 23:25:24,949      exp_logger INFO] # 8612 params
-[2024-09-16 23:25:28,698      exp_logger INFO] 实验结果已保存至 results/results_test/tmp/dataforgood/14_3_w7_dynst_20240916232521

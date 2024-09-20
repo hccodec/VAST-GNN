@@ -32,7 +32,7 @@
             "name": "MAIN",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/custom/main.py",
+            "program": "${workspaceFolder}/main.py",
             "cwd": "${workspaceFolder}/custom",
             "console": "integratedTerminal",
             "args": ["--data-dir", "../data/multiwave_data"]

@@ -1,4 +1,4 @@
 __pycache__
-results*
+results*/
 *.bin
-**extrasources**
+history_codes/

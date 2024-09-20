@@ -20,8 +20,8 @@
             "program": "utils/record_result.py",
             "console": "integratedTerminal",
             "args": [
-                "-d", "/home/hbj/workspace/vscode_workspace/lp/workspace/custom/results/test_mpnn_lstm/exp_test1",
-                // "-s", "/home/hbj/workspace/vscode_workspace/lp/workspace/custom/results/test_mpnn_lstm/exp_test1",
+                "-d", "results/results_test/tmp/",
+                "-s", "results/results_test/tmp/dataforgood/21_7_w21_mpnn_lstm_20240920185726"
             ]
         },
         {

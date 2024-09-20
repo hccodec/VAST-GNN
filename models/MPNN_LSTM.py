@@ -38,7 +38,7 @@ class MPNN_LSTM(nn.Module):
     def __init__(self, nfeat: int,
                  nhid: int,
                  nout: int,
-                 n_nodes: int,
+                #  n_nodes: int,
                  window: int,
                  dropout: float):
         """
@@ -55,7 +55,7 @@ class MPNN_LSTM(nn.Module):
         """
         super(MPNN_LSTM, self).__init__()
         self.window = window
-        self.n_nodes = n_nodes
+        # self.n_nodes = n_nodes
         self.nhid = nhid
         self.nfeat = nfeat
 
@@ -80,7 +80,7 @@ class MPNN_LSTM(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, X, y, A, extra_info=None, idx=None):
-        x, adj = X.view(-1, self.nfeat).float(), to_sparse(A)
+        n_nodes, x, adj = A.size(2), X.view(-1, self.nfeat).float(), to_sparse(A)
         
         lst = list()
 
@@ -89,7 +89,7 @@ class MPNN_LSTM(nn.Module):
         adj = adj.coalesce().indices()
 
         # 处理时间窗口数据
-        skip = x.view(-1, self.window, self.n_nodes, self.nfeat)
+        skip = x.view(-1, self.window, n_nodes, self.nfeat)
         skip = torch.transpose(skip, 1, 2).reshape(-1, self.window, self.nfeat)
 
         # 第一层GCNConv
@@ -109,7 +109,7 @@ class MPNN_LSTM(nn.Module):
 
         # reshape to (seq_len, batch_size , hidden) to fit the lstm
         # 重新整形以适应LSTM输入形状
-        x = x.view(-1, self.window, self.n_nodes, x.size(1))
+        x = x.view(-1, self.window, n_nodes, x.size(1))
         x = torch.transpose(x, 0, 1)
         x = x.contiguous().view(self.window, -1, x.size(3))
 
@@ -133,7 +133,7 @@ class MPNN_LSTM(nn.Module):
         x = self.relu(self.fc2(x)).squeeze()
         x = x.view(-1)
 
-        x = x.reshape(-1, 1, self.n_nodes, 1)
+        x = x.reshape(-1, 1, n_nodes, 1)
         return x
 
         
