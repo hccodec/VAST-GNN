@@ -176,7 +176,7 @@ def select_model(args, train_loader):
     dynst_model_args = {
         "in_dim": shape[0][-1],
         "out_dim": 1,
-        "hidden": 16,
+        "hidden": 64,
         "num_nodes": shape[0][1],
         "num_heads": 4,
         "num_layers": 1,
@@ -235,6 +235,10 @@ def run_model(data, model, mode='train'):
     elif len(data) == 5:
         casex, casey, mobility, extra_info, idx = data
         y_hat = model(casex, casey, mobility, idx, use_predict)
+
+    if casey.shape != y_hat.shape: casey = casey[:, -y_hat.size(1):]
+    assert y_hat.shape == casey.shape
+
     return y_hat, casex, casey, mobility, extra_info, idx
 
 

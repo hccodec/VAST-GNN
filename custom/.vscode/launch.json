@@ -14,6 +14,17 @@
     ],
     "configurations": [
         {
+            "name": "record_result",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "utils/record_result.py",
+            "console": "integratedTerminal",
+            "args": [
+                "-d", "/home/hbj/workspace/vscode_workspace/lp/workspace/custom/results/test_mpnn_lstm/exp_test1",
+                // "-s", "/home/hbj/workspace/vscode_workspace/lp/workspace/custom/results/test_mpnn_lstm/exp_test1",
+            ]
+        },
+        {
             "name": "MAIN(mpnn_lstm)",
             "type": "debugpy",
             "request": "launch",
@@ -23,8 +34,10 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--model", "mpnn_lstm",
-                "--dataset", "dataforgood",
+                "--model",
+                "mpnn_lstm",
+                "--dataset",
+                "dataforgood",
                 // "--enable-graph-learner"
             ]
         },
@@ -38,8 +51,10 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--model", "dynst",
-                "--dataset", "dataforgood",
+                "--model",
+                "dynst",
+                "--dataset",
+                "dataforgood",
                 "--enable-graph-learner"
             ]
         },
@@ -55,7 +70,8 @@
             },
             "args": [
                 // "-graph", "Adaptive"
-                "-out", "outputDynamic"
+                "-out",
+                "outputDynamic"
             ]
         },
         {
@@ -81,11 +97,16 @@
                 "DEBUG_MODE": "true",
             },
             "args": [
-                "--dataset", "dataforgood",
-                "--xdays", "7",
-                "--ydays", "1",
-                "--lr", "0.001",
-                "--batchsize", "32",
+                "--dataset",
+                "dataforgood",
+                "--xdays",
+                "7",
+                "--ydays",
+                "1",
+                "--lr",
+                "0.001",
+                "--batchsize",
+                "32",
             ]
         },
         {
@@ -111,7 +132,8 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--model", "sabgnn_case_only",
+                "--model",
+                "sabgnn_case_only",
             ]
         },
         {
@@ -124,12 +146,16 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--model", "selfmodel",
-                "--wave", "3",
-                "--ydays", "7",
+                "--model",
+                "selfmodel",
+                "--wave",
+                "3",
+                "--ydays",
+                "7",
                 "--enable-graph-learner",
                 "--train-with-extrainfo",
-                "--device", "1"
+                "--device",
+                "1"
             ]
         },
         {
@@ -142,7 +168,8 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--model", "selfmodel",
+                "--model",
+                "selfmodel",
                 "--train-with-extrainfo"
             ]
         },
@@ -156,7 +183,8 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--model", "lstm"
+                "--model",
+                "lstm"
             ]
         },
         {
@@ -169,7 +197,8 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--model", "lstm",
+                "--model",
+                "lstm",
                 "--train-with-extrainfo"
             ]
         },

@@ -6,7 +6,7 @@ from tensorboardX import SummaryWriter
 from train_test import train_process, validate_test_process, eval_process
 
 from utils.logger import logger
-from utils.utils import font_yellow, select_model, set_random_seed, parse_args
+from utils.utils import font_green, font_yellow, select_model, set_random_seed, parse_args
 
 
 def exp_YJ_Covid(args):
@@ -245,6 +245,9 @@ def exp_dataforgood(args):
                 case_normalize_ratio,
                 device,
             )
+            
+            logger.info("[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*list(metrics_latest.values())[:4]))
+            logger.info(f"[err_val] {metrics_latest['err_val']:.3f}, [err_test] {font_green(metrics_latest['err_test'])}")
 
             logger.info("-" * 20)
             logger.info(font_yellow(f"[最小 val loss (epoch {epoch_best})]"))
@@ -258,6 +261,10 @@ def exp_dataforgood(args):
                 case_normalize_ratio,
                 device,
             )
+            
+            
+            logger.info("[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*list(metrics_minvalloss.values())[:4]))
+            logger.info(f"[err_val] {metrics_minvalloss['err_val']:.3f}, [err_test] {font_green(metrics_minvalloss['err_test'])}")
 
             writer.add_hparams(
                 {

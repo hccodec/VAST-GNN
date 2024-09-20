@@ -55,7 +55,7 @@ def compute_err(output, y_test, mode='total', model_str='self'):
     assert o.shape == l.shape
 
     error = np.average(abs(o - l))
-    logger.info(f"[err] {font_green(error)}")
+    # logger.info(f"[err] {font_green(error)}")
 
     return error
 
@@ -76,7 +76,5 @@ def compute_metrics(
     mae_test = round(np.mean(np.array(mae_test) * case_normalize_ratio), 3)
     rmse_val = round(np.mean(np.array(rmse_val) * case_normalize_ratio), 3)
     rmse_test = round(np.mean(np.array(rmse_test) * case_normalize_ratio), 3)
-
-    logger.info(f"[val(MAE/RMSE)] {mae_val:.3f}/{rmse_val:.3f}, [test(MAE/RMSE)] {font_green(mae_test)}/{font_green(rmse_test)}")
 
     return mae_val, rmse_val, mae_test, rmse_test

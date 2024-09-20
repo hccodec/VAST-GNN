@@ -169,13 +169,17 @@ def train_process(
             metrics = compute_metrics(
                 y_hat_val, y_real_val, y_hat_test, y_real_test, case_normalize_ratio
             )
-            err = compute_err(y_hat_val, y_real_val)
+            err_val, err_test = compute_err(y_hat_val, y_real_val), compute_err(y_hat_test, y_real_test)
+
+            
+            logger.info("[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*metrics))
+            logger.info(f"[err_val] {err_val:.3f}, [err_test] {font_green(err_test)}")
 
             # fw.write(f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,time\n")
             with open(result_paths["csv"], "a") as fw:
                 fw.write(
-                    "{},{:.5f},{:.5f},{:.5f},{},{},{},{},{},{},{:2f}s\n".format(
-                        e, loss, loss_val, loss_test, *metrics, err, lr, time2 - time1
+                    "{},{:.5f},{:.5f},{:.5f},{},{},{},{},{},{},{},{:2f}s\n".format(
+                        e, loss, loss_val, loss_test, *metrics, err_val, err_test, lr, time2 - time1
                     )
                 )
 
@@ -203,7 +207,7 @@ def train_process(
                 "Text",
                 f"Epoch: {e}, Loss: {loss:.5f}, Loss_val: {loss_val:.5f}, Loss_test: {loss_test:.5f}, "
                 f"MAE_val: {metrics[0]:.5f}, RMSE_val: {metrics[1]:.5f}, MAE_test: {metrics[2]:.5f}, RMSE_test: {metrics[3]:.5f},"
-                f"Err: {err:.5f}, LR: {lr:.5f}, Time(s): {time2 - time1:.5f}",
+                f"Err_val: {err_val:.5f}, Err_test: {err_test:.5f}, LR: {lr:.5f}, Time(s): {time2 - time1:.5f}",
                 global_step=e,
             )
             # Scalar
@@ -212,7 +216,8 @@ def train_process(
             writer.add_scalar("Loss/test", loss_test, e)
             for i, metric_label in enumerate(metrics_labels):
                 writer.add_scalar(f"Metric/{metric_label}", metrics[i], e)
-            writer.add_scalar("Metric/Err", err, e)
+            writer.add_scalar("Metric/Err_val", err_val, e)
+            writer.add_scalar("Metric/Err_test", err_test, e)
             writer.add_scalar("Others/Learning_Rate", lr, e)
             writer.add_scalar("Others/Time(s)", time2 - time1, e)
             # endregion
@@ -276,6 +281,9 @@ def eval_process(
 
     trained_model = torch.load(model) if isinstance(model, str) else model
 
+    train_result, train_hat, train_real = validate_test_process(
+        trained_model, criterion, train_loader, device
+    )
     validation_result, validation_hat, validation_real = validate_test_process(
         trained_model, criterion, validation_loader, device
     )
@@ -287,10 +295,8 @@ def eval_process(
         validation_hat, validation_real, test_hat, test_real, case_normalize_ratio
     )
 
-    train_result, train_hat, train_real = validate_test_process(
-        trained_model, criterion, train_loader, device
-    )
-    err = compute_err(train_hat, train_real)
+    err_val = compute_err(validation_hat, validation_real)
+    err_test = compute_err(test_hat, test_real)
     # correlation = compute_correlation(
     #     train_hat,
     #     train_real,
@@ -306,7 +312,8 @@ def eval_process(
         "rmse_val": metrics[1],
         "mae_test": metrics[2],
         "rmse_test": metrics[3],
-        "err": err,
+        "err_val": err_val,
+        "err_test": err_test,
         # "correlation_train": correlation[0][0],
         # "correlation_val": correlation[1][0],
         # "correlation_test": correlation[2][0],
