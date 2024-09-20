@@ -36,7 +36,7 @@ class SingletonLogger:
         self.file_logger = logging.getLogger("exp_file_logger")
         self.console_logger = logging.getLogger("exp_console_logger")
 
-        fmt_str_console = "%(message)s \033[2m[%(asctime)s]\033[0m"
+        fmt_str_console = f"%(message)s \033[2m[%(asctime)s] [{os.path.dirname(log_file_path if log_file_path is not None else '')}]\033[0m"
         fmt_str_file = "[%(asctime)s %(name)s %(levelname)s] %(message)s"
         fmt_datestr_console = "%Y-%m-%d %H:%M:%S"
 

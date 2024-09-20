@@ -191,8 +191,8 @@ def select_model(args, train_loader):
         # 'out': 32,
         "shape": shape,
     }
-    mpnn_lstm_model_args = dict(nfeat=shape[0][-1], nhid=64, nout=1,
-                              n_nodes=shape[0][1], window=shape[0][0], dropout=0.5)
+    mpnn_lstm_model_args = dict(nfeat=shape[0][-1], nhid=64, nout=1, # n_nodes=shape[0][1],
+                              window=shape[0][0], dropout=0.5)
 
     assert args.model in models
     index = models.index(args.model)
@@ -249,9 +249,9 @@ def parse_args():
     parser.add_argument("--result-dir", default="results_test", help="")
     parser.add_argument("--seed", default=5, help="随机种子")
     parser.add_argument("--device", default=7, help="GPU号")
-    parser.add_argument("--xdays", type=int, default=21, help="预测所需历史天数")
-    parser.add_argument("--ydays", type=int, default=7, help="预测未来天数")
-    parser.add_argument("--window", type=int, default=-1, help="作为特征的历史天数窗口大小")
+    parser.add_argument("--xdays", type=int, default=7, help="预测所需历史天数")
+    parser.add_argument("--ydays", type=int, default=3, help="预测未来天数")
+    parser.add_argument("--window", type=int, default=-1, help="作为特征的历史天数窗口大小，值为-1时和xdays相同")
     # parser.add_argument("--wave", type=int, default=4, choices=[3, 4], help="预测波次")
     parser.add_argument(
         "--case-normalize-ratio", type=float, default=100.0, help="训练集比例百分点"
@@ -399,7 +399,7 @@ def run_model(data, model, mode='train'):
 
     y_hat_shape = y_hat[0].shape if isinstance(y_hat, tuple) else y_hat.shape # 适应模型同时输出图结构的情况
 
-    if casey.shape != y_hat_shape: casey = casey[:, -y_hat_shape[1]]
+    if casey.shape != y_hat_shape: casey = casey[:, -y_hat_shape[1]:]
     assert y_hat_shape == casey.shape
 
     return y_hat, casex, casey, mobility, extra_info, idx

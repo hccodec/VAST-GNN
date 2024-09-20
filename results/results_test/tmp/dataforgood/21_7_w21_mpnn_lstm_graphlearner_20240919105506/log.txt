@@ -1,6 +1,0 @@
-[2024-09-19 10:55:06,158      exp_logger INFO] 使用 GPU 7 进行计算
-[2024-09-19 10:55:06,160      exp_logger INFO] 运行结果将保存至 results/results_test/tmp/dataforgood/21_7_w21_mpnn_lstm_graphlearner_20240919105506
-[2024-09-19 10:55:06,727      exp_logger INFO] 已从数据文件读取 dataforgood 数据集
-[2024-09-19 10:55:06,727      exp_logger INFO] 开始训练 Italy
-[2024-09-19 10:55:09,297      exp_logger INFO] # 125313 params
-[2024-09-19 10:55:09,312      exp_logger INFO] 实验结果已保存至 results/results_test/tmp/dataforgood/21_7_w21_mpnn_lstm_graphlearner_20240919105506
