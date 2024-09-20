@@ -176,8 +176,7 @@ def select_model(args, train_loader):
     dynst_model_args = {
         "in_dim": shape[0][-1],
         "out_dim": 1,
-        "hidden": 16,
-        "num_nodes": shape[0][1],
+        "hidden": 64,
         "num_heads": 4,
         "num_layers": 1,
         "graph_layers": 1,
@@ -224,19 +223,6 @@ def select_model(args, train_loader):
 
 
 models = ["selfmodel", "sabgnn", "sabgnn_case_only", "lstm", "dynst", "mpnn_lstm"]
-
-
-def run_model(data, model, mode='train'):
-    use_predict = mode == 'test'
-    y_hat, casex, casey, mobility, extra_info, idx = None, None, None, None, None, None
-    if len(data) == 3:
-        casex, casey, mobility = data
-        y_hat = model(casex, casey, mobility, use_predict)
-    elif len(data) == 5:
-        casex, casey, mobility, extra_info, idx = data
-        y_hat = model(casex, casey, mobility, idx, use_predict)
-    return y_hat, casex, casey, mobility, extra_info, idx
-
 
 def parse_args():
     parser = ArgumentParser()
@@ -404,3 +390,21 @@ def hits_at_k(A_hat_batch, A_batch, k=10, threshold_ratio=0.1):
     
     # 计算所有批次和天数的平均 HITS@k
     return total_hits / total_edges
+
+def run_model(data, model, mode='train'):
+    use_predict = mode == 'test'
+    y_hat, casex, casey, mobility, extra_info, idx = None, None, None, None, None, None
+    if len(data) == 3:
+        casex, casey, mobility = data
+        y_hat = model(casex, casey, mobility, use_predict)
+    elif len(data) == 5:
+        casex, casey, mobility, extra_info, idx = data
+        y_hat = model(casex, casey, mobility, idx, use_predict)
+
+    if casey.shape != y_hat.shape: casey = casey[:, -y_hat.size(1):]
+    assert y_hat.shape == casey.shape
+
+    return y_hat, casex, casey, mobility, extra_info, idx
+
+def random_mask(data):
+    

@@ -206,12 +206,11 @@ class Decoder(nn.Module):
 
 
 class dynst(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden, num_nodes, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), enable_graph_learner = False):
+    def __init__(self, in_dim, out_dim, hidden, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), enable_graph_learner = False):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.hidden = hidden
-        self.num_nodes = num_nodes
         self.num_heads = num_heads
         self.num_layers = num_layers
         self.graph_layers = graph_layers
