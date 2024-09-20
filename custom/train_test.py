@@ -87,7 +87,7 @@ def train_process(
             )
 
             if enable_graph_learner:
-                print(f", [adj_lambda] {adj_lambda}\n", end="")
+                print(f"[adj_lambda] {adj_lambda}, ", end="")
                 msg_file_logger += f"[adj_lambda] {adj_lambda}, "
 
             model.train()
@@ -249,7 +249,7 @@ def validate_test_process(model: nn.Module, criterion, dataloader, device):
     for data in dataloader:
         data = tuple(d.to(device) for d in data)
 
-        y_hat, casex, casey, mobility, extra_info, idx = run_model(data, model, "test")
+        y_hat, casex, casey, mobility, extra_info, idx = run_model(data, model, mode = "test")
 
         if isinstance(y_hat, tuple):
             y_hat, _ = y_hat  # 适配启用图学习器的情况

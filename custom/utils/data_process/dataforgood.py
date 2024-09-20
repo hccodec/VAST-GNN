@@ -23,13 +23,13 @@ country_end_date = "0512"
 
 meta_info = {"name": country_names, "code": country_codes}
 
-def load_data(args):
+def load_data(args, enable_cache = True):
     databinfile = os.path.join(args.preprocessed_data_dir, args.databinfile)
-    # if os.path.exists(databinfile):
-    #     with open(databinfile, 'rb') as f:
-    #         meta_data = pickle.load(f)
-    #     logger.info('已从数据文件读取 dataforgood 数据集')
-    #     return meta_data
+    if enable_cache and os.path.exists(databinfile):
+        with open(databinfile, 'rb') as f:
+            meta_data = pickle.load(f)
+        logger.info('已从数据文件读取 dataforgood 数据集')
+        return meta_data
 
     meta_data = {}
     for i in range(len(country_names)):
