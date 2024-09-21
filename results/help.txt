@@ -1,0 +1,25 @@
+test1 用最后一天计算 error
+python main.py --xdays 14 --ydays 3 --window 7 --result-dir test --device 5 --exp test1
+python main.py --xdays 14 --ydays 7 --window 7 --result-dir test --device 7 --exp test1
+python main.py --xdays 14 --ydays 14 --window 7 --result-dir test --device 8 --exp test1
+test2 用预测的所有天 计算 error
+python main.py --xdays 14 --ydays 3 --window 7 --result-dir test --device 5 --exp test2
+python main.py --xdays 14 --ydays 7 --window 7 --result-dir test --device 7 --exp test2
+python main.py --xdays 14 --ydays 14 --window 7 --result-dir test --device 8 --exp test2
+
+test3 用所有天计算 error ，dropout=0.5
+python main.py --xdays 14 --ydays 3 --window 7 --result-dir test --device 9 --exp test3
+python main.py --xdays 14 --ydays 7 --window 7 --result-dir test --device 7 --exp test3
+python main.py --xdays 14 --ydays 14 --window 7 --result-dir test --device 8 --exp test3
+test4 test3的最后一天
+python main.py --xdays 14 --ydays 3 --window 7 --result-dir test --device 9 --exp test4
+python main.py --xdays 14 --ydays 7 --window 7 --result-dir test --device 7 --exp test4
+python main.py --xdays 14 --ydays 14 --window 7 --result-dir test --device 8 --exp test4
+
+
+python main.py --xdays 7 --ydays 3 --window 7 --result-dir test_mpnn_lstm --model mpnn_lstm --device 6 --exp test2
+python main.py --xdays 7 --ydays 3 --window 7 --result-dir test_mpnn_lstm --model dynst --device 8 --exp test2
+python main.py --xdays 7 --ydays 7 --window 7 --result-dir test_mpnn_lstm --model mpnn_lstm --device 7 --exp test2
+python main.py --xdays 7 --ydays 7 --window 7 --result-dir test_mpnn_lstm --model dynst --device 7 --exp test2
+python main.py --xdays 7 --ydays 14 --window 7 --result-dir test_mpnn_lstm --model mpnn_lstm --device 8 --exp test2
+python main.py --xdays 7 --ydays 14 --window 7 --result-dir test_mpnn_lstm --model dynst --device 6 --exp test2

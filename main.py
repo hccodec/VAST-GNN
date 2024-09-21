@@ -229,6 +229,7 @@ def exp_dataforgood(args):
             )
 
             # writer.close()
+            torch.save(trained_model, result_paths["model_latest"])
 
             logger.info("")
             logger.info(f"训练完毕，开始评估: {country_name}")
@@ -236,7 +237,7 @@ def exp_dataforgood(args):
             logger.info("-" * 20)
             logger.info(font_yellow(f"[最新 (epoch {len(losses['train']) - 1})]"))
             metrics_latest = eval_process(
-                trained_model,
+                result_paths["model_latest"],
                 criterion,
                 train_loader,
                 validation_loader,
@@ -261,7 +262,6 @@ def exp_dataforgood(args):
                 case_normalize_ratio,
                 device,
             )
-            
             
             logger.info("[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*list(metrics_minvalloss.values())[:4]))
             logger.info(f"[err_val] {metrics_minvalloss['err_val']:.3f}, [err_test] {font_green(metrics_minvalloss['err_test'])}")

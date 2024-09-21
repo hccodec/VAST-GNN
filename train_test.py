@@ -5,7 +5,7 @@ from eval import compute_err, compute_metrics, compute_correlation, metrics_labe
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
-from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, run_model, hits_at_k
+from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, process_batch_data, hits_at_k
 from models.dynst.model import dynst
 
 # logger = logger.getLogger()
@@ -97,8 +97,7 @@ def train_process(
                 opt.zero_grad()
 
                 data = tuple(d.to(device) for d in data)
-
-                y_hat, casex, casey, mobility, extra_info, idx = run_model(data, model)
+                y_hat, casex, casey, mobility, idx, extra_info = train_model(data, adj_lambda, model, device, 0.8)
 
 
                 if enable_graph_learner:
@@ -187,10 +186,7 @@ def train_process(
 
             # Graph
             if e == 0:
-                if len(data) == 3:
-                    writer.add_graph(model, (casex, casey, mobility))
-                elif len(data) == 5:
-                    writer.add_graph(model, (casex, casey, mobility, extra_info, idx))
+                writer.add_graph(model, (casex, casey, mobility, idx, extra_info) if isinstance(extra_info, torch.Tensor) else (casex, casey, mobility))
             # Histogram
             for name, param in model.named_parameters():
                 writer.add_histogram(name, param, e)
@@ -247,9 +243,9 @@ def validate_test_process(model: nn.Module, criterion, dataloader, device):
     y_hat_res, y_real_res = None, None
 
     for data in dataloader:
-        data = tuple(d.to(device) for d in data)
 
-        y_hat, casex, casey, mobility, extra_info, idx = run_model(data, model, mode = "test")
+        data = tuple(d.to(device) for d in data)
+        y_hat, casex, casey, mobility, idx, extra_info = run_model(data, model)
 
         if isinstance(y_hat, tuple):
             y_hat, _ = y_hat  # 适配启用图学习器的情况
@@ -318,3 +314,23 @@ def eval_process(
         # "correlation_val": correlation[1][0],
         # "correlation_test": correlation[2][0],
     }
+
+# 训练测试模型的子过程
+
+def train_model(data, adj_lambda, model, device, observed_ratio = 0.8):
+    
+    data = process_batch_data(data, adj_lambda, model, device, observed_ratio)
+
+    return run_model(data, model)
+
+def run_model(data, model):
+
+    casex, casey, mobility, idx, extra_info = data
+    y_hat = model(casex, casey, mobility, extra_info)
+
+    # 适应模型同时输出图结构的情况
+    y_hat_shape = y_hat[0].shape if isinstance(y_hat, tuple) else y_hat.shape
+    if casey.shape != y_hat_shape: casey = casey[:, -y_hat_shape[1]:]
+    assert y_hat_shape == casey.shape
+
+    return y_hat, casex, casey, mobility, idx, extra_info
