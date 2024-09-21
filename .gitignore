@@ -1,7 +1,5 @@
 __pycache__
 data_preprocessed/
-# results/results_test/tmp/
-# results_*/
-results*
+results*/
 *.bin
 history_codes/
