@@ -3,7 +3,7 @@ import os, sys, torch
 sys.path.append(os.getcwd())
 from tensorboardX import SummaryWriter
 
-from train_test import train_process, validate_test_process, eval_process
+from train_test import train_process, eval_process
 
 from utils.logger import logger
 from utils.utils import font_green, font_yellow, select_model, set_random_seed, parse_args
