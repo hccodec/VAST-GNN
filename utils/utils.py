@@ -8,7 +8,7 @@ from models.SAB_GNN_case_trained import Multiwave_SpecGCN_LSTM_CASE_TRAINED
 # from models.self.SELF_MODEL_20240718 import SelfModel
 # from models.self.SELF_MODEL_20240728 import SelfModel
 from models.self.SELF_MODEL_20240828 import SelfModel
-from models.dynst.model import dynst
+from models.dynst.model import dynst_extra_info, dynst
 from utils.logger import logger
 import traceback, functools, yaml
 from argparse import ArgumentParser
@@ -271,7 +271,7 @@ def parse_args():
     parser.add_argument("--lr-scheduler-stepsize", type=float, default=10)
     parser.add_argument("--lr-scheduler-gamma", type=float, default=0.7)
     parser.add_argument("--early-stop-patience", type=float, default=100)
-    parser.add_argument("--graph-lambda-0", type=float, default=1.0)
+    parser.add_argument("--graph-lambda-0", type=float, default=0.8)
     parser.add_argument("--graph-lambda-k", type=float, default=1e-2)
     parser.add_argument("--graph-lambda-method", choices=graph_lambda_methods, default='exp')
     parser.add_argument(
@@ -391,27 +391,20 @@ def hits_at_k(A_hat_batch, A_batch, k=10, threshold_ratio=0.1):
     # 计算所有批次和天数的平均 HITS@k
     return total_hits / total_edges
 
-def run_model(data, model, mode='train'):
-    use_predict = mode == 'test'
-    data = random_mask(data)
-    casex, casey, mobility, extra_info, idx = data
-    y_hat = model(casex, casey, mobility, extra_info, use_predict)
+def process_batch_data(data, adj_lambda, model, device, observed_ratio):
+    casex, casey, mobility, idx, extra_info = data
+    casex, casey, mobility, idx, extra_info = random_mask((casex, casey, mobility, idx, extra_info), observed_ratio)
+    
+    # 处理 extra_info
+    if isinstance(model, dynst):
+        extra_info = dynst_extra_info(adj_lambda, dataset_extra=extra_info)
 
-    y_hat_shape = y_hat[0].shape if isinstance(y_hat, tuple) else y_hat.shape # 适应模型同时输出图结构的情况
-
-    if casey.shape != y_hat_shape: casey = casey[:, -y_hat_shape[1]:]
-    assert y_hat_shape == casey.shape
-
-    return y_hat, casex, casey, mobility, extra_info, idx
+    return casex, casey, mobility, idx, extra_info
 
 def random_mask(data, observed_ratio = 0.8):
     assert observed_ratio > 0 and observed_ratio <= 1
-
-    casex, casey, mobility, extra_info, idx = None, None, None, None, None
-    if len(data) == 3:
-        casex, casey, mobility = data
-    elif len(data) == 5:
-        casex, casey, mobility, extra_info, idx = data
+    
+    casex, casey, mobility, idx, extra_info = data
     (batch_size, num_xdays, num_nodes, num_features), num_ydays = casex.size(), casey.size(1)
 
     mask = torch.cat([torch.ones(int(num_nodes * observed_ratio)), torch.zeros(num_nodes - int(num_nodes * observed_ratio))])
@@ -422,7 +415,7 @@ def random_mask(data, observed_ratio = 0.8):
     if casex is not None: casex = casex[:, :, selected_indices]
     if casey is not None: casey = casey[:, :, selected_indices]
     if mobility is not None: mobility = mobility[:, :, selected_indices][:, :, :, selected_indices]
-    if extra_info is not None: extra_info = extra_info[:, :, selected_indices]
-    if idx is not None: idx = idx[:, :, selected_indices]
+    # if idx is not None: idx = idx[selected_indices]
+    # if extra_info is not None: extra_info = extra_info[selected_indices]
 
-    return casex, casey, mobility, extra_info, idx
+    return casex, casey, mobility, idx, extra_info

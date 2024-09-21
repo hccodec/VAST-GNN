@@ -222,14 +222,14 @@ models = ["selfmodel", "sabgnn", "sabgnn_case_only", "lstm", "dynst"]
 
 def run_model(data, model, mode='train'):
     use_predict = mode == 'test'
-    y_hat, casex, casey, mobility, extra_info, idx = None, None, None, None, None, None
+    y_hat, casex, casey, mobility, idx, extra_info = None, None, None, None, None, None
     if len(data) == 3:
         casex, casey, mobility = data
         y_hat = model(casex, casey, mobility, use_predict)
     elif len(data) == 5:
-        casex, casey, mobility, extra_info, idx = data
+        casex, casey, mobility, idx, extra_info = data
         y_hat = model(casex, casey, mobility, idx, use_predict)
-    return y_hat, casex, casey, mobility, extra_info, idx
+    return y_hat, casex, casey, mobility, idx, extra_info
 
 
 def parse_args():

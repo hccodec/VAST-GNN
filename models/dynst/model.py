@@ -89,8 +89,8 @@ class DynGraphEncoder(nn.Module):
 
         edge_features = torch.sigmoid(self.fc(edge_features))
 
-        mask = torch.eye(num_nodes).unsqueeze(0).unsqueeze(0).unsqueeze(-1).repeat(batch_size, (pred_len + obs_len), 1, 1, 1).to(self.device)
-        edge_features = edge_features * (1 - mask)
+        mask = torch.eye(num_nodes).unsqueeze(0).unsqueeze(0).repeat(batch_size, (pred_len + obs_len), 1, 1).to(self.device)
+        edge_features = edge_features.squeeze(-1) * (1 - mask)
 
         return edge_features
 
@@ -165,7 +165,7 @@ class Decoder(nn.Module):
         self.out = nn.Linear(hidden, out_dim)
         self.device = device
 
-    def forward(self, x, gt, adj_t, use_predict=False):
+    def forward(self, x, gt, adj_t, use_predict = False):
         batch_size = x.size(0)
         obs_len = x.size(1)
         num_nodes = x.size(2)
@@ -180,7 +180,7 @@ class Decoder(nn.Module):
             # current_x = current_x.permute(0, 2, 3, 1).contiguous()
             x_tcn = self.tcn(current_x.flatten(0, -2).unsqueeze(1))
             x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
-            adj = adj_t[:, i].squeeze(-1)
+            adj = adj_t[:, i]
             laplace_adj = getLaplaceMat(adj)
             node_state_list = [x_tcn]
             node_state = x_tcn
@@ -205,6 +205,24 @@ class Decoder(nn.Module):
         return predict_list
 
 
+class dynst_extra_info():
+    def __init__(self, lambda_A, dataset_extra = None):
+        self.lambda_A = lambda_A
+        self.dataset_extra = dataset_extra
+
+    def get_lambda(self):
+        return self.lambda_A
+    # def __init__(self, epoch, max_epochs, lambda_range = [0.1, 1.0], dataset_extra = None):
+    #     assert hasattr(lambda_range, "__len__") and len(lambda_range == 2) and lambda_range[1] - lambda_range[0] > 0
+
+    #     self.lambda_range = lambda_range
+    #     self.epoch = epoch
+    #     self.max_epochs = max_epochs
+    #     self.dataset_extra = dataset_extra
+
+    # def get_lambda(self):
+    #     return self.lambda_range[1] - (self.lambda_range[1] - self.lambda_range[0]) * (self.epoch / self.max_epochs)
+
 class dynst(nn.Module):
     def __init__(self, in_dim, out_dim, hidden, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), enable_graph_learner = False):
         super().__init__()
@@ -221,8 +239,14 @@ class dynst(nn.Module):
         self.enc = DynGraphEncoder(in_dim, hidden, num_heads, num_layers, dropout, device).to(device)
         self.dec = Decoder(in_dim, out_dim, hidden, graph_layers, dropout, device).to(device)
 
-    def forward(self, X, y, A, extra_info=None, use_predict = False):
+    def forward(self, X, y, A, extra_info : dynst_extra_info=None):
         adj_hat = self.enc(X, y)
-        y_hat = self.dec(X, y, adj_hat, use_predict)
-        adj_hat = adj_hat[:, :A.size(1)].squeeze(-1)
+
+        # if self.training and extra_info:
+        #     # lambda_A = extra_info.lambda_range[1] - (extra_info.lambda_range[1] - extra_info.lambda_range[0]) * (extra_info.epoch / extra_info.max_epochs)
+        #     lambda_A = extra_info.get_lambda()
+        #     adj_hat = adj_hat[:, :A.size(1)].squeeze(-1)
+        #     adj_hat = (1 - lambda_A) * adj_hat + lambda_A * A
+
+        y_hat = self.dec(X, y, adj_hat, not self.training)
         return (y_hat, adj_hat) if self.enable_graph_learner else y_hat

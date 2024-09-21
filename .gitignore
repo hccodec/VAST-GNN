@@ -1,6 +1,7 @@
 __pycache__
-results/
-results_old/
-results_original/
+data_preprocessed/
+# results/results_test/tmp/
+# results_*/
+results*
 *.bin
 history_codes/
