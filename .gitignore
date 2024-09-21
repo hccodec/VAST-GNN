@@ -2,4 +2,5 @@ __pycache__
 data_preprocessed/
 results*/
 *.bin
+epilearn/
 history_codes/
