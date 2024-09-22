@@ -166,10 +166,7 @@ class Decoder(nn.Module):
         self.device = device
 
     def forward(self, x, gt, adj_t, use_predict = False):
-        batch_size = x.size(0)
-        obs_len = x.size(1)
-        num_nodes = x.size(2)
-        pred_len = gt.size(1)
+        (batch_size, obs_len, num_nodes, _), pred_len = x.size(), gt.size(1)
 
         _seq = torch.cat([x[:, 0, :, :-1], x[:, :, :, -1].transpose(1, 2), gt.squeeze(-1).transpose(1, 2)], dim=-1)
 
@@ -180,7 +177,7 @@ class Decoder(nn.Module):
             # current_x = current_x.permute(0, 2, 3, 1).contiguous()
             x_tcn = self.tcn(current_x.flatten(0, -2).unsqueeze(1))
             x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
-            adj = adj_t[:, i]
+            adj = adj_t[:, i - (pred_len + 1)]
             laplace_adj = getLaplaceMat(adj)
             node_state_list = [x_tcn]
             node_state = x_tcn
@@ -210,8 +207,6 @@ class dynst_extra_info():
         self.lambda_A = lambda_A
         self.dataset_extra = dataset_extra
 
-    def get_lambda(self):
-        return self.lambda_A
     # def __init__(self, epoch, max_epochs, lambda_range = [0.1, 1.0], dataset_extra = None):
     #     assert hasattr(lambda_range, "__len__") and len(lambda_range == 2) and lambda_range[1] - lambda_range[0] > 0
 
@@ -240,13 +235,16 @@ class dynst(nn.Module):
         self.dec = Decoder(in_dim, out_dim, hidden, graph_layers, dropout, device).to(device)
 
     def forward(self, X, y, A, extra_info : dynst_extra_info=None):
+        
+
         adj_hat = self.enc(X, y)
 
-        # if self.training and extra_info:
+        # if self.training and extra_info is not None:
         #     # lambda_A = extra_info.lambda_range[1] - (extra_info.lambda_range[1] - extra_info.lambda_range[0]) * (extra_info.epoch / extra_info.max_epochs)
-        #     lambda_A = extra_info.get_lambda()
-        #     adj_hat = adj_hat[:, :A.size(1)].squeeze(-1)
-        #     adj_hat = (1 - lambda_A) * adj_hat + lambda_A * A
+        #     A_y = extra_info.dataset_extra
+        #     A_gt = torch.cat((A, A_y), dim=1)
+        #     lambda_A = extra_info.lambda_A
+        #     adj_hat = (1 - lambda_A) * adj_hat + lambda_A * A_gt
 
         y_hat = self.dec(X, y, adj_hat, not self.training)
         return (y_hat, adj_hat) if self.enable_graph_learner else y_hat

@@ -410,12 +410,12 @@ def random_mask(data, observed_ratio = 0.8):
     mask = torch.cat([torch.ones(int(num_nodes * observed_ratio)), torch.zeros(num_nodes - int(num_nodes * observed_ratio))])
     mask = mask[torch.randperm(num_nodes)]
     # mask = mask.unsqueeze(0).unsqueeze(0).expand(batch_size, num_xdays, -1)
-    selected_indices = torch.nonzero(mask).squeeze()
+    selected_indices = torch.nonzero(mask).squeeze().to(casex.device)
     
     if casex is not None: casex = casex[:, :, selected_indices]
     if casey is not None: casey = casey[:, :, selected_indices]
     if mobility is not None: mobility = mobility[:, :, selected_indices][:, :, :, selected_indices]
     # if idx is not None: idx = idx[selected_indices]
-    # if extra_info is not None: extra_info = extra_info[selected_indices]
+    if extra_info is not None: extra_info = extra_info[:, :, selected_indices][:, :, :, selected_indices]
 
     return casex, casey, mobility, idx, extra_info
