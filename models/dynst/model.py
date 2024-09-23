@@ -166,18 +166,18 @@ class Decoder(nn.Module):
         self.device = device
 
     def forward(self, x, gt, adj_t, use_predict = False):
-        (batch_size, obs_len, num_nodes, _), pred_len = x.size(), gt.size(1)
+        batch_size, obs_len, num_nodes, pred_len = x.size(0), x.size(1), x.size(2), gt.size(1)
 
         _seq = torch.cat([x[:, 0, :, :-1], x[:, :, :, -1].transpose(1, 2), gt.squeeze(-1).transpose(1, 2)], dim=-1)
 
-        current_x = x[:, -1]
+        current_x = x[:, 0]
         gru_hidden = torch.zeros(batch_size * num_nodes, self.hidden).to(self.device)
         predict_list = []
-        for i in range(pred_len):
+        for i in range(obs_len + pred_len):
             # current_x = current_x.permute(0, 2, 3, 1).contiguous()
             x_tcn = self.tcn(current_x.flatten(0, -2).unsqueeze(1))
             x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
-            adj = adj_t[:, i - (pred_len + 1)]
+            adj = adj_t[:, i]
             laplace_adj = getLaplaceMat(adj)
             node_state_list = [x_tcn]
             node_state = x_tcn
@@ -193,11 +193,18 @@ class Decoder(nn.Module):
             predict = self.out(gru_hidden)
             predict = predict.reshape(batch_size, num_nodes, -1)
 
-            if use_predict:
-                current_x = torch.cat((current_x[:, :, 1:], predict), dim=-1)
+            # if use_predict and not i < obs_len:
+            #     current_x = torch.cat((current_x[:, :, 1:], predict), dim=-1)
+            # else:
+            #     current_x = _seq[:, :, i + 1: i + obs_len + 1]
+            # if not i < obs_len: predict_list.append(predict)
+            if i < obs_len:
+                current_x = _seq[:, :, i + 1 : i + obs_len + 1]
             else:
-                current_x = _seq[:, :, i + 1: i + obs_len + 1]
-            predict_list.append(predict)
+                if use_predict: current_x = torch.cat((current_x[:, :, 1:], predict), dim=-1)
+                else: current_x = _seq[:, :, i + 1 : i + obs_len + 1]
+                predict_list.append(predict)
+
         predict_list = torch.stack(predict_list, dim=1)
         return predict_list
 
@@ -237,14 +244,15 @@ class dynst(nn.Module):
     def forward(self, X, y, A, extra_info : dynst_extra_info=None):
         
 
-        adj_hat = self.enc(X, y)
+        adj_output = self.enc(X, y)
 
-        # if self.training and extra_info is not None:
-        #     # lambda_A = extra_info.lambda_range[1] - (extra_info.lambda_range[1] - extra_info.lambda_range[0]) * (extra_info.epoch / extra_info.max_epochs)
-        #     A_y = extra_info.dataset_extra
-        #     A_gt = torch.cat((A, A_y), dim=1)
-        #     lambda_A = extra_info.lambda_A
-        #     adj_hat = (1 - lambda_A) * adj_hat + lambda_A * A_gt
+        adj_hat = adj_output
+        if self.training and extra_info is not None:
+            # lambda_A = extra_info.lambda_range[1] - (extra_info.lambda_range[1] - extra_info.lambda_range[0]) * (extra_info.epoch / extra_info.max_epochs)
+            A_gt = extra_info.dataset_extra
+            A_all = torch.cat((A, A_gt), dim=1)
+            lambda_A = extra_info.lambda_A
+            adj_hat = (1 - lambda_A) * adj_output + lambda_A * A_all
 
-        y_hat = self.dec(X, y, adj_hat, not self.training)
-        return (y_hat, adj_hat) if self.enable_graph_learner else y_hat
+        y_hat = self.dec(X, y, adj_hat.float(), not self.training)
+        return (y_hat, adj_output) if self.enable_graph_learner else y_hat

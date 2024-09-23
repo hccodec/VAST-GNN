@@ -12,7 +12,10 @@ def parse_args():
     parser.add_argument("--exp", type=str, default="test1")
     parser.add_argument("-d", "--dir", type=str, default="", help="数据集的上一层文件夹")
     parser.add_argument("-s", "--subdir", default="", help="指定某一子目录")
-    return parser.parse_args()
+    args =  parser.parse_args()
+    if args.subdir != "":
+        args.dir = os.path.dirname(os.path.dirname(args.subdir))
+    return args
 
 def extract_results(args):
     result_dir, exp_name, dir = args.result_dir, args.exp, args.dir
@@ -179,7 +182,7 @@ if __name__ == "__main__":
     # get models
     models = []
     for result in results: models.append(result['model'])
-    models = list(set(models))
+    models = sorted(set(models))
     for model in list(models):
         print()
         print("[{}] {}".format(model, ','.join(countries)))
