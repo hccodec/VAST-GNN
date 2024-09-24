@@ -46,3 +46,5 @@ python main.py --xdays 7 --ydays 7 --window 7 --result-dir test_mpnn_lstm --mode
 python main.py --xdays 7 --ydays 14 --window 7 --result-dir test_mpnn_lstm --model mpnn_lstm --device 8 --exp test2
 python main.py --xdays 7 --ydays 14 --window 7 --result-dir test_mpnn_lstm --model dynst --device 6 --exp test2
 
+
+

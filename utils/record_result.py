@@ -3,6 +3,7 @@ import argparse, os, re
 from custom_datetime import str2date
 
 pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
+pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
 countries = ["England", "France", "Italy", "Spain"]
 
 def parse_args():
@@ -29,12 +30,16 @@ def extract_results(args):
         for exp in exps:
             assert pattern_subdir.search(exp), exp
             model, xdays, ydays, window, shift, timestr = pattern_subdir.search(exp).groups()
+            assert pattern_subdir.search(exp), exp
+            model, xdays, ydays, window, shift, timestr = pattern_subdir.search(exp).groups()
 
             log_path = os.path.join(dir, dataset, exp,  "log.txt")
+            if not os.path.exists(log_path): continue
             if not os.path.exists(log_path): continue
             res = extract_from_logfile(log_path)
 
             exp_result.append(dict(
+                model=model, xdays=xdays, ydays=ydays, window=window, shift=shift, timestr=timestr, res=res
                 model=model, xdays=xdays, ydays=ydays, window=window, shift=shift, timestr=timestr, res=res
             ))
         results[dataset] = exp_result
@@ -129,6 +134,7 @@ def print_err(args, results, _models, i):
             epoch_minvalloss = r[country]['minvalloss']['epoch']
             err_val_minvalloss = r[country]['minvalloss']['err_val']
             err_test_minvalloss = r[country]['minvalloss']['err_test']
+
 
             epoch_latest = r[country]['latest']['epoch']
             err_val_latest = r[country]['latest']['err_val']
