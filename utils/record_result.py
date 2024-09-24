@@ -127,7 +127,6 @@ def print_err(args, results, _models, i):
             err_val_minvalloss = r[country]['minvalloss']['err_val']
             err_test_minvalloss = r[country]['minvalloss']['err_test']
 
-
             epoch_latest = r[country]['latest']['epoch']
             err_val_latest = r[country]['latest']['err_val']
             err_test_latest = r[country]['latest']['err_test']
