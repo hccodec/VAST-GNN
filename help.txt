@@ -1,3 +1,25 @@
+
+##################################################################################################################
+
+# mpnn_lstm/dynst 第 3/7/14 天 (test1)
+python main.py --ydays 1 --shift 2 --result-dir tests --model dynst --device 6 --exp test1
+python main.py --ydays 1 --shift 6 --result-dir tests --model dynst --device 7 --exp test1
+python main.py --ydays 1 --shift 13 --result-dir tests --model dynst --device 5 --exp test1
+python main.py --ydays 1 --shift 2 --result-dir tests --model mpnn_lstm --device 5 --exp test1
+python main.py --ydays 1 --shift 6 --result-dir tests --model mpnn_lstm --device 7 --exp test1
+python main.py --ydays 1 --shift 13 --result-dir tests --model mpnn_lstm --device 6 --exp test1
+
+python utils.record_result.py -d results/tests/exp_test1
+
+# dynst 连续预测 只比对最后一天 添加命令行参数 --comp-last
+python main.py --ydays 3 --result-dir tests --model dynst --comp-last --device 6 --exp test2
+python main.py --ydays 7 --result-dir tests --model dynst --comp-last --device 7 --exp test2
+python main.py --ydays 14 --result-dir tests --model dynst --comp-last --device 5 --exp test2
+
+python utils.record_result.py -d results/tests/exp_test2
+
+##################################################################################################################
+
 test1 用最后一天计算 error
 python main.py --xdays 14 --ydays 3 --window 7 --result-dir test --device 5 --exp test1
 python main.py --xdays 14 --ydays 7 --window 7 --result-dir test --device 7 --exp test1
@@ -23,3 +45,4 @@ python main.py --xdays 7 --ydays 7 --window 7 --result-dir test_mpnn_lstm --mode
 python main.py --xdays 7 --ydays 7 --window 7 --result-dir test_mpnn_lstm --model dynst --device 7 --exp test2
 python main.py --xdays 7 --ydays 14 --window 7 --result-dir test_mpnn_lstm --model mpnn_lstm --device 8 --exp test2
 python main.py --xdays 7 --ydays 14 --window 7 --result-dir test_mpnn_lstm --model dynst --device 6 --exp test2
+

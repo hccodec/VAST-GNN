@@ -95,7 +95,7 @@ def split_dataset(args, data_origin, date_all, mode=2):
 
     # 先生成对应索引，再生成
     n = len(date_all) - args.xdays - args.ydays + 1
-    train_ratio, validation_ratio = args.trainratio, args.validateratio
+    train_ratio, validation_ratio = args.train_ratio, args.val_ratio
 
     if hasattr(n, '__len__'): n = len(n)
     assert train_ratio + validation_ratio < 1 and isinstance(n, int)

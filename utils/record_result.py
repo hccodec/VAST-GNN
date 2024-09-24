@@ -2,9 +2,8 @@ import argparse, os, re
 
 from custom_datetime import str2date
 
-pattern_subdir = re.compile(r"^(\d+)_(\d+)_w(\d+)_(.*)_(\d+)$")
+pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
 countries = ["England", "France", "Italy", "Spain"]
-pattern_subdir = re.compile(r"^(\d+)_(\d+)_w(\d+)_(.*)_(\d+)$")
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -28,14 +27,15 @@ def extract_results(args):
         exps = os.listdir(os.path.join(dir, dataset))
         exp_result = []
         for exp in exps:
-            xdays, ydays, window, model, timestr = pattern_subdir.search(exp).groups()
-            xdays, ydays, window, model, timestr = pattern_subdir.search(exp).groups()
+            assert pattern_subdir.search(exp), exp
+            model, xdays, ydays, window, shift, timestr = pattern_subdir.search(exp).groups()
 
             log_path = os.path.join(dir, dataset, exp,  "log.txt")
+            if not os.path.exists(log_path): continue
             res = extract_from_logfile(log_path)
 
             exp_result.append(dict(
-                xdays=xdays, ydays=ydays, window=window, model=model, timestr=timestr, res=res
+                model=model, xdays=xdays, ydays=ydays, window=window, shift=shift, timestr=timestr, res=res
             ))
         results[dataset] = exp_result
 
@@ -97,25 +97,19 @@ def process_log_segment(lines):
     # print(lines)
     return {country: res}
 
-def print_err(args, results, _model):
+def print_err(args, results, _models, i):
     s = {'minvalloss': {}, 'latest': {}}
 
     for result in results:
-        x, y, window, model, timestr = result['xdays'], result['ydays'], result['window'], result['model'], result['timestr']
-        if model != _model: continue
+        x, y, window, model, shift, timestr = result['xdays'], result['ydays'], result['window'], result['model'], result['shift'], result['timestr']
+        if model != _models[i]: continue
         r = result['res']
 
         if args.subdir:
-            if not args.subdir.split("/")[-1] == f"{x}_{y}_w{window}_{model}_{timestr}": continue
+            if not args.subdir.split("/")[-1] == f"{model}_{x}_{y}_w{window}_s{shift}_{timestr}": continue
 
-        x, y, window, model, timestr = result['xdays'], result['ydays'], result['window'], result['model'], result['timestr']
-        if model != _model: continue
-        r = result['res']
-
-        if args.subdir:
-            if not args.subdir.split("/")[-1] == f"{x}_{y}_w{window}_{model}_{timestr}": continue
-
-        key = f"{x}->{y} ({window}) {str(str2date(timestr, '%Y%m%d%H%M%S'))}"
+        key = f"{x}->{y} (w{window}s{shift})"
+        # key = f"{x}->{y} (w{window}s{shift}) {str(str2date(timestr, '%Y%m%d%H%M%S'))}"
         s['minvalloss'][key] = {}
         s['latest'][key] = {}
         for country in countries:
@@ -132,27 +126,11 @@ def print_err(args, results, _model):
                 )
                 continue
 
-            if not country in r:
-                s['minvalloss'][key][country] = dict(
-                    err_val="-",
-                    err_test="-",
-                    epoch="-"
-                )
-                s['latest'][key][country] = dict(
-                    err_val="-",
-                    err_test="-",
-                    epoch="-"
-                )
-                continue
-
             epoch_minvalloss = r[country]['minvalloss']['epoch']
             err_val_minvalloss = r[country]['minvalloss']['err_val']
             err_test_minvalloss = r[country]['minvalloss']['err_test']
-            err_val_minvalloss = r[country]['minvalloss']['err_val']
-            err_test_minvalloss = r[country]['minvalloss']['err_test']
+
             epoch_latest = r[country]['latest']['epoch']
-            err_val_latest = r[country]['latest']['err_val']
-            err_test_latest = r[country]['latest']['err_test']
             err_val_latest = r[country]['latest']['err_val']
             err_test_latest = r[country]['latest']['err_test']
 
@@ -169,9 +147,11 @@ def print_err(args, results, _model):
     _ = 1
     if args.subdir: print(args.subdir)
     for k in s:
-        print(f"{k:10s}", ' ' * 10, ' | '.join(list(s[k].keys())))
-        print('[err_test]', ' | '.join([' '.join(map(lambda c: c['err_test'], v.values())) for v in s[k].values()]))
-        print('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
+        if k != 'minvalloss': continue
+        keys = sorted(s[k].keys(), key=lambda x: int(re.search(r'\d+', x).group()))
+        if not i: print(' | '.join(keys))
+        print(f'[{_models[i]:>{9}s}]', ' | '.join([' '.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]))
+        # print('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
         # print(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))
 
 
@@ -182,8 +162,9 @@ if __name__ == "__main__":
     # get models
     models = []
     for result in results: models.append(result['model'])
-    models = sorted(set(models))
-    for model in list(models):
-        print()
-        print("[{}] {}".format(model, ','.join(countries)))
-        print_err(args, results, model)
+    assert set(models) == {'dynst', 'mpnn_lstm'}
+    models = ['mpnn_lstm', 'dynst']
+    print()
+    print("[err_test] {}".format(','.join(countries)))
+    for i in range(len(models)):
+        print_err(args, results, models, i)

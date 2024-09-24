@@ -44,12 +44,11 @@ def compute_correlation(
 RMSELoss = lambda _y, y: float(torch.sqrt(torch.mean((_y - y) ** 2)))
 MAELoss = lambda _y, y: float(torch.mean(torch.div(torch.abs(_y - y), 1)))
 
-def compute_err(output, y_test, mode='total', model_str='self'):
-    assert mode in ['total', 'last']
-    o = (output.view(-1) if(model_str=="LSTM") else output).cpu().detach().numpy()
-    l = (y_test.view(-1) if(model_str=="LSTM") else y_test).cpu().numpy()
+def compute_err(output, y_test, comp_last: bool):
+    o = output.cpu().detach().numpy()
+    l = y_test.cpu().numpy()
 
-    if mode == "last": o, l = o[:, -1], l[:, -1]
+    if comp_last: o, l = o[:, -1], l[:, -1]
     #--------------- Average error per region
     # error = np.mean(np.sum(abs(o - l), -1) / output.size(-1))
     assert o.shape == l.shape

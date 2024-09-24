@@ -318,8 +318,8 @@ def parse_args():
     args.device = set_device(args.device)
     args.databinfile = f"{args.databinfile}_{args.wave}_{args.xdays}_{args.ydays}.bin"
 
-    args.trainratio /= 100
-    args.validateratio /= 100
+    args.train_ratio /= 100
+    args.val_ratio /= 100
 
     args.startdate = "20200414" if args.wave == 3 else "20200720"
     args.enddate = "20210207" if args.wave == 3 else "20210515"

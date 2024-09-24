@@ -264,7 +264,18 @@ def hits_at_k(A_hat_batch, A_batch, k=10, threshold_ratio=0.1):
     # 计算所有批次和天数的平均 HITS@k
     return total_hits / total_edges
 
-def process_batch_data(data, adj_lambda, model, device, observed_ratio):
+def process_batch(data, adj_lambda, model, observed_ratio):
+    """
+    考虑到 random_mask 的随机性和 adj_lambda 的动态变化，故在此对每个 batch 都执行一次数据转换操作。
+    Args:
+        data:           数据集 batch
+        adj_lambda:     模型运行时 A_gt 的系数
+        model:          模型 class
+        observed_ratio: 观测到节点的比例
+
+    Returns:
+
+    """
     casex, casey, mobility, idx, extra_info = data
     casex, casey, mobility, idx, extra_info = random_mask((casex, casey, mobility, idx, extra_info), observed_ratio)
     
@@ -292,3 +303,23 @@ def random_mask(data, observed_ratio = 0.8):
     if extra_info is not None: extra_info = extra_info[:, :, selected_indices][:, :, :, selected_indices]
 
     return casex, casey, mobility, idx, extra_info
+
+def get_exp_desc(modelstr, xdays, ydays, window, shift) -> str:
+    '''
+
+    Args:
+        modelstr:   模型字符串
+        xdays:      历史窗口
+        ydays:      预测窗口
+        window:     历史数据特征窗口
+        shift:      预测窗口偏移
+
+    Returns:
+
+    '''
+    y_desc = ""
+    if shift == 0: y_desc += f" {ydays}"
+    elif ydays == 1: y_desc += f"第 {shift + 1}"
+    else: y_desc += f"第 {shift + 1}-{shift + ydays}"
+
+    return f"历史 {xdays} 天预测未来{y_desc} 天 ({modelstr}_w{window})"

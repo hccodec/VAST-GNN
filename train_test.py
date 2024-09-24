@@ -5,8 +5,9 @@ from eval import compute_err, compute_metrics, compute_correlation, metrics_labe
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
-from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, process_batch_data, hits_at_k
-from models.dynst.model import dynst
+from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, process_batch, hits_at_k
+from models.dynst.model import dynst, dynst_extra_info
+
 
 # logger = logger.getLogger()
 
@@ -25,6 +26,7 @@ def train_process(
     validation_loader,
     test_loader,
     early_stop_patience,
+    nodes_observed_ratio,
     case_normalize_ratio,
     graph_lambda_0,
     graph_lambda_k,
@@ -32,7 +34,8 @@ def train_process(
     device,
     writer,
     result_paths,
-    enable_graph_learner
+    enable_graph_learner,
+    comp_last
 ):
 
     opt = torch.optim.Adam(
@@ -56,12 +59,12 @@ def train_process(
 
     time_start = time.time()
 
-    with open(result_paths["csv"], "w"):
-        pass
-    with open(result_paths["csv"], "a") as fw:
-        fw.write(
-            f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,err,lr,time\n"
-        )
+    # with open(result_paths["csv"], "w"):
+    #     pass
+    # with open(result_paths["csv"], "a") as fw:
+    #     fw.write(
+    #         f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,err,lr,time\n"
+    #     )
 
     loss_best, model_best, epoch_best = float("inf"), None, 0
     early_stop_wait = 0  # 控制 early stop 的行为。当其值达到阈值时停止训练
@@ -97,15 +100,18 @@ def train_process(
                 opt.zero_grad()
 
                 data = tuple(d.to(device) for d in data)
-                y_hat, casex, casey, mobility, idx, extra_info = train_model(data, adj_lambda, model, device, 0.8)
+                y_hat, casex, casey, mobility, idx, extra_info = train_model(data, adj_lambda, model, nodes_observed_ratio)
 
+                adj_y = extra_info.dataset_extra if isinstance(extra_info, dynst_extra_info) else extra_info
+                assert isinstance(adj_y, torch.Tensor) and adj_y.shape == (*casey.shape[:-1], casey.shape[-2])
+                adj_gt = torch.cat([mobility, adj_y], dim = 1)
 
                 if enable_graph_learner:
                     y_hat, adj_hat = y_hat
                     loss = criterion(casey.float(), y_hat.float()) + adj_lambda * criterion(
-                        mobility.float(), adj_hat.float()
+                        adj_gt.float(), adj_hat.float()
                     )
-                    hits10 = hits_at_k(mobility, adj_hat)
+                    hits10 = hits_at_k(adj_gt, adj_hat)
                 else:
                     loss = criterion(casey.float(), y_hat.float())
 
@@ -157,7 +163,7 @@ def train_process(
             else:
                 last = 3
                 last_losses = losses['val'][-min(last, len(losses['val'])):]
-                if len(losses['val']) > 2 and max(last_losses) - min(last_losses) < 1e-2:
+                if len(losses['val']) > 2 and max(last_losses) - min(last_losses) < 1e-1:
                     msg_file_logger += " (Early stop)"
                     print(" (Early stop)")
                     early_stop = True
@@ -168,19 +174,18 @@ def train_process(
             metrics = compute_metrics(
                 y_hat_val, y_real_val, y_hat_test, y_real_test, case_normalize_ratio
             )
-            err_val, err_test = compute_err(y_hat_val, y_real_val), compute_err(y_hat_test, y_real_test)
+            err_val, err_test = compute_err(y_hat_val, y_real_val, comp_last), compute_err(y_hat_test, y_real_test, comp_last)
 
-            
             logger.info("[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*metrics))
             logger.info(f"[err_val] {err_val:.3f}, [err_test] {font_green(err_test)}")
 
-            # fw.write(f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,time\n")
-            with open(result_paths["csv"], "a") as fw:
-                fw.write(
-                    "{},{:.5f},{:.5f},{:.5f},{},{},{},{},{},{},{},{:2f}s\n".format(
-                        e, loss, loss_val, loss_test, *metrics, err_val, err_test, lr, time2 - time1
-                    )
-                )
+            # # fw.write(f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,time\n")
+            # with open(result_paths["csv"], "a") as fw:
+            #     fw.write(
+            #         "{},{:.5f},{:.5f},{:.5f},{},{},{},{},{},{},{},{:2f}s\n".format(
+            #             e, loss, loss_val, loss_test, *metrics, err_val, err_test, lr, time2 - time1
+            #         )
+            #     )
 
             # region tensorboard
 
@@ -273,6 +278,7 @@ def eval_process(
     y_days,
     case_normalize_ratio,
     device,
+    comp_last
 ):
 
     trained_model = torch.load(model) if isinstance(model, str) else model
@@ -291,8 +297,8 @@ def eval_process(
         validation_hat, validation_real, test_hat, test_real, case_normalize_ratio
     )
 
-    err_val = compute_err(validation_hat, validation_real)
-    err_test = compute_err(test_hat, test_real)
+    err_val = compute_err(validation_hat, validation_real, comp_last)
+    err_test = compute_err(test_hat, test_real, comp_last)
     # correlation = compute_correlation(
     #     train_hat,
     #     train_real,
@@ -317,9 +323,9 @@ def eval_process(
 
 # 训练测试模型的子过程
 
-def train_model(data, adj_lambda, model, device, observed_ratio = 0.8):
+def train_model(data, adj_lambda, model, nodes_observed_ratio = 0.8):
     
-    data = process_batch_data(data, adj_lambda, model, device, observed_ratio)
+    data = process_batch(data, adj_lambda, model, nodes_observed_ratio)
 
     return run_model(data, model)
 

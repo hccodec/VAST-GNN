@@ -193,11 +193,6 @@ class Decoder(nn.Module):
             predict = self.out(gru_hidden)
             predict = predict.reshape(batch_size, num_nodes, -1)
 
-            # if use_predict and not i < obs_len:
-            #     current_x = torch.cat((current_x[:, :, 1:], predict), dim=-1)
-            # else:
-            #     current_x = _seq[:, :, i + 1: i + obs_len + 1]
-            # if not i < obs_len: predict_list.append(predict)
             if i < obs_len:
                 current_x = _seq[:, :, i + 1 : i + obs_len + 1]
             else:
