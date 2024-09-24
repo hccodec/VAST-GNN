@@ -18,8 +18,6 @@ def parse_args():
         type=str,
         default="",
         help="处理后的数据集文件名称。其实际文件名为 <databinfile>_xdays_ydays_window_shift.bin",
-        default="",
-        help="处理后的数据集文件名称。其实际文件名为 <databinfile>_xdays_ydays_window_shift.bin",
     )
     parser.add_argument(
         "--preprocessed-data-dir",
@@ -28,19 +26,12 @@ def parse_args():
     )
     parser.add_argument("--exp", default="-1", help="实验编号.-1 表示不编号")
     parser.add_argument("--model", default="dynst", choices=models_list, help="设置实验所用模型")
-    parser.add_argument("--model", default="dynst", choices=models_list, help="设置实验所用模型")
     parser.add_argument("--result-dir", default="results_test", help="")
     parser.add_argument("--seed", default=5, help="随机种子")
     parser.add_argument("--device", default=7, help="GPU号")
     parser.add_argument("--xdays", type=int, default=7, help="预测所需历史天数")
     parser.add_argument("--ydays", type=int, default=3, help="预测未来天数")
     parser.add_argument("--window", type=int, default=-1, help="作为特征的历史天数窗口大小，值为-1时和xdays相同")
-    parser.add_argument("--shift", type=int, default=0,
-                        help="大于 0 则启用隔 shift 天预测。如xdays=7, ydays=2, shift=1 即 0-6 天预测 8-9 天。")
-    parser.add_argument("--nodes-observed-ratio", type=float, default=80.0, help="观测到的结点百分点")
-    parser.add_argument("--case-normalize-ratio", type=float, default=100.0, help="训练集比例百分点")
-    parser.add_argument("--train-ratio", type=int, default=70, help="训练集比例百分点")
-    parser.add_argument("--val-ratio", type=int, default=10, help="验证集比例百分点")
     parser.add_argument("--shift", type=int, default=0,
                         help="大于 0 则启用隔 shift 天预测。如xdays=7, ydays=2, shift=1 即 0-6 天预测 8-9 天。")
     parser.add_argument("--nodes-observed-ratio", type=float, default=80.0, help="观测到的结点百分点")
@@ -94,10 +85,8 @@ def process_args(args):
     subdir += f"_{now}"
 
     # 通过 args.dataset 锁定数据集最终位置
-    # 通过 args.dataset 锁定数据集最终位置
     args.data_dir += "/" + args.dataset
 
-    # 通过数据集以及 arg.exp 锁定实验结果的最终保存位置
     # 通过数据集以及 arg.exp 锁定实验结果的最终保存位置
     if args.exp == "" or args.exp == "-1":
         args.result_dir = os.path.join("results", args.result_dir, "tmp", args.dataset, subdir)
@@ -107,7 +96,6 @@ def process_args(args):
         )
     os.makedirs(args.result_dir, exist_ok=True)
 
-    # 在实验结果最终保存位置创建 log 文件
     # 在实验结果最终保存位置创建 log 文件
     set_logger(args.result_dir)
 
@@ -121,22 +109,8 @@ def process_args(args):
     # 通过百分点确定隐藏结点比例
     assert 0 <= args.nodes_observed_ratio <= 100
     args.nodes_observed_ratio /= 100
-    # 确定处理好的数据集的位置
-    if args.databinfile == "":
-        args.databinfile = f"{args.dataset}_x{args.xdays}_y{args.ydays}_w{args.window}_s{args.shift}.bin"
-    else:
-        args.databinfile = f"{args.databinfile}_{args.dataset}_x{args.xdays}_y{args.ydays}_w{args.window}_s{args.shift}.bin"
-    args.databinfile = os.path.join(args.preprocessed_data_dir, args.databinfile)
 
-    # 通过百分点确定隐藏结点比例
-    assert 0 <= args.nodes_observed_ratio <= 100
-    args.nodes_observed_ratio /= 100
-
-    # 通过百分点确定比例
-    assert 0 < args.train_ratio < 100 and 0 < args.val_ratio < 100
-    args.train_ratio /= 100
-    args.val_ratio /= 100
-    # 通过百分点确定比例
+    # 通过百分点确定训练集划分比例
     assert 0 < args.train_ratio < 100 and 0 < args.val_ratio < 100
     args.train_ratio /= 100
     args.val_ratio /= 100

@@ -3,7 +3,6 @@ import argparse, os, re
 from custom_datetime import str2date
 
 pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
-pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
 countries = ["England", "France", "Italy", "Spain"]
 
 def parse_args():
@@ -30,16 +29,12 @@ def extract_results(args):
         for exp in exps:
             assert pattern_subdir.search(exp), exp
             model, xdays, ydays, window, shift, timestr = pattern_subdir.search(exp).groups()
-            assert pattern_subdir.search(exp), exp
-            model, xdays, ydays, window, shift, timestr = pattern_subdir.search(exp).groups()
 
             log_path = os.path.join(dir, dataset, exp,  "log.txt")
-            if not os.path.exists(log_path): continue
             if not os.path.exists(log_path): continue
             res = extract_from_logfile(log_path)
 
             exp_result.append(dict(
-                model=model, xdays=xdays, ydays=ydays, window=window, shift=shift, timestr=timestr, res=res
                 model=model, xdays=xdays, ydays=ydays, window=window, shift=shift, timestr=timestr, res=res
             ))
         results[dataset] = exp_result
@@ -73,7 +68,6 @@ def process_log_segment(lines):
     pattern_country = re.compile(r"训练完毕，开始评估: (\w+)")
     pattern_loss = re.compile(r"\[val\(MAE/RMSE\)\] (\d+\.\d+)/(\d+\.\d+), \[test\(MAE/RMSE\)\] (\d+\.\d+)/(\d+\.\d+)")
     pattern_err = re.compile(r"\[err_val\] (\d+\.\d+), \[err_test\] (\d+\.\d+)")
-    pattern_err = re.compile(r"\[err_val\] (\d+\.\d+), \[err_test\] (\d+\.\d+)")
     pattern_latest_epoch = re.compile(r"\[最新 \(epoch (\d+)\)\]")
     pattern_min_val_epoch = re.compile(r"\[最小 val loss \(epoch (\d+)\)\]")
 
@@ -95,8 +89,6 @@ def process_log_segment(lines):
             losses = list(map(float, match.groups())) if match else -1
             res["latest" if i == 3 else "minvalloss"].update(dict(losses=losses))
         elif i == 4 or i == 8:
-            err_val, err_test = list(map(float, match.groups()))
-            res["latest" if i == 4 else "minvalloss"].update(dict(err_val=err_val, err_test=err_test))
             err_val, err_test = list(map(float, match.groups()))
             res["latest" if i == 4 else "minvalloss"].update(dict(err_val=err_val, err_test=err_test))
     # print(lines)
