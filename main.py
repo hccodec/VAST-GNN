@@ -6,10 +6,11 @@ from tensorboardX import SummaryWriter
 from train_test import train_process, eval_process
 
 from utils.logger import logger
-from utils.utils import font_green, font_yellow, select_model, set_random_seed
+from utils.utils import font_green, font_yellow, select_model, set_random_seed, get_exp_desc
 from utils.args import parse_args
 
 def exp_main(args):
+    logger.info(f"实验【{get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift)}】开始")
 
     from utils.data_process.dataforgood import load_data
 
@@ -26,19 +27,18 @@ def exp_main(args):
             f.write("{}: {}\n".format(k, v))
 
 
-    for i_country in range(3, 4):
+    for i_country in range(len(meta_data["country_names"])):
         train_country(args, result_paths, meta_data, i_country)
 
-    logger.info(f"实验 dataforgood（ 预测范围 {args.xdays}->{args.ydays} w{args.window}）结束")
+    logger.info(f"实验【{get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift)}】结束")
 
 def train_country(args, result_paths, meta_data, i_country):
-    # for i_country in range(3, 4):
     country_name = meta_data["country_names"][i_country]
     country_code = meta_data["country_codes"][i_country]
 
     train_loader, validation_loader, test_loader = meta_data['data'][country_name][0]
 
-    logger.info(f"开始训练 {country_name}")
+    logger.info(f"开始训练 {country_name} ...")
 
     # 记录实验参数
     result_paths.update(
@@ -49,7 +49,7 @@ def train_country(args, result_paths, meta_data, i_country):
             "model_latest": os.path.join(
                 args.result_dir, f"model_{country_code}_latest.pth"
             ),
-            "csv": os.path.join(args.result_dir, f"results_{country_code}.csv"),
+            # "csv": os.path.join(args.result_dir, f"results_{country_code}.csv"),
             "tensorboard": os.path.join(
                 args.result_dir, f"tensorboard_{country_code}"
             ),
@@ -76,6 +76,7 @@ def train_country(args, result_paths, meta_data, i_country):
         epochs = args.epochs
         device = args.device
         early_stop_patience = args.early_stop_patience
+        nodes_observed_ratio = args.nodes_observed_ratio
         case_normalize_ratio = args.case_normalize_ratio
         enable_graph_learner = args.enable_graph_learner
         (
@@ -87,9 +88,6 @@ def train_country(args, result_paths, meta_data, i_country):
             args.graph_lambda_k,
             args.graph_lambda_method,
         )
-
-        # start_date, end_date, x_days, y_days = args.startdate, args.enddate, args.xdays, args.ydays
-        # data_dir, case_normalize_ratio, text_normalize_ratio = args.data_dir, args.case_normalize_ratio, args.text_normalize_ratio
 
         losses, trained_model, epoch_best, loss_best = train_process(
             model,
@@ -104,6 +102,7 @@ def train_country(args, result_paths, meta_data, i_country):
             validation_loader,
             test_loader,
             early_stop_patience,
+            nodes_observed_ratio,
             case_normalize_ratio,
             graph_lambda_0,
             graph_lambda_k,

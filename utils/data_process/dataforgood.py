@@ -2,13 +2,11 @@
 dataforgood jieguo 
 """
 
-from utils.custom_datetime import DateRange, date2str, str2date
-import geopandas as gpd, os, json, math, copy, re
+import os, re
 import numpy as np
 import torch, random
 from torch.utils.data import DataLoader, TensorDataset
 import pickle
-from tqdm.auto import tqdm
 from utils.logger import logger
 from utils.utils import progress_indicator
 import networkx as nx
@@ -18,7 +16,10 @@ import pandas as pd
 pattern_graph_file = re.compile("(.*)_(.*).csv")
 
 def load_data(args, enable_cache = True):
-    databinfile = os.path.join(args.preprocessed_data_dir, args.databinfile)
+    data_dir, databinfile, batch_size = args.data_dir, args.databinfile, args.batchsize
+    xdays, ydays, window, shift = args.xdays, args.ydays, args.window, args.shift
+    train_ratio, val_ratio = args.train_ratio, args.val_ratio
+
     if enable_cache and os.path.exists(databinfile):
         with open(databinfile, 'rb') as f:
             meta_data = pickle.load(f)
@@ -27,17 +28,17 @@ def load_data(args, enable_cache = True):
 
     meta_data = {}
 
-    country_names = [d for d in os.listdir(os.path.join("data", args.dataset))
-                     if os.path.isdir(os.path.join("data", args.dataset, d))]
+    country_names = [d for d in os.listdir(data_dir)
+                     if os.path.isdir(os.path.join(data_dir, d))]
     country_codes = list(map(lambda x: x if x is None else x.groups()[0],
-                             [pattern_graph_file.search(os.listdir(os.path.join("data", args.dataset, d, "graphs"))[0])
-                              for d in os.listdir(os.path.join("data", args.dataset))
-                              if os.path.isdir(os.path.join("data", args.dataset, d))]))
+                             [pattern_graph_file.search(os.listdir(os.path.join(data_dir, d, "graphs"))[0])
+                              for d in os.listdir(data_dir)
+                              if os.path.isdir(os.path.join(data_dir, d))]))
 
     for i in range(len(country_names)):
         logger.info(f"正在读取国家 {country_names[i]:{max([len(n) for n in country_names])}s} 的数据...")
         data = _load_data(args, country_names[i])
-        dataloaders = split_dataset(args, *data)
+        dataloaders = split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, *data)
         meta_data[country_names[i]] = (dataloaders, data)
 
     meta_data = {"country_names": country_names, "country_codes": country_codes, "data": meta_data}
@@ -50,20 +51,19 @@ def load_data(args, enable_cache = True):
     return meta_data
 
 
-def _load_data(args, country_name: int, policy: str = "clip"):
+def _load_data(args, country_name: str, policy: str = "clip"):
     """
     按国家从文件加载数据集
     """
     assert policy in ['clip', 'pad']
 
-    window_size = args.window
-    data_path = os.path.join("data", args.dataset, country_name)
-    label_path = os.path.join(data_path, f"{country_name.lower()}_labels.csv")
+    window_size, data_country_path = args.window, os.path.join(args.data_dir, country_name)
 
     Gs, dates, nodes = [], [], []
 
-    for i_date, graph_file in enumerate(os.listdir(os.path.join(data_path, "graphs"))):
-        graph = pd.read_csv(os.path.join(data_path, "graphs", graph_file), header=None)
+    # 读图，并提取图中包含的结点 nodes 和日期 dates
+    for i_date, graph_file in enumerate(os.listdir(os.path.join(data_country_path, "graphs"))):
+        graph = pd.read_csv(os.path.join(data_country_path, "graphs", graph_file), header=None)
 
         country_code, date = pattern_graph_file.search(graph_file).groups()
         dates.append(date)
@@ -79,19 +79,19 @@ def _load_data(args, country_name: int, policy: str = "clip"):
         assert not len(nodes) or nodes == _nodes  # 所有图的结点都应相同
         nodes = _nodes
 
-    labels = pd.read_csv(label_path).set_index("name")
-    labels = labels.loc[nodes, dates]  # not needed
+    adjs = np.stack([nx.adjacency_matrix(G).toarray() for G in Gs])
 
-    adjs = np.stack([nx.adjacency_matrix(G).toarray() for G in Gs])  # A
+    # 读标签，本实验为病例数
+    labels = pd.read_csv(os.path.join(data_country_path, f"{country_name.lower()}_labels.csv")).set_index("name")
+    labels = labels.loc[nodes, dates]
 
     cases = np.expand_dims(labels.to_numpy().T, -1)
 
+    # 根据 window_size 拼接特征，并根据拼接特征的策略裁剪 adjs 和 cases
     if policy == "clip":
-        # 截断
         features = np.stack([cases[i : i + window_size].squeeze(-1).T for i in range(len(cases) - window_size + 1)])
         cases, adjs = cases[-features.shape[0]:], adjs[-features.shape[0]:]
     elif policy == 'pad':
-        # 补零
         cases_pad = np.pad(cases, ((6, 0), (0, 0), (0, 0)), mode='constant', constant_values=0)
         features = np.stack([cases_pad[i : i + window_size].squeeze(-1).T for i in range(len(dates))])
 
@@ -101,38 +101,36 @@ def _load_data(args, country_name: int, policy: str = "clip"):
 
 
 # 分割数据集
-def split_dataset(args, features, cases, adjs, batchsize = 8):
-    num_days, num_nodes, _ = features.shape
-    # indices generation for train/val/test
-    train_indices, val_indices, test_indices = generate_indices(args, num_days)
+def split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, features, cases, adjs):
 
-    # extract formatted data with xdays/yays
-    xdays, ydays = args.xdays, args.ydays
-    X = torch.stack([features[i : i + xdays] for i in range(num_days - xdays - ydays + 1)], dim = 0)
-    y = torch.stack([cases[i : i + ydays] for i in range(args.window, num_days - ydays + 1)], dim = 0)
-    A = torch.stack([adjs[i : i + xdays] for i in range(num_days - xdays - ydays + 1)], dim = 0)
-    A_y = torch.stack([adjs[i : i + ydays] for i in range(args.window, num_days - ydays + 1)], dim = 0)
+    num_days, num_nodes, _ = features.shape
+
+    # indices generation for train/val/test
+    train_indices, val_indices, test_indices = generate_indices(num_days - xdays - ydays - shift + 1, train_ratio, val_ratio)
+
+    # extract formatted data with xdays/yays as well as shift
+    X = torch.stack([features[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)], dim = 0)
+    A = torch.stack([adjs[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)], dim = 0)
+    y = torch.stack([cases[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)], dim = 0)
+    A_y = torch.stack([adjs[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)], dim = 0)
 
     train_data = (X[train_indices], y[train_indices], A[train_indices], torch.tensor(train_indices), A_y[train_indices])
     val_data = (X[val_indices], y[val_indices], A[val_indices], torch.tensor(val_indices), A_y[val_indices])
     test_data = (X[test_indices], y[test_indices], A[test_indices], torch.tensor(test_indices), A_y[test_indices])
 
-    train_loader = DataLoader(TensorDataset(*train_data), batch_size=batchsize, shuffle=True)
-    val_loader = DataLoader(TensorDataset(*val_data), batch_size=batchsize)
-    test_loader = DataLoader(TensorDataset(*test_data), batch_size=batchsize)
+    train_loader = DataLoader(TensorDataset(*train_data), batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(TensorDataset(*val_data), batch_size=batch_size)
+    test_loader = DataLoader(TensorDataset(*test_data), batch_size=batch_size)
 
     return train_loader, val_loader, test_loader
 
 
-def generate_indices(args, num_days):
-    # 先生成对应索引，再生成
-    n = num_days - args.xdays - args.ydays + 1
-    train_ratio, validation_ratio = args.trainratio, args.validateratio
+def generate_indices(n, train_ratio, val_ratio):
 
     if hasattr(n, '__len__'): n = len(n)
-    assert train_ratio + validation_ratio < 1 and isinstance(n, int)
+    assert train_ratio + val_ratio < 1 and isinstance(n, int)
 
-    n_train, n_validation = int(n * train_ratio), int(n * validation_ratio)
+    n_train, n_validation = int(n * train_ratio), int(n * val_ratio)
     n_test = n - n_train - n_validation
 
     # backwards even index
