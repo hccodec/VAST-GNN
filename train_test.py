@@ -111,7 +111,7 @@ def train_process(
                     loss = criterion(casey.float(), y_hat.float()) + adj_lambda * criterion(
                         adj_gt.float(), adj_hat.float()
                     )
-                    hits10 = hits_at_k(adj_gt, adj_hat)
+                    hits10 = hits_at_k(adj_hat, adj_gt)
                 else:
                     loss = criterion(casey.float(), y_hat.float())
 

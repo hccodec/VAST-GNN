@@ -18,10 +18,10 @@ def exp_main(args):
 
     result_paths = {
         "log": os.path.join(args.result_dir, "log.txt"),
-        "help": os.path.join(args.result_dir, "help.txt"),
+        "args": os.path.join(args.result_dir, "args.txt"),
     }
 
-    with open(result_paths["help"], "w") as f:
+    with open(result_paths["args"], "w") as f:
         f.write("[args]\n")
         for k, v in args._get_kwargs():
             f.write("{}: {}\n".format(k, v))
@@ -62,7 +62,7 @@ def train_country(args, result_paths, meta_data, i_country):
     criterion = torch.nn.functional.mse_loss
 
     # 记录模型参数
-    with open(result_paths["help"], "a") as f:
+    with open(result_paths["args"], "a") as f:
         f.write(f"\n[model_args:{country_name}]\n")
         f.write(str(model_args) + "\n")
 

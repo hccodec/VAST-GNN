@@ -5,6 +5,14 @@ from custom_datetime import str2date
 pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
 countries = ["England", "France", "Italy", "Spain"]
 
+pattern_sort_key = re.compile(r"^(\d+)->(\d+) \(w(\d+)s(\d+)\)$")
+def sort_key(item):
+    # 提取数字并返回一个元组用于排序
+    # 排序列表类似于 ['7->1 (w7s6)', '7->1 (w7s13)', '7->1 (w7s2)']
+    match = pattern_sort_key.search(item)
+    if match: return list(map(int, pattern_sort_key.search(item).groups()))
+    else: return None
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--result-dir", type=str, default="test")
@@ -145,7 +153,7 @@ def print_err(args, results, _models, i):
     if args.subdir: print(args.subdir)
     for k in s:
         if k != 'minvalloss': continue
-        keys = sorted(s[k].keys(), key=lambda x: int(re.search(r'\d+', x).group()))
+        keys = sorted(s[k].keys(), key=sort_key)
         if not i: print(' | '.join(keys))
         print(f'[{_models[i]:>{9}s}]', ' | '.join([' '.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]))
         # print('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
@@ -159,7 +167,7 @@ if __name__ == "__main__":
     # get models
     models = []
     for result in results: models.append(result['model'])
-    assert set(models) == {'dynst', 'mpnn_lstm'}
+    # assert set(models) == {'dynst', 'mpnn_lstm'}, models
     models = ['mpnn_lstm', 'dynst']
     print()
     print("[err_test] {}".format(','.join(countries)))

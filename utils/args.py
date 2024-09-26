@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument("--model", default="dynst", choices=models_list, help="设置实验所用模型")
     parser.add_argument("--result-dir", default="results_test", help="")
     parser.add_argument("--seed", default=5, help="随机种子")
-    parser.add_argument("--device", default=7, help="GPU号")
+    parser.add_argument("--device", default=8, help="GPU号")
     parser.add_argument("--xdays", type=int, default=7, help="预测所需历史天数")
     parser.add_argument("--ydays", type=int, default=3, help="预测未来天数")
     parser.add_argument("--window", type=int, default=-1, help="作为特征的历史天数窗口大小，值为-1时和xdays相同")
@@ -78,7 +78,6 @@ def process_args(args):
     # 通过 args.window 的默认值规范 args.window
     args.window = args.xdays if args.window == -1 else args.window
 
-    args.device = set_device(args.device)
 
     # 通过规范 subdir 规范 args.result_dir
     subdir = f"{args.model}_{args.xdays}_{args.ydays}_w{args.window}_s{args.shift}"
@@ -99,6 +98,9 @@ def process_args(args):
     # 在实验结果最终保存位置创建 log 文件
     set_logger(args.result_dir)
 
+    # 设置 GPU 设备
+    args.device = set_device(args.device)
+
     # 确定处理好的数据集的位置
     if args.databinfile == "":
         args.databinfile = f"{args.dataset}_x{args.xdays}_y{args.ydays}_w{args.window}_s{args.shift}.bin"
@@ -117,6 +119,9 @@ def process_args(args):
 
     if args.dataset == 'dataforgood':
         args.case_normalize_ratio = 1
+
+    # 单为 dynst 启用图结构学习
+    # if args.model == "dynst": args.enable_graph_learner = True
 
     return args
 

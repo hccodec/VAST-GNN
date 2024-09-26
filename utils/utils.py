@@ -156,7 +156,8 @@ def select_model(args, train_loader):
     dynst_model_args = {
         "in_dim": shape[0][-1],
         "out_dim": 1,
-        "hidden": 64,
+        "hidden": 32,
+        # "hidden": 64,
         "num_heads": 4,
         "num_layers": 2,
         "graph_layers": 1,

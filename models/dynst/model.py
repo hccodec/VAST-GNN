@@ -242,8 +242,7 @@ class dynst(nn.Module):
         adj_output = self.enc(X, y)
 
         adj_hat = adj_output
-        if self.training and extra_info is not None:
-            # lambda_A = extra_info.lambda_range[1] - (extra_info.lambda_range[1] - extra_info.lambda_range[0]) * (extra_info.epoch / extra_info.max_epochs)
+        if self.training and extra_info is not None and self.enable_graph_learner:
             A_gt = extra_info.dataset_extra
             A_all = torch.cat((A, A_gt), dim=1)
             lambda_A = extra_info.lambda_A
