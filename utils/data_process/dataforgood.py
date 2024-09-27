@@ -16,7 +16,7 @@ import pandas as pd
 pattern_graph_file = re.compile("(.*)_(.*).csv")
 
 def load_data(args, enable_cache = True):
-    data_dir, databinfile, batch_size = args.data_dir, args.databinfile, args.batchsize
+    data_dir, databinfile, batch_size = args.data_dir, args.databinfile, args.batch_size
     xdays, ydays, window, shift = args.xdays, args.ydays, args.window, args.shift
     train_ratio, val_ratio = args.train_ratio, args.val_ratio
 

@@ -1,6 +1,8 @@
 import os, sys, torch
 
-sys.path.append(os.getcwd())
+import pandas as pd
+
+# sys.path.append(os.getcwd())
 from tensorboardX import SummaryWriter
 
 from train_test import train_process, eval_process
@@ -16,6 +18,12 @@ def exp_main(args):
 
     meta_data = load_data(args)
 
+    meta_info = [list(k[0].shape[:2]) for k in map(lambda x: x[1], meta_data['data'].values())]
+    meta_info = pd.DataFrame(meta_info, columns=['Days', 'Regions'], index=meta_data['country_names'])
+    print(meta_info)
+
+    logger.info(f"")
+
     result_paths = {
         "log": os.path.join(args.result_dir, "log.txt"),
         "args": os.path.join(args.result_dir, "args.txt"),
@@ -23,8 +31,7 @@ def exp_main(args):
 
     with open(result_paths["args"], "w") as f:
         f.write("[args]\n")
-        for k, v in args._get_kwargs():
-            f.write("{}: {}\n".format(k, v))
+        for k in args: f.write("{}: {}\n".format(k, args[k]))
 
 
     for i_country in range(len(meta_data["country_names"])):
@@ -36,7 +43,7 @@ def train_country(args, result_paths, meta_data, i_country):
     country_name = meta_data["country_names"][i_country]
     country_code = meta_data["country_codes"][i_country]
 
-    train_loader, validation_loader, test_loader = meta_data['data'][country_name][0]
+    train_loader, val_loader, test_loader = meta_data['data'][country_name][0]
 
     logger.info(f"开始训练 {country_name} ...")
 
@@ -78,17 +85,13 @@ def train_country(args, result_paths, meta_data, i_country):
         early_stop_patience = args.early_stop_patience
         nodes_observed_ratio = args.nodes_observed_ratio
         case_normalize_ratio = args.case_normalize_ratio
-        enable_graph_learner = args.enable_graph_learner
+
         comp_last = args.comp_last
-        (
-            graph_lambda_0,
-            graph_lambda_k,
-            graph_lambda_method,
-        ) = (
-            args.graph_lambda_0,
-            args.graph_lambda_k,
-            args.graph_lambda_method,
-        )
+
+        graph_lambda_0 = args.graph_lambda_0
+        graph_lambda_n = args.graph_lambda_n
+        graph_lambda_epoch_max = args.graph_lambda_epoch_max
+        graph_lambda_method = args.graph_lambda_method
 
         losses, trained_model, epoch_best, loss_best = train_process(
             model,
@@ -100,18 +103,18 @@ def train_country(args, result_paths, meta_data, i_country):
             lr_scheduler_gamma,
             lr_weight_decay,
             train_loader,
-            validation_loader,
+            val_loader,
             test_loader,
             early_stop_patience,
             nodes_observed_ratio,
             case_normalize_ratio,
             graph_lambda_0,
-            graph_lambda_k,
+            graph_lambda_n,
+            graph_lambda_epoch_max,
             graph_lambda_method,
             device,
             writer,
             result_paths,
-            enable_graph_learner,
             comp_last
         )
 
@@ -127,7 +130,7 @@ def train_country(args, result_paths, meta_data, i_country):
             result_paths["model_latest"],
             criterion,
             train_loader,
-            validation_loader,
+            val_loader,
             test_loader,
             args.ydays,
             case_normalize_ratio,
@@ -136,7 +139,7 @@ def train_country(args, result_paths, meta_data, i_country):
         )
 
         logger.info(
-            "[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*list(metrics_latest.values())[:4]))
+            "[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*metrics_latest.values()[:4]))
         logger.info(f"[err_val] {metrics_latest['err_val']:.3f}, [err_test] {font_green(metrics_latest['err_test'])}")
 
         logger.info("-" * 20)
@@ -145,7 +148,7 @@ def train_country(args, result_paths, meta_data, i_country):
             result_paths["model"],
             criterion,
             train_loader,
-            validation_loader,
+            val_loader,
             test_loader,
             args.ydays,
             case_normalize_ratio,
@@ -172,7 +175,7 @@ def train_country(args, result_paths, meta_data, i_country):
                            "xdays",
                            "ydays",
                            "window",
-                           "batchsize",
+                           "batch_size",
                            "lr",
                            "lr_min",
                            "seed",

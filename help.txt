@@ -1,20 +1,24 @@
 
 ##################################################################################################################
 
-# mpnn_lstm/dynst 第 3/7/14 天 (test1)
-python main.py --ydays 1 --shift 2 --result-dir tests --model dynst --device 6 --exp test1g --enable-graph-learner
-python main.py --ydays 1 --shift 6 --result-dir tests --model dynst --device 7 --exp test1g --enable-graph-learner
-python main.py --ydays 1 --shift 13 --result-dir tests --model dynst --device 5 --exp test1g --enable-graph-learner
+# [test1] mpnn_lstm/dynst 隔天
+python main.py --ydays 1 --shift 2 --result-dir tests --model dynst --device 6 --exp test1 --enable-graph-learner
+python main.py --ydays 1 --shift 6 --result-dir tests --model dynst --device 7 --exp test1 --enable-graph-learner
+python main.py --ydays 1 --shift 13 --result-dir tests --model dynst --device 5 --exp test1 --enable-graph-learner
+
 python main.py --ydays 1 --shift 2 --result-dir tests --model mpnn_lstm --device 5 --exp test1
 python main.py --ydays 1 --shift 6 --result-dir tests --model mpnn_lstm --device 7 --exp test1
 python main.py --ydays 1 --shift 13 --result-dir tests --model mpnn_lstm --device 6 --exp test1
 
 python utils.record_result.py -d results/tests/exp_test1
 
-# dynst 连续预测 只比对最后一天 添加命令行参数 --comp-last
+# [test2] dynst 连续 --comp-last
 python main.py --ydays 3 --result-dir tests --model dynst --comp-last --device 2 --exp test2
 python main.py --ydays 7 --result-dir tests --model dynst --comp-last --device 3 --exp test2
 python main.py --ydays 14 --result-dir tests --model dynst --comp-last --device 4 --exp test2
+
+# [test3] 连续
+
 python main.py --ydays 3 --result-dir tests --model dynst --comp-last --device 7 --exp test2g --enable-graph-learner
 python main.py --ydays 7 --result-dir tests --model dynst --comp-last --device 6 --exp test2g --enable-graph-learner # (hidden=32)
 python main.py --ydays 14 --result-dir tests --model dynst --comp-last --device 5 --exp test2g --enable-graph-learner # (hidden=32)

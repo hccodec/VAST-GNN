@@ -16,9 +16,9 @@ if __name__ == '__main__':
     criterion = torch.nn.MSELoss()
 
     data_origin, date_all = load_data(args)
-    train_loader, validation_loader, test_loader, train_origin, validation_origin, test_origin, train_indices, validation_indices, test_indices = split_dataset(args, data_origin, date_all)
+    train_loader, val_loader, test_loader, train_origin, validation_origin, test_origin, train_indices, validation_indices, test_indices = split_dataset(args, data_origin, date_all)
 
-    validation_result, validation_hat, validation_real = validate_test_process(trained_model, criterion, validation_loader, args.device)
+    validation_result, validation_hat, validation_real = validate_test_process(trained_model, criterion, val_loader, args.device)
     test_result, test_hat, test_real = validate_test_process(trained_model, criterion, test_loader, args.device)
 
     metrics = compute_metrics(

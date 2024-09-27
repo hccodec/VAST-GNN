@@ -1,14 +1,7 @@
 import os, torch, numpy as np, random
 from models.LSTM_ONLY import LSTM_MODEL
 from models.MPNN_LSTM import MPNN_LSTM
-from models.SAB_GNN import Multiwave_SpecGCN_LSTM
-from models.SAB_GNN_case_trained import Multiwave_SpecGCN_LSTM_CASE_TRAINED
-# from models.SELF_MODEL import SelfModel
-# from models.self.SELF_MODEL_20240715 import SelfModel
-# from models.self.SELF_MODEL_20240718 import SelfModel
-# from models.self.SELF_MODEL_20240728 import SelfModel
-from models.self.SELF_MODEL_20240828 import SelfModel
-from models.dynst.model import dynst_extra_info, dynst
+from models.dynst import dynst_extra_info, dynst
 from utils.args import models_list, graph_lambda_methods
 from utils.logger import logger
 import traceback, functools
@@ -140,21 +133,8 @@ def select_model(args, train_loader):
 
     shape = [tuple(i.shape) for i in train_loader.dataset[0]]
 
-    specGCN_model_args = {
-        "alpha": 0.2,
-        "specGCN": {"hid": 6, "out": 4, "dropout": 0.5},
-        "shape": shape,
-        "lstm": {"hid": 3},
-    }
-    self_model_args = {
-        "dropout": 0.5,
-        "text_fc": {"out": 4},
-        "gnn": {"hid": 16, "out": 6},
-        "lstm": {"hid": [6, 3]},
-        "shape": shape,
-    }
     dynst_model_args = {
-        "in_dim": shape[0][-1],
+        "in_dim": args.window,
         "out_dim": 1,
         "hidden": 32,
         # "hidden": 64,
@@ -162,7 +142,8 @@ def select_model(args, train_loader):
         "num_layers": 2,
         "graph_layers": 1,
         "dropout": 0.5,
-        "device": args.device
+        "device": args.device,
+        "enable_graph_learner": True
     }
     lstm_model_args = {
         # 'in': train_loader.dataset[0][2].shape[-1],
@@ -179,22 +160,12 @@ def select_model(args, train_loader):
     index = models_list.index(args.model)
 
     if index == 0:
-        model_args = self_model_args
-        model = SelfModel(args, model_args).to(args.device)
-    elif index == 1:
-        model_args = specGCN_model_args
-        model = Multiwave_SpecGCN_LSTM(args, model_args).to(args.device)
-    elif index == 2:
-        specGCN_model_args["shape"] = train_loader.dataset[0][2].shape
-        model_args = specGCN_model_args
-        model = Multiwave_SpecGCN_LSTM_CASE_TRAINED(args, model_args).to(args.device)
-    elif index == 3:
         model_args = lstm_model_args
         model = LSTM_MODEL(args, model_args).to(args.device)
-    elif index == 4:
+    elif index == 1:
         model_args = dynst_model_args
-        model = dynst(*model_args.values(), args.enable_graph_learner).to(args.device)
-    elif index == 5:
+        model = dynst(*model_args.values()).to(args.device)
+    elif index == 2:
         model_args = mpnn_lstm_model_args
         model = MPNN_LSTM(*model_args.values()).to(args.device)
     else:
@@ -202,10 +173,16 @@ def select_model(args, train_loader):
 
     return model, model_args
 
-def adjust_lambda(epoch, lambda_0, k, method='exp'):
+def adjust_lambda(epoch, num_epochs, lambda_0, lambda_n, lambda_epoch_max, method='cos'):
+    assert method in graph_lambda_methods
+    assert epoch < num_epochs
+
     index = graph_lambda_methods.index(method)
     if index == 0:
-        return lambda_0 * np.exp(-k * epoch)
+        k = np.log(10 * lambda_0 / num_epochs)
+        return lambda_0 * np.exp(-k * epoch / num_epochs)
+    elif index == 1:
+        return lambda_0 * np.cos(np.pi / 2 / lambda_epoch_max * epoch)
     else:
         raise IndexError("请选择正确的 adjency matrix lambda 策略")
 
@@ -324,3 +301,12 @@ def get_exp_desc(modelstr, xdays, ydays, window, shift) -> str:
     else: y_desc += f"第 {shift + 1}-{shift + ydays}"
 
     return f"历史 {xdays} 天预测未来{y_desc} 天 ({modelstr}_w{window})"
+
+def min_max_adj(adj: torch.Tensor, epsilon = 1e-8):
+    adj = adj * (1 - torch.eye(129)).to(adj.device)
+    adj_min = adj.min(dim=-1, keepdim=True)[0].min(dim=-2, keepdim=True)[0]
+    adj_max = adj.max(dim=-1, keepdim=True)[0].max(dim=-2, keepdim=True)[0]
+    # 防止除以 0，设置一个极小值 epsilon
+    adj = (adj - adj_min) / (adj_max - adj_min + epsilon)
+
+    return adj

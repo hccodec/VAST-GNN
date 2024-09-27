@@ -1,43 +1,54 @@
-paths:
-  data_dir: data
-  preprocessed_data_dir: data_preprocessed
-  result_dir: results_test
-  databinfile: dataset
 
-experiment:
-  exp: "-1"
-  model: sabgnn
-  desc: ""
+##in_dim:  # shape[0][-1] 的值应根据具体数据进行替换
+#out_dim: 1
+#hidden: 32
+#num_heads: 4
+#num_layers: 2
+#graph_layers: 1
+#dropout: 0.5
 
-device:
-  seed: 5
-  device: 7
+# 配置文件以及各种目录
+data_dir: "data"           # 数据集目录
+dataset: "dataforgood"      # 选择的数据集
+preprocessed_data_dir: "data_preprocessed"  # 处理后的数据集目录
+databinfile: ""            # 处理后的数据集文件名称，实际文件名为 <databinfile>_xdays_ydays_window_shift.bin
+exp: -1                    # 实验编号 -1 表示不编号
+model: "dynst"             # 设置实验所用模型
+result_dir: "results_test" # 实验结果目录
 
-prediction:
-  xdays: 21
-  ydays: 7
-  wave: 4
-  startdate_wave_3: 20200414
-  enddate_wave_3: 20210207
-  startdate_wave_4: 20200720
-  enddate_wave_4: 20210515
+# 实验设置：随机种子和设备号
+seed: 5                    # 随机种子
+device: 8                  # GPU号
 
-normalization:
-  case_normalize_ratio: 100.0
-  text_normalize_ratio: 100.0
+## 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
+#xdays: 7                   # 预测所需历史天数
+#ydays: 3                   # 预测未来天数
+#window: -1                 # 作为特征的历史天数窗口大小，值为-1时和xdays相同
+#shift: 0                   # 大于 0 则启用隔 shift 天预测
 
-training:
-  trainratio: 70
-  validateratio: 10
-  epochs: 1000
-  batchsize: 8
-  early_stop_patience: 50
-  learningrate:
-    lr: 1e_3
-    lr_min: 1e_5
-    lr_scheduler_stepsize: 10
-    lr_scheduler_gamma: 0.8
+# 实验设置：比率
+nodes_observed_ratio: 100.0  # 观测到的结点百分点
+case_normalize_ratio: 100.0  # 训练集比例百分点
+train_ratio: 70              # 训练集比例百分点
+val_ratio: 10                # 验证集比例百分点
 
-options:
-  enable_graph_learner: false
-  train_with_text: false
+# 训练参数
+epochs: 500                  # 训练轮数
+batch_size: 8                # 批次大小
+
+# 实验设置：学习率
+lr: 0.001                   # 初始学习率
+lr_min: 0.001               # 最小学习率
+lr_weight_decay: 0.0005     # 权重衰减
+lr_scheduler_stepsize: 10   # 学习率调整步长
+lr_scheduler_gamma: 0.7     # 学习率调整系数
+early_stop_patience: 100    # 提前停止的耐心次数
+
+# 实验：图结构相关参数设置
+graph_lambda_0: 0.8         # 初始图正则化参数
+graph_lambda_n: 0.0         # 最终图正则化参数
+graph_lambda_epoch_max: 300 # 图正则化参数达到最大值的轮次
+graph_lambda_method: "cos"  # 图正则化方法
+
+# 其他实验参数
+comp_last: true             # 在多天预测的情形下只比对最后一天的结果

@@ -1,12 +1,13 @@
 import torch, time
 from torch import nn
-from eval import compute_err, compute_metrics, compute_correlation, metrics_labels
+from eval import compute_err, compute_metrics, metrics_labels
 
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
-from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, process_batch, hits_at_k
-from models.dynst.model import dynst, dynst_extra_info
+from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, process_batch, hits_at_k, \
+    min_max_adj
+from models.dynst import dynst_extra_info
 
 
 # logger = logger.getLogger()
@@ -23,18 +24,18 @@ def train_process(
     lr_scheduler_gamma,
     lr_weight_decay,
     train_loader,
-    validation_loader,
+    val_loader,
     test_loader,
     early_stop_patience,
     nodes_observed_ratio,
     case_normalize_ratio,
     graph_lambda_0,
-    graph_lambda_k,
+    graph_lambda_n,
+    graph_lambda_epoch_max,
     graph_lambda_method,
     device,
     writer,
     result_paths,
-    enable_graph_learner,
     comp_last
 ):
 
@@ -77,21 +78,21 @@ def train_process(
             time1 = time.time()
 
             _lr = opt.param_groups[0]["lr"]
-            adj_lambda = adjust_lambda(
-                e, graph_lambda_0, graph_lambda_k, graph_lambda_method
-            )
 
+
+            adj_lambda = adjust_lambda(
+                e, epochs, graph_lambda_0, graph_lambda_n, graph_lambda_epoch_max, graph_lambda_method
+            )
             print(
                 f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr}, ",
                 end="",
             )
             msg_file_logger += (
-                f"[Epoch] {e}/{epochs}, [lr] {_lr}, [adj_lambda] {adj_lambda}, "
+                f"[Epoch] {e}/{epochs}, [lr] {_lr}, "
             )
 
-            if enable_graph_learner:
-                print(f"[adj_lambda] {adj_lambda}, ", end="")
-                msg_file_logger += f"[adj_lambda] {adj_lambda}, "
+            print(f"[adj_lambda] {adj_lambda:.5f}, ", end="")
+            msg_file_logger += f"[adj_lambda] {adj_lambda}, "
 
             model.train()
             loss_res = []
@@ -106,11 +107,12 @@ def train_process(
                 assert isinstance(adj_y, torch.Tensor) and adj_y.shape == (*casey.shape[:-1], casey.shape[-2])
                 adj_gt = torch.cat([mobility, adj_y], dim = 1)
 
-                if enable_graph_learner:
+                if isinstance(y_hat, tuple):
                     y_hat, adj_hat = y_hat
-                    loss = criterion(casey.float(), y_hat.float()) + adj_lambda * criterion(
-                        adj_gt.float(), adj_hat.float()
-                    )
+                    adj_gt = min_max_adj(adj_gt)
+                    # adj_hat = min_max_adj((adj_hat))
+
+                    loss = criterion(casey.float(), y_hat.float()) + adj_lambda * criterion(adj_gt.float(), adj_hat.float())
                     hits10 = hits_at_k(adj_hat, adj_gt)
                 else:
                     loss = criterion(casey.float(), y_hat.float())
@@ -130,7 +132,7 @@ def train_process(
             losses["train"].append(loss)
 
             loss_val, y_hat_val, y_real_val = validate_test_process(
-                model, criterion, validation_loader, device
+                model, criterion, val_loader, device
             )
             loss_test, y_hat_test, y_real_test = validate_test_process(
                 model, criterion, test_loader, device
@@ -273,7 +275,7 @@ def eval_process(
     model,
     criterion,
     train_loader,
-    validation_loader,
+    val_loader,
     test_loader,
     y_days,
     case_normalize_ratio,
@@ -287,7 +289,7 @@ def eval_process(
         trained_model, criterion, train_loader, device
     )
     validation_result, validation_hat, validation_real = validate_test_process(
-        trained_model, criterion, validation_loader, device
+        trained_model, criterion, val_loader, device
     )
     test_result, test_hat, test_real = validate_test_process(
         trained_model, criterion, test_loader, device
