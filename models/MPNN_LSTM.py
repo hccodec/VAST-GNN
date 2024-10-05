@@ -16,7 +16,7 @@ from torch_geometric.nn import GCNConv
 #         self.fc = nn.Linear(lstm_args['lstm']['hid'], lstm_args['linear']['hid'])
 #         self.fc_out = nn.Linear(lstm_args['linear']['hid'], args.ydays)
 
-#     def forward(self, X, y, A, extra_info=None, idx=None):
+#     def forward(self, X, y, A, A_y, extra_info=None, idx=None):
 #         X = X.float()
         
 #         x = X[:,-1].float()
@@ -79,7 +79,7 @@ class MPNN_LSTM(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.relu = nn.ReLU()
 
-    def forward(self, X, y, A, extra_info=None, idx=None):
+    def forward(self, X, y, A, A_y, extra_info=None, idx=None):
         n_nodes, x, adj = A.size(2), X.view(-1, self.nfeat).float(), to_sparse(A)
         
         lst = list()

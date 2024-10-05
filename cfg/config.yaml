@@ -18,7 +18,7 @@ result_dir: "results_test" # 实验结果目录
 
 # 实验设置：随机种子和设备号
 seed: 5                    # 随机种子
-device: 8                  # GPU号
+device: 3                  # GPU号
 
 ## 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
 #xdays: 7                   # 预测所需历史天数
@@ -27,7 +27,7 @@ device: 8                  # GPU号
 #shift: 0                   # 大于 0 则启用隔 shift 天预测
 
 # 实验设置：比率
-nodes_observed_ratio: 100.0  # 观测到的结点百分点
+node_observed_ratio: 100.0   # 观测到的结点百分点
 case_normalize_ratio: 100.0  # 训练集比例百分点
 train_ratio: 70              # 训练集比例百分点
 val_ratio: 10                # 验证集比例百分点

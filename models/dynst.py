@@ -219,7 +219,7 @@ class dynst_extra_info():
     #     return self.lambda_range[1] - (self.lambda_range[1] - self.lambda_range[0]) * (self.epoch / self.max_epochs)
 
 class dynst(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), enable_graph_learner = False):
+    def __init__(self, in_dim, out_dim, hidden, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), no_graph_gt = False):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -229,26 +229,26 @@ class dynst(nn.Module):
         self.graph_layers = graph_layers
 
         self.device = device
-        self.enable_graph_learner = enable_graph_learner
+        self.no_graph_gt = no_graph_gt
 
         self.enc = DynGraphEncoder(in_dim, hidden, num_heads, num_layers, dropout, device).to(device)
         self.dec = Decoder(in_dim, out_dim, hidden, graph_layers, dropout, device).to(device)
 
-    def forward(self, X, y, A, extra_info : dynst_extra_info=None):
-        
+    def forward(self, X, y, A, A_y, adj_lambda):
 
         adj_output = self.enc(X, y)
 
-        # 融合矩阵
-        adj_hat = adj_output
-        if self.training and self.enable_graph_learner and extra_info is not None:
-            A_gt = extra_info.dataset_extra
-            A_all = torch.cat((A, A_gt), dim=1)
-            lambda_A = extra_info.lambda_A
-            A_all = getLaplaceMat(A_all.flatten(0, 1)).reshape(adj_output.shape)
+        adj_hat = adj_output # 不带图结构 gt
+
+        # 求图结构 gt 和 enc_output 的线性结果
+        if self.training and not self.no_graph_gt and adj_lambda is not None:
             adj_output = getLaplaceMat(adj_output.flatten(0, 1)).reshape(adj_output.shape)
-            adj_hat = (1 - lambda_A) * adj_output + lambda_A * A_all
+
+            adj_gt = torch.cat((A, A_y), dim=1)
+            adj_gt = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
+
+            adj_hat = (1 - adj_lambda) * adj_output + adj_lambda * adj_gt
             adj_hat = getLaplaceMat(adj_hat.flatten(0, 1)).reshape(adj_output.shape)
 
         y_hat = self.dec(X, y, adj_hat.float(), not self.training)
-        return (y_hat, adj_output) if self.enable_graph_learner else y_hat
+        return y_hat, adj_output

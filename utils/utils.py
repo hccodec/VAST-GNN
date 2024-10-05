@@ -143,7 +143,7 @@ def select_model(args, train_loader):
         "graph_layers": 1,
         "dropout": 0.5,
         "device": args.device,
-        "enable_graph_learner": True
+        "no_graph_gt": args.no_graph_gt
     }
     lstm_model_args = {
         # 'in': train_loader.dataset[0][2].shape[-1],
@@ -186,101 +186,42 @@ def adjust_lambda(epoch, num_epochs, lambda_0, lambda_n, lambda_epoch_max, metho
     else:
         raise IndexError("请选择正确的 adjency matrix lambda 策略")
 
-def hits_at_k(A_hat_batch, A_batch, k=10, threshold_ratio=0.1):
-    """
-    计算带有按比例阈值的 HITS@k
-    A_hat_batch: 预测的邻接矩阵，大小为 (batch_size, day, n, n)，包含小数值
-    A_batch: 实际的邻接矩阵，大小为 (batch_size, day, n, n)
-    k: 考虑前k个最高置信度的边
-    threshold_ratio: 用于确定局部阈值的比例 (例如 0.1 表示取前 10% 的值作为阈值)
-    
-    返回:
-        HITS@k 的平均值
-    """
-    A_hat_batch, A_batch = A_hat_batch.detach().cpu().numpy(), A_batch.detach().cpu().numpy()
-
-    batch_size, day, n, _ = A_hat_batch.shape
-    total_hits = 0
-    total_edges = 0
-    
-    for b in range(batch_size):
-        for d in range(day):
-            A_hat = A_hat_batch[b, d]  # 第 b 个batch的第d天的预测邻接矩阵
-            A = A_batch[b, d]          # 第 b 个batch的第d天的实际邻接矩阵
-            
-            hits = 0
-            for i in range(n):
-                # 预测矩阵中第i行的边置信度（从i节点出发的所有边）
-                preds = A_hat[i]
-                
-                # 使用局部比例法，设定该节点的阈值
-                local_threshold = np.percentile(preds, 100 * (1 - threshold_ratio))
-                
-                # 大于阈值的边被视为存在
-                valid_indices = np.where(preds >= local_threshold)[0]
-                
-                # 如果 k 大于有效边数量，则调整 k 的值
-                top_k_count = min(k, len(valid_indices))
-                
-                # 找出置信度最高的 top_k_count 个边
-                if top_k_count > 0:
-                    top_k_indices = preds[valid_indices].argsort()[-top_k_count:][::-1]
-                    top_k_indices = valid_indices[top_k_indices]
-                else:
-                    top_k_indices = []
-                
-                # 实际矩阵中，第i行的边，看看哪些是真实存在的
-                true_edges = np.where(A[i] > 0)[0]
-                
-                # 计算命中的数量
-                hits += len(set(top_k_indices).intersection(set(true_edges)))
-            
-            # 记录当前batch和天数的命中
-            total_hits += hits
-            total_edges += (n * k)
-    
-    # 计算所有批次和天数的平均 HITS@k
-    return total_hits / total_edges
-
-def process_batch(data, adj_lambda, model, observed_ratio):
-    """
-    考虑到 random_mask 的随机性和 adj_lambda 的动态变化，故在此对每个 batch 都执行一次数据转换操作。
-    Args:
-        data:           数据集 batch
-        adj_lambda:     模型运行时 A_gt 的系数
-        model:          模型 class
-        observed_ratio: 观测到节点的比例
-
-    Returns:
-
-    """
-    casex, casey, mobility, idx, extra_info = data
-    casex, casey, mobility, idx, extra_info = random_mask((casex, casey, mobility, idx, extra_info), observed_ratio)
-    
-    # 处理 extra_info
-    if isinstance(model, dynst):
-        extra_info = dynst_extra_info(adj_lambda, dataset_extra=extra_info)
-
-    return casex, casey, mobility, idx, extra_info
+# def process_batch(data, observed_ratio):
+#     """
+#     考虑到 random_mask 的随机性和 adj_lambda 的动态变化，故在此对每个 batch 都执行一次数据转换操作。
+#     Args:
+#         data:           数据集 batch
+#         adj_lambda:     模型运行时 A_gt 的系数
+#         model:          模型 class
+#         observed_ratio: 观测到节点的比例
+#
+#     Returns:
+#
+#     """
+#     x_case, y_case, x_mob, y_mob, idx_dataset = data
+#     x_case, y_case, x_mob, y_mob, idx_dataset = random_mask((x_case, y_case, x_mob, y_mob, idx_dataset), observed_ratio)
+#
+#     return x_case, y_case, x_mob, y_mob, idx_dataset
 
 def random_mask(data, observed_ratio = 0.8):
     assert observed_ratio > 0 and observed_ratio <= 1
     
-    casex, casey, mobility, idx, extra_info = data
-    (batch_size, num_xdays, num_nodes, num_features), num_ydays = casex.size(), casey.size(1)
+    x_case, y_case, x_mob, y_mob, idx_dataset = data
+    (batch_size, num_xdays, num_nodes, num_features), num_ydays = x_case.size(), y_case.size(1)
 
     mask = torch.cat([torch.ones(int(num_nodes * observed_ratio)), torch.zeros(num_nodes - int(num_nodes * observed_ratio))])
     mask = mask[torch.randperm(num_nodes)]
     # mask = mask.unsqueeze(0).unsqueeze(0).expand(batch_size, num_xdays, -1)
-    selected_indices = torch.nonzero(mask).squeeze().to(casex.device)
+    selected_indices = torch.nonzero(mask).squeeze().to(x_case.device)
     
-    if casex is not None: casex = casex[:, :, selected_indices]
-    if casey is not None: casey = casey[:, :, selected_indices]
-    if mobility is not None: mobility = mobility[:, :, selected_indices][:, :, :, selected_indices]
+    if x_case is not None: x_case = x_case[:, :, selected_indices]
+    if y_case is not None: y_case = y_case[:, :, selected_indices]
+    if x_mob is not None: x_mob = x_mob[:, :, selected_indices][:, :, :, selected_indices]
+    if y_mob is not None: y_mob = y_mob[:, :, selected_indices][:, :, :, selected_indices]
     # if idx is not None: idx = idx[selected_indices]
-    if extra_info is not None: extra_info = extra_info[:, :, selected_indices][:, :, :, selected_indices]
+    # if extra_info is not None: extra_info = extra_info[:, :, selected_indices][:, :, :, selected_indices]
 
-    return casex, casey, mobility, idx, extra_info
+    return x_case, y_case, x_mob, y_mob, idx_dataset
 
 def get_exp_desc(modelstr, xdays, ydays, window, shift) -> str:
     '''
@@ -303,7 +244,10 @@ def get_exp_desc(modelstr, xdays, ydays, window, shift) -> str:
     return f"历史 {xdays} 天预测未来{y_desc} 天 ({modelstr}_w{window})"
 
 def min_max_adj(adj: torch.Tensor, epsilon = 1e-8):
-    adj = adj * (1 - torch.eye(129)).to(adj.device)
+    adj = adj.clone()
+    if abs(adj.max() - 1) < epsilon and adj.min() < epsilon:
+        pass
+    adj = adj * (1 - torch.eye(adj.shape[-2])).to(adj.device) # 去掉自环，避免自环影响数量级
     adj_min = adj.min(dim=-1, keepdim=True)[0].min(dim=-2, keepdim=True)[0]
     adj_max = adj.max(dim=-1, keepdim=True)[0].max(dim=-2, keepdim=True)[0]
     # 防止除以 0，设置一个极小值 epsilon

@@ -2,9 +2,9 @@
 ##################################################################################################################
 
 # [test1] mpnn_lstm/dynst 隔天
-python main.py --ydays 1 --shift 2 --result-dir tests --model dynst --device 6 --exp test1 --enable-graph-learner
-python main.py --ydays 1 --shift 6 --result-dir tests --model dynst --device 7 --exp test1 --enable-graph-learner
-python main.py --ydays 1 --shift 13 --result-dir tests --model dynst --device 5 --exp test1 --enable-graph-learner
+python main.py --ydays 1 --shift 2 --result-dir tests --model dynst --device 6 --exp test1
+python main.py --ydays 1 --shift 6 --result-dir tests --model dynst --device 7 --exp test1
+python main.py --ydays 1 --shift 13 --result-dir tests --model dynst --device 5 --exp test1
 
 python main.py --ydays 1 --shift 2 --result-dir tests --model mpnn_lstm --device 5 --exp test1
 python main.py --ydays 1 --shift 6 --result-dir tests --model mpnn_lstm --device 7 --exp test1

@@ -14,7 +14,7 @@ class LSTM_MODEL(nn.Module):
         self.fc = nn.Linear(lstm_args['lstm']['hid'], lstm_args['linear']['hid'])
         self.fc_out = nn.Linear(lstm_args['linear']['hid'], args.ydays)
 
-    def forward(self, X, y, A, extra_info=None, idx=None):
+    def forward(self, X, y, A, A_y, extra_info=None, idx=None):
         X = X.float()
         
         x = X[:,-1].float()

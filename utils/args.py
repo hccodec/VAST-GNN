@@ -9,7 +9,7 @@ from utils.logger import set_logger, logger
 models_list = ["lstm", "dynst", "mpnn_lstm"]
 graph_lambda_methods = ['exp', 'cos']
 
-def parse_args():
+def parse_args(record_log = True):
     parser = ArgumentParser()
     # 配置文件以及各种目录
     parser.add_argument("--config", type=str, default="cfg/config.yaml", help="配置文件路径")
@@ -51,9 +51,9 @@ def parse_args():
     # parser.add_argument("--graph-lambda-n", type=float, default=0)
     # parser.add_argument("--graph-lambda-epoch-max", type=float, default=-1)
     # parser.add_argument("--graph-lambda-method", choices=graph_lambda_methods, default='cos')
-    # # parser.add_argument(
-    # #     "--enable-graph-learner", action="store_true", help="是否启用图学习器"
-    # # )
+    parser.add_argument(
+        "--no_graph_gt", action="store_true", help="图学习器是否不融合历史真实图结构。默认不带该参即融合"
+    )
 
     parser.add_argument(
         "--comp-last",
@@ -64,10 +64,10 @@ def parse_args():
     parser.add_argument("--f", help="兼容 jupyter")
     args = parser.parse_args()
 
-    args = process_args(args)
+    args = process_args(args, record_log)
     return args
 
-def process_args(args):
+def process_args(args, record_log):
 
     with open(args.config) as f:
         cfg = yaml.safe_load(f)
@@ -105,10 +105,12 @@ def process_args(args):
         args.result_dir = os.path.join(
             "results", args.result_dir, f"exp_{args.exp}", args.dataset, subdir
         )
-    os.makedirs(args.result_dir, exist_ok=True)
 
     # 在实验结果最终保存位置创建 log 文件
-    set_logger(args.result_dir)
+    if record_log:
+        os.makedirs(args.result_dir, exist_ok=True)
+        print("结果目录:", args.result_dir)
+        set_logger(args.result_dir)
 
     # 设置 GPU 设备
     args.device = set_device(args.device)
@@ -121,8 +123,8 @@ def process_args(args):
     args.databinfile = os.path.join(args.preprocessed_data_dir, args.databinfile)
 
     # 通过百分点确定隐藏结点比例
-    assert 0 <= args.nodes_observed_ratio <= 100
-    args.nodes_observed_ratio /= 100
+    assert 0 <= args.node_observed_ratio <= 100
+    args.node_observed_ratio /= 100
 
     # 通过百分点确定训练集划分比例
     assert 0 < args.train_ratio < 100 and 0 < args.val_ratio < 100

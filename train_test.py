@@ -1,12 +1,12 @@
-import torch, time
+import torch, time, os
 from torch import nn
-from eval import compute_err, compute_metrics, metrics_labels
+import numpy as np
+from eval import compute_err, compute_mae_rmse, metrics_labels, compute_correlation, compute_hits_at_k
 
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
-from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, process_batch, hits_at_k, \
-    min_max_adj
+from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, random_mask
 from models.dynst import dynst_extra_info
 
 
@@ -27,7 +27,7 @@ def train_process(
     val_loader,
     test_loader,
     early_stop_patience,
-    nodes_observed_ratio,
+    node_observed_ratio,
     case_normalize_ratio,
     graph_lambda_0,
     graph_lambda_n,
@@ -84,38 +84,35 @@ def train_process(
                 e, epochs, graph_lambda_0, graph_lambda_n, graph_lambda_epoch_max, graph_lambda_method
             )
             print(
-                f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr}, ",
+                f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr}",
                 end="",
             )
             msg_file_logger += (
                 f"[Epoch] {e}/{epochs}, [lr] {_lr}, "
             )
 
-            print(f"[adj_lambda] {adj_lambda:.5f}, ", end="")
+            print(f", [adj_lambda] {adj_lambda:.5f}", end="")
             msg_file_logger += f"[adj_lambda] {adj_lambda}, "
 
             model.train()
             loss_res = []
+            hits10_res = []
 
             for data in train_loader:
                 opt.zero_grad()
 
                 data = tuple(d.to(device) for d in data)
-                y_hat, casex, casey, mobility, idx, extra_info = train_model(data, adj_lambda, model, nodes_observed_ratio)
+                y_hat, x_case, y_case, x_mob, y_mob, idx_dataset = train_model(data, adj_lambda, model, node_observed_ratio)
 
-                adj_y = extra_info.dataset_extra if isinstance(extra_info, dynst_extra_info) else extra_info
-                assert isinstance(adj_y, torch.Tensor) and adj_y.shape == (*casey.shape[:-1], casey.shape[-2])
-                adj_gt = torch.cat([mobility, adj_y], dim = 1)
+                adj_gt = torch.cat([x_mob, y_mob], dim = 1)
 
                 if isinstance(y_hat, tuple):
                     y_hat, adj_hat = y_hat
-                    adj_gt = min_max_adj(adj_gt)
-                    # adj_hat = min_max_adj((adj_hat))
-
-                    loss = criterion(casey.float(), y_hat.float()) + adj_lambda * criterion(adj_gt.float(), adj_hat.float())
-                    hits10 = hits_at_k(adj_hat, adj_gt)
+                    loss = criterion(y_case.float(), y_hat.float()) + adj_lambda * criterion(adj_gt.float(), adj_hat.float())
+                    hits10 = compute_hits_at_k(adj_hat.float(), adj_gt.float())
+                    hits10_res.append(hits10)
                 else:
-                    loss = criterion(casey.float(), y_hat.float())
+                    loss = criterion(y_case.float(), y_hat.float())
 
                 loss.backward(retain_graph=True)
                 opt.step()
@@ -123,33 +120,43 @@ def train_process(
                 loss_res.append(loss.data.cpu().numpy())
 
             loss = sum(loss_res) / len(loss_res)
+            hits10 = sum(hits10_res) / len(hits10_res)
 
-            loss *= case_normalize_ratio**2
-
-            # todo：loss 放缩  ratio ** 2
+            # 记录 train loss
             msg_file_logger += f"[Loss(train/val/test)] {loss:.3f}/"
-            print(f"[Loss(train/val/test)] {loss:.3f}/", end="")
+            print(f", [Loss(train/val/test)] {loss:.3f}/", end="")
             losses["train"].append(loss)
 
-            loss_val, y_hat_val, y_real_val = validate_test_process(
-                model, criterion, val_loader, device
-            )
-            loss_test, y_hat_test, y_real_test = validate_test_process(
-                model, criterion, test_loader, device
-            )
-            loss_val *= case_normalize_ratio**2
-            loss_test *= case_normalize_ratio**2
+            loss_val, y_real_val, y_hat_val, adj_real_val, adj_hat_val = validate_test_process(model, criterion,
+                                                                                               val_loader)
+            loss_test, y_real_test, y_hat_test, adj_real_test, adj_hat_test = validate_test_process(model, criterion,
+                                                                                                    test_loader)
 
+            # hits10_train = compute_hits_at_k(adj_hat_train, adj_real_train)
+            hits10_val = compute_hits_at_k(adj_hat_val, adj_real_val)
+            hits10_test = compute_hits_at_k(adj_hat_test, adj_real_test)
+
+            # 拼接记录 val/test loss
             msg_file_logger += f"{loss_val:.3f}/{loss_test:.3f}"
-            print(f"{font_yellow(loss_val)}/{loss_test:.3f}, ", end="")
+            print(f"{font_yellow(loss_val)}/{loss_test:.3f}", end="")
             losses["val"].append(loss_val)
             losses["test"].append(loss_test)
 
+            # 记录 hits 10
+            msg_file_logger += ", [HITS@10(train/val/test)] {:.5f}/{:.5f}/{:.5f}".format(
+                hits10, hits10_val,hits10_test
+            )
+            print(", [HITS@10(train/val/test)] {:.5f}/{:.5f}/{:.5f}".format(
+                hits10, hits10_val,hits10_test
+            ), end="")
+
+            # 记录 时间
             time2 = time.time()
-            print(f"({time2 - time1:.3f}s)", end="")
-            msg_file_logger += f"({time2 - time1:.3f}s)"
+            print(f" ({time2 - time1:.3f}s)", end="")
+            msg_file_logger += f" ({time2 - time1:.3f}s)"
 
             if loss_val < loss_best:
+                # 记录 保存最优模型
                 msg_file_logger += " (Best model saved)"
                 print(font_yellow(" (Best model saved)"), end="")
                 loss_best, model_best, epoch_best = loss_val, model, e
@@ -173,9 +180,8 @@ def train_process(
             print()
             file_logger.info(msg_file_logger)
 
-            metrics = compute_metrics(
-                y_hat_val, y_real_val, y_hat_test, y_real_test, case_normalize_ratio
-            )
+            metrics = *compute_mae_rmse(y_hat_val, y_real_val), *compute_mae_rmse(y_hat_test, y_real_test)
+
             err_val, err_test = compute_err(y_hat_val, y_real_val, comp_last), compute_err(y_hat_test, y_real_test, comp_last)
 
             logger.info("[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*metrics))
@@ -193,7 +199,7 @@ def train_process(
 
             # Graph
             if e == 0:
-                writer.add_graph(model, (casex, casey, mobility, idx, extra_info) if isinstance(extra_info, torch.Tensor) else (casex, casey, mobility))
+                writer.add_graph(model, (x_case, y_case, x_mob, y_mob, idx_dataset))
             # Histogram
             for name, param in model.named_parameters():
                 writer.add_histogram(name, param, e)
@@ -244,101 +250,104 @@ def train_process(
 
 
 @torch.no_grad()
-def validate_test_process(model: nn.Module, criterion, dataloader, device):
+def validate_test_process(model: nn.Module, criterion, dataloader):
+    device = next(model.parameters()).device
     model.eval()
     loss_res = []
-    y_hat_res, y_real_res = None, None
+    y_hat_res, adj_hat_res = [], []
 
     for data in dataloader:
 
         data = tuple(d.to(device) for d in data)
-        y_hat, casex, casey, mobility, idx, extra_info = run_model(data, model)
+        y_hat, x_case, y_case, x_mob, y_mob, idx_dataset = run_model(data, model)
+        # adj_gt = torch.cat([x_mob, y_mob], dim = -3)
 
+        # 读取结果计算 loss
         if isinstance(y_hat, tuple):
-            y_hat, _ = y_hat  # 适配启用图学习器的情况
-        loss = criterion(casey.float(), y_hat.float())
+            y_hat, adj_hat = y_hat  # 适配启用图学习器的情况
+            adj_hat_res.append(adj_hat.float())
 
+        loss = criterion(y_case.float(), y_hat.float())
         loss_res.append(loss.item())
-        if y_hat_res is None:
-            y_hat_res = y_hat
-        else:
-            y_hat_res = torch.cat([y_hat_res, y_hat], 0)
-        if y_real_res is None:
-            y_real_res = casey
-        else:
-            y_real_res = torch.cat([y_real_res, casey], 0)
 
-    return sum(loss_res) / len(loss_res), y_hat_res, y_real_res
+        y_hat_res.append(y_hat.float())
+
+    loss = np.mean(loss_res)
+
+    y_hat_res = torch.cat(y_hat_res) # 含 batch 维度：cat
+    adj_hat_res = torch.cat(adj_hat_res) # 含 batch 维度：cat
+
+    y_real_res = torch.stack([d[1] for d in dataloader.dataset]).to(y_hat_res.device) # 不含 batch 维度：stack
+    adj_real_res = torch.stack([torch.cat([d[2], d[3]]) for d in dataloader.dataset]).to(adj_hat_res.device) # 不含 batch 维度：stack
+
+    return loss, y_real_res, y_hat_res, adj_real_res, adj_hat_res
 
 
-def eval_process(
-    model,
-    criterion,
-    train_loader,
-    val_loader,
-    test_loader,
-    y_days,
-    case_normalize_ratio,
-    device,
-    comp_last
-):
+def eval_process(model, criterion, train_loader, val_loader, test_loader, comp_last):
+    # 读取模型
+    trained_model = None
+    if isinstance(model, str):
+        assert os.path.exists(model)
+        trained_model = torch.load(model)
+    else:
+        trained_model = model
 
-    trained_model = torch.load(model) if isinstance(model, str) else model
+    # 分别在 train/val/test 三个数据集上跑出结果
 
-    train_result, train_hat, train_real = validate_test_process(
-        trained_model, criterion, train_loader, device
-    )
-    validation_result, validation_hat, validation_real = validate_test_process(
-        trained_model, criterion, val_loader, device
-    )
-    test_result, test_hat, test_real = validate_test_process(
-        trained_model, criterion, test_loader, device
-    )
+    loss_train, y_real_train, y_hat_train, adj_real_train, adj_hat_train = validate_test_process(trained_model, criterion, train_loader)
+    loss_val, y_real_val, y_hat_val, adj_real_val, adj_hat_val = validate_test_process(trained_model, criterion, val_loader)
+    loss_test, y_real_test, y_hat_test, adj_real_test, adj_hat_test = validate_test_process(trained_model, criterion, test_loader)
 
-    metrics = compute_metrics(
-        validation_hat, validation_real, test_hat, test_real, case_normalize_ratio
-    )
+    metrics = *compute_mae_rmse(y_hat_val, y_real_val), *compute_mae_rmse(y_hat_test, y_real_test)
+    err_val, err_test = compute_err(y_hat_val, y_real_val, comp_last), compute_err(y_hat_test, y_real_test, comp_last)
 
-    err_val = compute_err(validation_hat, validation_real, comp_last)
-    err_test = compute_err(test_hat, test_real, comp_last)
-    # correlation = compute_correlation(
-    #     train_hat,
-    #     train_real,
-    #     validation_hat,
-    #     validation_real,
-    #     test_hat,
-    #     test_real,
-    #     y_days,
-    # )
+    corr_train = compute_correlation(y_hat_train, adj_real_train)[0]
+    corr_val = compute_correlation(y_hat_val, adj_real_val)[0]
+    corr_test = compute_correlation(y_hat_test, adj_real_test)[0]
 
-    return {
+    hits10_train = compute_hits_at_k(adj_hat_train, adj_real_train)
+    hits10_val = compute_hits_at_k(adj_hat_val, adj_real_val)
+    hits10_test = compute_hits_at_k(adj_hat_test, adj_real_test)
+
+    logger.info(
+        "[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*metrics))
+    logger.info(
+        "[err(val/test)] {:.3f}/{}, [corr(train/val/test)] {:.3f}/{:.3f}/{:.3f}, [hits10(train/val/test)] {:.5f}/{:.5f}/{:.5f}".format(
+            err_val, font_green(err_test), corr_train, corr_val, corr_test, hits10_train, hits10_val, hits10_test))
+
+    res = {
         "mae_val": metrics[0],
         "rmse_val": metrics[1],
         "mae_test": metrics[2],
         "rmse_test": metrics[3],
         "err_val": err_val,
         "err_test": err_test,
-        # "correlation_train": correlation[0][0],
-        # "correlation_val": correlation[1][0],
-        # "correlation_test": correlation[2][0],
+        "corr_train": corr_train,
+        "corr_val": corr_val,
+        "corr_test": corr_test,
+        "hits10_train": hits10_train,
+        "hits10_val": hits10_val,
+        "hits10_test": hits10_test,
     }
+    return res
 
 # 训练测试模型的子过程
 
-def train_model(data, adj_lambda, model, nodes_observed_ratio = 0.8):
+def train_model(data, adj_lambda, model, node_observed_ratio = 0.8):
     
-    data = process_batch(data, adj_lambda, model, nodes_observed_ratio)
+    x_case, y_case, x_mob, y_mob, idx_dataset = data
+    x_case, y_case, x_mob, y_mob, idx_dataset = random_mask((x_case, y_case, x_mob, y_mob, idx_dataset), node_observed_ratio)
 
-    return run_model(data, model)
+    return run_model(data, model, adj_lambda)
 
-def run_model(data, model):
+def run_model(data, model, adj_lambda = None):
 
-    casex, casey, mobility, idx, extra_info = data
-    y_hat = model(casex, casey, mobility, extra_info)
+    x_case, y_case, x_mob, y_mob, idx_dataset = data
+    y_hat = model(x_case, y_case, x_mob, y_mob, adj_lambda)
 
     # 适应模型同时输出图结构的情况
     y_hat_shape = y_hat[0].shape if isinstance(y_hat, tuple) else y_hat.shape
-    if casey.shape != y_hat_shape: casey = casey[:, -y_hat_shape[1]:]
-    assert y_hat_shape == casey.shape
+    if y_case.shape != y_hat_shape: y_case = y_case[:, -y_hat_shape[1]:]
+    assert y_hat_shape == y_case.shape
 
-    return y_hat, casex, casey, mobility, idx, extra_info
+    return y_hat, x_case, y_case, x_mob, y_mob, idx_dataset

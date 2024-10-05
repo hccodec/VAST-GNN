@@ -18,10 +18,6 @@ def exp_main(args):
 
     meta_data = load_data(args)
 
-    meta_info = [list(k[0].shape[:2]) for k in map(lambda x: x[1], meta_data['data'].values())]
-    meta_info = pd.DataFrame(meta_info, columns=['Days', 'Regions'], index=meta_data['country_names'])
-    print(meta_info)
-
     logger.info(f"")
 
     result_paths = {
@@ -83,7 +79,7 @@ def train_country(args, result_paths, meta_data, i_country):
         epochs = args.epochs
         device = args.device
         early_stop_patience = args.early_stop_patience
-        nodes_observed_ratio = args.nodes_observed_ratio
+        node_observed_ratio = args.node_observed_ratio
         case_normalize_ratio = args.case_normalize_ratio
 
         comp_last = args.comp_last
@@ -106,7 +102,7 @@ def train_country(args, result_paths, meta_data, i_country):
             val_loader,
             test_loader,
             early_stop_patience,
-            nodes_observed_ratio,
+            node_observed_ratio,
             case_normalize_ratio,
             graph_lambda_0,
             graph_lambda_n,
@@ -132,16 +128,8 @@ def train_country(args, result_paths, meta_data, i_country):
             train_loader,
             val_loader,
             test_loader,
-            args.ydays,
-            case_normalize_ratio,
-            device,
             comp_last
         )
-
-        logger.info(
-            "[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*metrics_latest.values()[:4]))
-        logger.info(f"[err_val] {metrics_latest['err_val']:.3f}, [err_test] {font_green(metrics_latest['err_test'])}")
-
         logger.info("-" * 20)
         logger.info(font_yellow(f"[最小 val loss (epoch {epoch_best})]"))
         metrics_minvalloss = eval_process(
@@ -150,16 +138,8 @@ def train_country(args, result_paths, meta_data, i_country):
             train_loader,
             val_loader,
             test_loader,
-            args.ydays,
-            case_normalize_ratio,
-            device,
             comp_last
         )
-
-        logger.info("[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(
-            *list(metrics_minvalloss.values())[:4]))
-        logger.info(
-            f"[err_val] {metrics_minvalloss['err_val']:.3f}, [err_test] {font_green(metrics_minvalloss['err_test'])}")
 
         writer.add_hparams(
             {

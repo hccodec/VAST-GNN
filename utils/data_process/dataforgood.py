@@ -24,29 +24,32 @@ def load_data(args, enable_cache = True):
         with open(databinfile, 'rb') as f:
             meta_data = pickle.load(f)
         logger.info('已从数据文件读取 dataforgood 数据集')
-        return meta_data
+    else:
+        meta_data = {}
 
-    meta_data = {}
+        country_names = [d for d in os.listdir(data_dir)
+                         if os.path.isdir(os.path.join(data_dir, d))]
+        country_codes = list(map(lambda x: x if x is None else x.groups()[0],
+                                 [pattern_graph_file.search(os.listdir(os.path.join(data_dir, d, "graphs"))[0])
+                                  for d in os.listdir(data_dir)
+                                  if os.path.isdir(os.path.join(data_dir, d))]))
 
-    country_names = [d for d in os.listdir(data_dir)
-                     if os.path.isdir(os.path.join(data_dir, d))]
-    country_codes = list(map(lambda x: x if x is None else x.groups()[0],
-                             [pattern_graph_file.search(os.listdir(os.path.join(data_dir, d, "graphs"))[0])
-                              for d in os.listdir(data_dir)
-                              if os.path.isdir(os.path.join(data_dir, d))]))
+        for i in range(len(country_names)):
+            logger.info(f"正在读取国家 {country_names[i]:{max([len(n) for n in country_names])}s} 的数据...")
+            data = _load_data(args, country_names[i])
+            dataloaders = split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, *data)
+            meta_data[country_names[i]] = (dataloaders, data)
 
-    for i in range(len(country_names)):
-        logger.info(f"正在读取国家 {country_names[i]:{max([len(n) for n in country_names])}s} 的数据...")
-        data = _load_data(args, country_names[i])
-        dataloaders = split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, *data)
-        meta_data[country_names[i]] = (dataloaders, data)
+        meta_data = {"country_names": country_names, "country_codes": country_codes, "data": meta_data}
 
-    meta_data = {"country_names": country_names, "country_codes": country_codes, "data": meta_data}
+        if not os.path.exists(databinfile):
+            os.makedirs(args.preprocessed_data_dir, exist_ok=True)
+            with open(databinfile, 'wb') as f:
+                pickle.dump(meta_data, f)
 
-    if not os.path.exists(databinfile):
-        os.makedirs(args.preprocessed_data_dir, exist_ok=True)
-        with open(databinfile, 'wb') as f:
-            pickle.dump(meta_data, f)
+    meta_info = [list(k[0].shape[:2]) for k in map(lambda x: x[1], meta_data['data'].values())]
+    meta_info = pd.DataFrame(meta_info, columns=['Days', 'Regions'], index=meta_data['country_names'])
+    print(meta_info)
 
     return meta_data
 
@@ -109,14 +112,14 @@ def split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, featu
     train_indices, val_indices, test_indices = generate_indices(num_days - xdays - ydays - shift + 1, train_ratio, val_ratio)
 
     # extract formatted data with xdays/yays as well as shift
-    X = torch.stack([features[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)], dim = 0)
-    A = torch.stack([adjs[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)], dim = 0)
-    y = torch.stack([cases[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)], dim = 0)
-    A_y = torch.stack([adjs[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)], dim = 0)
+    x_case = torch.stack([features[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)])
+    x_mob = torch.stack([adjs[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)])
+    y_case = torch.stack([cases[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)])
+    y_mob = torch.stack([adjs[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)])
 
-    train_data = (X[train_indices], y[train_indices], A[train_indices], torch.tensor(train_indices), A_y[train_indices])
-    val_data = (X[val_indices], y[val_indices], A[val_indices], torch.tensor(val_indices), A_y[val_indices])
-    test_data = (X[test_indices], y[test_indices], A[test_indices], torch.tensor(test_indices), A_y[test_indices])
+    train_data = (x_case[train_indices], y_case[train_indices], x_mob[train_indices], y_mob[train_indices], torch.tensor(train_indices))
+    val_data = (x_case[val_indices], y_case[val_indices], x_mob[val_indices], y_mob[val_indices], torch.tensor(val_indices))
+    test_data = (x_case[test_indices], y_case[test_indices], x_mob[test_indices], y_mob[test_indices], torch.tensor(test_indices))
 
     train_loader = DataLoader(TensorDataset(*train_data), batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(TensorDataset(*val_data), batch_size=batch_size)
