@@ -55,10 +55,12 @@ def hits_at_k(A, A_hat, k, threshold_ratio):
     - hits_k: float, Hits@k 值
     """
     # 确保 A 和 A_hat 是方阵
-    assert A.shape == A_hat.shape, "A and A_hat must有 the same shape"
+    assert A.shape == A_hat.shape, "A and A_hat must have the same shape"
 
-    A = torch.where(A > threshold_ratio, 1, 0)
-    A_hat = torch.where(A_hat > threshold_ratio, 1, 0)
+    A, A_hat = A.clone(), A_hat.clone()
+
+    # A = torch.where(A > threshold_ratio, 1, 0)
+    # A_hat = torch.where(A_hat > threshold_ratio, 1, 0)
 
     N = A.shape[0]
 
@@ -95,7 +97,7 @@ def compute_hits_at_k(A_hat_batch, A_batch, k=10, threshold_ratio=0.5):
     assert A_hat_batch.shape == A_batch.shape
     A_hat_batch, A_batch = A_hat_batch.clone().cpu(), A_batch.clone().cpu()
 
-    A_hat_batch, A_batch = min_max_adj(A_hat_batch), min_max_adj(A_batch)
+    # A_hat_batch, A_batch = min_max_adj(A_hat_batch), min_max_adj(A_batch)
 
     total_hits = 0
     batch_size, num_days, n, _ = A_hat_batch.shape

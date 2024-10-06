@@ -12,13 +12,13 @@ data_dir: "data"           # 数据集目录
 dataset: "dataforgood"      # 选择的数据集
 preprocessed_data_dir: "data_preprocessed"  # 处理后的数据集目录
 databinfile: ""            # 处理后的数据集文件名称，实际文件名为 <databinfile>_xdays_ydays_window_shift.bin
-exp: -1                    # 实验编号 -1 表示不编号
+# exp: -1                    # 实验编号 -1 表示不编号
 model: "dynst"             # 设置实验所用模型
-result_dir: "results_test" # 实验结果目录
+# result_dir: "results_test" # 实验结果目录
 
 # 实验设置：随机种子和设备号
 seed: 5                    # 随机种子
-device: 3                  # GPU号
+device: 7                  # GPU号
 
 ## 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
 #xdays: 7                   # 预测所需历史天数
@@ -51,4 +51,4 @@ graph_lambda_epoch_max: 300 # 图正则化参数达到最大值的轮次
 graph_lambda_method: "cos"  # 图正则化方法
 
 # 其他实验参数
-comp_last: true             # 在多天预测的情形下只比对最后一天的结果
+# comp_last: true             # 在多天预测的情形下只比对最后一天的结果

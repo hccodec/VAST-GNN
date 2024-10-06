@@ -4,22 +4,18 @@ from eval import compute_mae_rmse
 from utils.args import parse_args
 from utils.data_process.dataforgood import split_dataset, load_data
 import pandas as pd
+from argparse import ArgumentParser
 
 pth_name = 'best_model_jp.pth'
 log_name = "log.txt"
 
 if __name__ == '__main__':
 
-    args = parse_args(False)
-    from argparse import ArgumentParser
-
     parser = ArgumentParser()
-    parser.add_argument("--model-dir", default='results/results_test/tmp/dataforgood/dynst_7_7_w7_s0_20241003000136/')
+    parser.add_argument("--model-dir",default='results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/')
     parser.add_argument("--country-code", default='EN')
-
-    args.model_dir = parser.parse_args().model_dir
-    args.country_code = parser.parse_args().country_code
-
+    args = parse_args(record_log=False, parent_parser=parser)
+    
     trained_model = torch.load(os.path.join(args.model_dir, f"model_{args.country_code}_best.pth"))
 
     criterion = torch.nn.MSELoss()
@@ -36,4 +32,4 @@ if __name__ == '__main__':
     # metrics_val = compute_mae_rmse(y_hat_val.float(), y_real_val.float())
     # metrics_test = compute_mae_rmse(y_hat_test.float(), y_real_test.float())
     res = eval_process(trained_model, criterion, train_loader, val_loader, test_loader, comp_last = False)
-    print(res)
+    # print(res)

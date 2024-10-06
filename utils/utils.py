@@ -177,6 +177,8 @@ def adjust_lambda(epoch, num_epochs, lambda_0, lambda_n, lambda_epoch_max, metho
     assert method in graph_lambda_methods
     assert epoch < num_epochs
 
+    if epoch > lambda_epoch_max: epoch = lambda_epoch_max
+
     index = graph_lambda_methods.index(method)
     if index == 0:
         k = np.log(10 * lambda_0 / num_epochs)
@@ -246,7 +248,7 @@ def get_exp_desc(modelstr, xdays, ydays, window, shift) -> str:
 def min_max_adj(adj: torch.Tensor, epsilon = 1e-8):
     adj = adj.clone()
     if abs(adj.max() - 1) < epsilon and adj.min() < epsilon:
-        pass
+        _ = 1
     adj = adj * (1 - torch.eye(adj.shape[-2])).to(adj.device) # 去掉自环，避免自环影响数量级
     adj_min = adj.min(dim=-1, keepdim=True)[0].min(dim=-2, keepdim=True)[0]
     adj_max = adj.max(dim=-1, keepdim=True)[0].max(dim=-2, keepdim=True)[0]

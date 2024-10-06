@@ -14,34 +14,6 @@
     ],
     "configurations": [
         {
-            "name": "record_result",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "utils/record_result.py",
-            "console": "integratedTerminal",
-            "args": [
-                "-d", "results/results_test/tmp/",
-                "-s", "results/results_test/tmp/dataforgood/21_7_w21_mpnn_lstm_20240920185726"
-            ]
-        },
-        {
-            "name": "MAIN(mpnn_lstm)",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                "--model",
-                "mpnn_lstm",
-                "--dataset",
-                "dataforgood",
-                // "--enable-graph-learner"
-            ]
-        },
-        {
             "name": "MAIN(dynst)",
             "type": "debugpy",
             "request": "launch",
@@ -51,31 +23,12 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--model",
-                "dynst",
-                "--dataset",
-                "dataforgood",
                 // "--enable-graph-learner"
+                "--exp", "test1006"
             ]
         },
         {
-            "name": "MepoGNN",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "Main.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/extrasources/MepoGNN/model",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                // "-graph", "Adaptive"
-                "-out",
-                "outputDynamic"
-            ]
-        },
-        {
-            "name": "MAIN(YJ_COVID-19)",
+            "name": "France",
             "type": "debugpy",
             "request": "launch",
             "program": "main.py",
@@ -84,161 +37,21 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                // "--dataset", "dataforgood"
+                "--country", "France"
             ]
         },
         {
-            "name": "MAIN(dataforgood)",
+            "name": "record results",
             "type": "debugpy",
             "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true",
-            },
-            "args": [
-                "--dataset",
-                "dataforgood",
-                "--xdays",
-                "7",
-                "--ydays",
-                "1",
-                "--lr",
-                "0.001",
-                "--batchsize",
-                "32",
-            ]
-        },
-        {
-            "name": "MAIN(graph learner)",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
+            "program": "utils/record_result.py",
             "console": "integratedTerminal",
             "env": {
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--enable-graph-learner",
+                "-s", "results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704"
             ]
         },
-        {
-            "name": "MAIN(case trained)",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                "--model",
-                "sabgnn_case_only",
-            ]
-        },
-        {
-            "name": "MAIN(self,3,21-7)",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                "--model",
-                "selfmodel",
-                "--wave",
-                "3",
-                "--ydays",
-                "7",
-                "--enable-graph-learner",
-                "--train-with-extrainfo",
-                "--device",
-                "1"
-            ]
-        },
-        {
-            "name": "MAIN(self&text)",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                "--model",
-                "selfmodel",
-                "--train-with-extrainfo"
-            ]
-        },
-        {
-            "name": "MAIN(lstm)",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                "--model",
-                "lstm"
-            ]
-        },
-        {
-            "name": "MAIN(lstm_with_text)",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                "--model",
-                "lstm",
-                "--train-with-extrainfo"
-            ]
-        },
-        {
-            "name": "MAIN(CPU)",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                "--device",
-                "-1"
-            ]
-        },
-        {
-            "name": "TEST",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "test.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                "--data-dir",
-                "../data/multiwave_data"
-            ]
-        },
-        {
-            "name": "CLEANUP",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "cleanup.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-        }
     ]
 }

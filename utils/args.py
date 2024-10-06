@@ -9,10 +9,15 @@ from utils.logger import set_logger, logger
 models_list = ["lstm", "dynst", "mpnn_lstm"]
 graph_lambda_methods = ['exp', 'cos']
 
-def parse_args(record_log = True):
-    parser = ArgumentParser()
+def get_parser(parent_parser=None):
+    if parent_parser is None:
+        parser = ArgumentParser()
+    else:
+        assert isinstance(parent_parser, ArgumentParser)
+        parser = parent_parser
     # 配置文件以及各种目录
     parser.add_argument("--config", type=str, default="cfg/config.yaml", help="配置文件路径")
+    parser.add_argument("--country", type=str, default=None, help="指定训练某个国家")
     # parser.add_argument("--data-dir", default="data", help="数据集目录")
     # parser.add_argument("--dataset", default='dataforgood', help="选择的数据集")
     # parser.add_argument("--databinfile", type=str, default="",
@@ -62,8 +67,10 @@ def parse_args(record_log = True):
     )
     parser.add_argument("--desc", help="该实验的说明")
     parser.add_argument("--f", help="兼容 jupyter")
-    args = parser.parse_args()
+    return parser
 
+def parse_args(record_log = True, parent_parser = None):
+    args = get_parser(parent_parser).parse_args()
     args = process_args(args, record_log)
     return args
 
@@ -84,7 +91,7 @@ def process_args(args, record_log):
 
     # args.comp_last 仅支持多天连续预测
     if args.comp_last:
-        assert args.shift == 0, "参数 comp-last 仅支持多天连续预测"
+        assert args.shift == 0, f"参数 comp-last ({args.comp_last}) 仅支持多天连续预测."
 
     # 通过 args.window 的默认值规范 args.window
     args.window = args.xdays if args.window == -1 else args.window

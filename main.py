@@ -29,9 +29,15 @@ def exp_main(args):
         f.write("[args]\n")
         for k in args: f.write("{}: {}\n".format(k, args[k]))
 
-
-    for i_country in range(len(meta_data["country_names"])):
+    if args.country in meta_data["country_names"]:
+        i_country = meta_data["country_names"].index(args.country)
         train_country(args, result_paths, meta_data, i_country)
+    else:
+        if args.country is None:
+            for i_country in range(len(meta_data["country_names"])):
+                train_country(args, result_paths, meta_data, i_country)
+        else:
+            print(f"参数错误 args.country: {args.country}")
 
     logger.info(f"实验【{get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift)}】结束")
 

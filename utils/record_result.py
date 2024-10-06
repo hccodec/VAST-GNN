@@ -75,13 +75,16 @@ def process_log_segment(lines):
     # 定义正则表达式来匹配日志中的信息
     pattern_country = re.compile(r"训练完毕，开始评估: (\w+)")
     pattern_loss = re.compile(r"\[val\(MAE/RMSE\)\] (\d+\.\d+)/(\d+\.\d+), \[test\(MAE/RMSE\)\] (\d+\.\d+)/(\d+\.\d+)")
+    pattern_err_corr_hits10 = re.compile(
+        r"\[err\(val/test\)\] (\d+\.\d+)/(\d+\.\d+), \[corr\(train/val/test\)\] (\-?\d+\.\d+)/(\-?\d+\.\d+)/(\-?\d+\.\d+), \[hits10\(train/val/test\)\] (\d+\.\d+)/(\d+\.\d+)/(\d+\.\d+)"
+    )
     pattern_err = re.compile(r"\[err_val\] (\d+\.\d+), \[err_test\] (\d+\.\d+)")
     pattern_latest_epoch = re.compile(r"\[最新 \(epoch (\d+)\)\]")
     pattern_min_val_epoch = re.compile(r"\[最小 val loss \(epoch (\d+)\)\]")
 
     match_patterns = [
-        pattern_country, None, pattern_latest_epoch, pattern_loss, pattern_err,
-        None, pattern_min_val_epoch, pattern_loss, pattern_err
+        pattern_country, None, pattern_latest_epoch, pattern_loss, pattern_err_corr_hits10,
+        None, pattern_min_val_epoch, pattern_loss, pattern_err_corr_hits10
     ]
 
     res = {}
@@ -97,8 +100,9 @@ def process_log_segment(lines):
             losses = list(map(float, match.groups())) if match else -1
             res["latest" if i == 3 else "minvalloss"].update(dict(losses=losses))
         elif i == 4 or i == 8:
-            err_val, err_test = list(map(float, match.groups()))
-            res["latest" if i == 4 else "minvalloss"].update(dict(err_val=err_val, err_test=err_test))
+            err_val, err_test, corr_train, corr_val, corr_test, hits10_train, hits10_val, hits10_test = list(map(float, match.groups()))
+            res["latest" if i == 4 else "minvalloss"].update(dict(err_val=err_val, err_test=err_test, corr_train=corr_train, corr_val=corr_val, corr_test=corr_test,
+            hits10_train=hits10_train, hits10_val=hits10_val, hits10_test=hits10_test))
     # print(lines)
     return {country: res}
 

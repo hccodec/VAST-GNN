@@ -6,7 +6,7 @@ from eval import compute_err, compute_mae_rmse, metrics_labels, compute_correlat
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
-from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, random_mask
+from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, min_max_adj, random_mask
 from models.dynst import dynst_extra_info
 
 
@@ -104,10 +104,12 @@ def train_process(
                 data = tuple(d.to(device) for d in data)
                 y_hat, x_case, y_case, x_mob, y_mob, idx_dataset = train_model(data, adj_lambda, model, node_observed_ratio)
 
-                adj_gt = torch.cat([x_mob, y_mob], dim = 1)
-
                 if isinstance(y_hat, tuple):
                     y_hat, adj_hat = y_hat
+
+                    adj_gt = min_max_adj(torch.cat([x_mob, y_mob], dim = 1))
+                    adj_hat = min_max_adj(adj_hat)
+
                     loss = criterion(y_case.float(), y_hat.float()) + adj_lambda * criterion(adj_gt.float(), adj_hat.float())
                     hits10 = compute_hits_at_k(adj_hat.float(), adj_gt.float())
                     hits10_res.append(hits10)
@@ -254,7 +256,7 @@ def validate_test_process(model: nn.Module, criterion, dataloader):
     device = next(model.parameters()).device
     model.eval()
     loss_res = []
-    y_hat_res, adj_hat_res = [], []
+    y_hat_res, adj_hat_res, adj_real_res = [], [], []
 
     for data in dataloader:
 
@@ -265,21 +267,24 @@ def validate_test_process(model: nn.Module, criterion, dataloader):
         # 读取结果计算 loss
         if isinstance(y_hat, tuple):
             y_hat, adj_hat = y_hat  # 适配启用图学习器的情况
+            
+            adj_gt = min_max_adj(torch.cat([x_mob, y_mob], dim = 1))
+            adj_hat = min_max_adj(adj_hat)
+
+            adj_real_res.append(adj_gt.float())
             adj_hat_res.append(adj_hat.float())
 
         loss = criterion(y_case.float(), y_hat.float())
         loss_res.append(loss.item())
-
         y_hat_res.append(y_hat.float())
 
     loss = np.mean(loss_res)
 
     y_hat_res = torch.cat(y_hat_res) # 含 batch 维度：cat
     adj_hat_res = torch.cat(adj_hat_res) # 含 batch 维度：cat
+    adj_real_res = torch.cat(adj_real_res) # 含 batch 维度：cat
 
     y_real_res = torch.stack([d[1] for d in dataloader.dataset]).to(y_hat_res.device) # 不含 batch 维度：stack
-    adj_real_res = torch.stack([torch.cat([d[2], d[3]]) for d in dataloader.dataset]).to(adj_hat_res.device) # 不含 batch 维度：stack
-
     return loss, y_real_res, y_hat_res, adj_real_res, adj_hat_res
 
 
