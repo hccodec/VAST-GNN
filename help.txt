@@ -25,6 +25,24 @@ python main.py --ydays 14 --result-dir tests --model dynst --comp-last --device 
 
 python utils.record_result.py -d results/tests/exp_test2
 
+# [test_1008_1]
+graph_lambda 参数设置为：(0, 0.9) -> (300, 0.5)
+python main.py --ydays 3 --result-dir tests --comp-last --device 8 --exp test_1008_1
+python main.py --ydays 1 --shift 2 --result-dir tests --device 8 --exp test_1008_1
+
+[更新] graph_lambda 参数设置为：(0, 0.9) -> (500, 0.5)
+python main.py --ydays 3 --result-dir tests --comp-last --device 2 --exp test_1008_2
+python main.py --ydays 1 --shift 2 --result-dir tests --device 3 --exp test_1008_2
+
+只在后面应用一次 laplacemat 尝试复现最好结果
+python main.py --ydays 3 --result-dir tests --comp-last --device 7 --exp test_1008_3（卡 7。。。）
+python main.py --ydays 1 --shift 2 --result-dir tests --device 8 --exp test_1008_3（卡 8。。。）
+python main.py --ydays 7 --result-dir tests --comp-last --device 7 --exp test_1008_3 (显存不够 失败)
+python main.py --ydays 1 --shift 6 --result-dir tests --device 8 --exp test_1008_3 （√）
+
+loss 邻接矩阵 adj_hat 改为 adj_gt 的尺度（A_hat * mu_gt / mu_hat）
+python main.py --ydays 3 --result-dir tests --comp-last --device 8 --exp test_1008_4（卡 8。。。）
+python main.py --ydays 1 --shift 2 --result-dir tests --device 0 --exp test_1008_4 （卡 0。。。）
 
 ##################################################################################################################
 

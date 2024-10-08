@@ -24,7 +24,7 @@
             },
             "args": [
                 // "--enable-graph-learner"
-                "--exp", "test1006"
+                // "--exp", "test1006"
             ]
         },
         {
@@ -50,7 +50,7 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "-s", "results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704"
+                "-s", "results/results_test/exp_test10062/dataforgood/dynst_7_1_w7_s2_20241006222816"
             ]
         },
     ]

@@ -76,7 +76,7 @@ def hits_at_k(A, A_hat, k, threshold_ratio):
     # 只保留非对角线部分的排序索引
     non_diag_indices = sorted_indices[mask_flat[sorted_indices] == 1]
     # 取前 k 个预测的边索引
-    top_k_indices = non_diag_indices[:k]
+    top_k_indices = non_diag_indices[: int(k / 10 * len(non_diag_indices))]
 
     # 将 top_k_indices 转换为矩阵中的 (i, j) 对应的行列索引
     i_indices = top_k_indices // N

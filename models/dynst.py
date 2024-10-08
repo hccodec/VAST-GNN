@@ -236,19 +236,22 @@ class dynst(nn.Module):
 
     def forward(self, X, y, A, A_y, adj_lambda):
 
-        adj_output = self.enc(X, y)
+        adj_output = self.enc(X, y) # enc 输出的图结构，不可更改，用于返回值
 
-        adj_hat = adj_output # 不带图结构 gt
+        adj_enc = adj_output # 使用 adj_enc 传入 dec
 
         # 求图结构 gt 和 enc_output 的线性结果
         if self.training and not self.no_graph_gt and adj_lambda is not None:
-            adj_output = getLaplaceMat(adj_output.flatten(0, 1)).reshape(adj_output.shape)
-
             adj_gt = torch.cat((A, A_y), dim=1)
-            adj_gt = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
 
-            adj_hat = (1 - adj_lambda) * adj_output + adj_lambda * adj_gt
-            adj_hat = getLaplaceMat(adj_hat.flatten(0, 1)).reshape(adj_output.shape)
+            # TODO: adj_enc 的 mu sigma 和 adj_gt 一致
 
-        y_hat = self.dec(X, y, adj_hat.float(), not self.training)
+            # adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
+            # adj_gt = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
+
+            adj_enc = (1 - adj_lambda) * adj_enc + adj_lambda * adj_gt
+
+            adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
+
+        y_hat = self.dec(X, y, adj_enc.float(), not self.training)
         return y_hat, adj_output

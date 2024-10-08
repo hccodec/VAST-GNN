@@ -6,7 +6,7 @@ from eval import compute_err, compute_mae_rmse, metrics_labels, compute_correlat
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
-from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, min_max_adj, random_mask
+from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, min_max_adj, random_mask, rm_self_loops
 from models.dynst import dynst_extra_info
 
 
@@ -107,11 +107,23 @@ def train_process(
                 if isinstance(y_hat, tuple):
                     y_hat, adj_hat = y_hat
 
-                    adj_gt = min_max_adj(torch.cat([x_mob, y_mob], dim = 1))
-                    adj_hat = min_max_adj(adj_hat)
+                    with torch.no_grad():
 
-                    loss = criterion(y_case.float(), y_hat.float()) + adj_lambda * criterion(adj_gt.float(), adj_hat.float())
-                    hits10 = compute_hits_at_k(adj_hat.float(), adj_gt.float())
+                        adj_gt = torch.cat([x_mob, y_mob], dim=1)
+                        adj_gt_no_diag = rm_self_loops(adj_gt)
+
+                        mean_adj_hat = adj_hat.mean(axis=(-2, -1), keepdims=True)
+                        std_adj_hat = adj_hat.std(axis=(-2, -1), keepdims=True)
+                        mean_adj_gt_no_diag = adj_gt_no_diag.mean(axis=(-2, -1), keepdims=True)
+                        std_adj_gt_no_diag = adj_gt_no_diag.std(axis=(-2, -1), keepdims=True)
+                        
+                        # adj_hat = (adj_hat - mean_adj_hat) / std_adj_hat * std_adj_gt_no_diag + mean_adj_gt_no_diag
+                        # adj_hat = rm_self_loops(adj_hat)
+
+                        adj_hat = adj_hat * mean_adj_gt_no_diag / mean_adj_hat
+
+                    loss = criterion(y_case.float(), y_hat.float()) + adj_lambda * criterion(adj_gt_no_diag.float(), adj_hat.float())
+                    hits10 = compute_hits_at_k(adj_hat.float(), adj_gt_no_diag.float())
                     hits10_res.append(hits10)
                 else:
                     loss = criterion(y_case.float(), y_hat.float())

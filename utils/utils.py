@@ -179,14 +179,18 @@ def adjust_lambda(epoch, num_epochs, lambda_0, lambda_n, lambda_epoch_max, metho
 
     if epoch > lambda_epoch_max: epoch = lambda_epoch_max
 
+    res = 1
+
     index = graph_lambda_methods.index(method)
     if index == 0:
         k = np.log(10 * lambda_0 / num_epochs)
-        return lambda_0 * np.exp(-k * epoch / num_epochs)
+        res = np.exp(-k * epoch / num_epochs)
     elif index == 1:
-        return lambda_0 * np.cos(np.pi / 2 / lambda_epoch_max * epoch)
+        res = np.cos(np.pi / 2 / lambda_epoch_max * epoch)
     else:
         raise IndexError("请选择正确的 adjency matrix lambda 策略")
+    
+    return res * (lambda_0 - lambda_n) + lambda_n
 
 # def process_batch(data, observed_ratio):
 #     """
@@ -245,6 +249,7 @@ def get_exp_desc(modelstr, xdays, ydays, window, shift) -> str:
 
     return f"历史 {xdays} 天预测未来{y_desc} 天 ({modelstr}_w{window})"
 
+@torch.no_grad()
 def min_max_adj(adj: torch.Tensor, epsilon = 1e-8):
     adj = adj.clone()
     if abs(adj.max() - 1) < epsilon and adj.min() < epsilon:
@@ -256,3 +261,6 @@ def min_max_adj(adj: torch.Tensor, epsilon = 1e-8):
     adj = (adj - adj_min) / (adj_max - adj_min + epsilon)
 
     return adj
+
+@torch.no_grad()
+def rm_self_loops(a): return a * (1 - torch.eye(a.size(-1)).to(a.device))
