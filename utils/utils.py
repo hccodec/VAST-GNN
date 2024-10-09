@@ -136,11 +136,12 @@ def select_model(args, train_loader):
     dynst_model_args = {
         "in_dim": args.window,
         "out_dim": 1,
-        "hidden": 32,
-        # "hidden": 64,
+        # "hidden": 32,
+        "hidden_enc": 32,
+        "hidden_dec": 64,
         "num_heads": 4,
         "num_layers": 2,
-        "graph_layers": 1,
+        "graph_layers": 2,
         "dropout": 0.5,
         "device": args.device,
         "no_graph_gt": args.no_graph_gt

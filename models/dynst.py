@@ -219,11 +219,12 @@ class dynst_extra_info():
     #     return self.lambda_range[1] - (self.lambda_range[1] - self.lambda_range[0]) * (self.epoch / self.max_epochs)
 
 class dynst(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), no_graph_gt = False):
+    def __init__(self, in_dim, out_dim, hidden_enc, hidden_dec, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), no_graph_gt = False):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
-        self.hidden = hidden
+        self.hidden_enc = hidden_enc
+        self.hidden_dec = hidden_dec
         self.num_heads = num_heads
         self.num_layers = num_layers
         self.graph_layers = graph_layers
@@ -231,8 +232,8 @@ class dynst(nn.Module):
         self.device = device
         self.no_graph_gt = no_graph_gt
 
-        self.enc = DynGraphEncoder(in_dim, hidden, num_heads, num_layers, dropout, device).to(device)
-        self.dec = Decoder(in_dim, out_dim, hidden, graph_layers, dropout, device).to(device)
+        self.enc = DynGraphEncoder(in_dim, hidden_enc, num_heads, num_layers, dropout, device).to(device)
+        self.dec = Decoder(in_dim, out_dim, hidden_dec, graph_layers, dropout, device).to(device)
 
     def forward(self, X, y, A, A_y, adj_lambda):
 
@@ -244,13 +245,15 @@ class dynst(nn.Module):
         if self.training and not self.no_graph_gt and adj_lambda is not None:
             adj_gt = torch.cat((A, A_y), dim=1)
 
-            # TODO: adj_enc 的 mu sigma 和 adj_gt 一致
+            # （√）adj_enc 的 mu sigma 和 adj_gt 一致（√）
+            # (已解决，在外部对 adj_enc 按照 mu 执行 adj_enc -> adj_gt 的尺度缩放)
 
-            # adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
-            # adj_gt = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
+            adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
+            adj_gt = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
 
             adj_enc = (1 - adj_lambda) * adj_enc + adj_lambda * adj_gt
 
+            # 此处已针对具体实验进行临时更改：只传入 adj_output 和只传入 adj_gt （均仅在下一句执行Laplace归一化）
             adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
 
         y_hat = self.dec(X, y, adj_enc.float(), not self.training)

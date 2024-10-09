@@ -19,15 +19,16 @@ class LSTM_MODEL(nn.Module):
         
         x = X[:,-1].float()
         batch_size, num_zones, _ = x.shape
-        if self.train_with_text: 
-            extra_info = extra_info.float()
-            x = torch.cat([x.unsqueeze(-1), extra_info.transpose(1, 2)], -1)
+        # if self.train_with_text: 
+        #     extra_info = extra_info.float()
+        #     x = torch.cat([x.unsqueeze(-1), extra_info.transpose(1, 2)], -1)
         x = x.flatten(0, 1)
         x, (hc, cn) = self.lstm(x)
         # x = x.flatten(-2, -1)
-        if self.train_with_text: x = x[:, -1]
+        # if self.train_with_text: x = x[:, -1]
         x = self.relu(self.fc(x))
         x = self.fc_out(x)
         x = x.view(batch_size, num_zones, -1).transpose(-2, -1)
+        x = x.unsqueeze(-1)
         return x
 

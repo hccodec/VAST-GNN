@@ -122,7 +122,9 @@ def train_process(
 
                         adj_hat = adj_hat * mean_adj_gt_no_diag / mean_adj_hat
 
-                    loss = criterion(y_case.float(), y_hat.float()) + adj_lambda * criterion(adj_gt_no_diag.float(), adj_hat.float())
+                    # loss = criterion(y_case.float(), y_hat.float()) + adj_lambda * criterion(adj_gt_no_diag.float(), adj_hat.float())
+                    loss = criterion(y_case.float(), y_hat.float())
+
                     hits10 = compute_hits_at_k(adj_hat.float(), adj_gt_no_diag.float())
                     hits10_res.append(hits10)
                 else:
@@ -133,8 +135,8 @@ def train_process(
 
                 loss_res.append(loss.data.cpu().numpy())
 
-            loss = sum(loss_res) / len(loss_res)
-            hits10 = sum(hits10_res) / len(hits10_res)
+            loss = np.mean(loss_res)
+            if len(hits10_res) > 0: hits10 = np.mean(hits10_res)
 
             # 记录 train loss
             msg_file_logger += f"[Loss(train/val/test)] {loss:.3f}/"
@@ -146,9 +148,10 @@ def train_process(
             loss_test, y_real_test, y_hat_test, adj_real_test, adj_hat_test = validate_test_process(model, criterion,
                                                                                                     test_loader)
 
-            # hits10_train = compute_hits_at_k(adj_hat_train, adj_real_train)
-            hits10_val = compute_hits_at_k(adj_hat_val, adj_real_val)
-            hits10_test = compute_hits_at_k(adj_hat_test, adj_real_test)
+            if len(hits10_res) > 0:
+                # hits10_train = compute_hits_at_k(adj_hat_train, adj_real_train)
+                hits10_val = compute_hits_at_k(adj_hat_val, adj_real_val)
+                hits10_test = compute_hits_at_k(adj_hat_test, adj_real_test)
 
             # 拼接记录 val/test loss
             msg_file_logger += f"{loss_val:.3f}/{loss_test:.3f}"
@@ -156,13 +159,14 @@ def train_process(
             losses["val"].append(loss_val)
             losses["test"].append(loss_test)
 
-            # 记录 hits 10
-            msg_file_logger += ", [HITS@10(train/val/test)] {:.5f}/{:.5f}/{:.5f}".format(
-                hits10, hits10_val,hits10_test
-            )
-            print(", [HITS@10(train/val/test)] {:.5f}/{:.5f}/{:.5f}".format(
-                hits10, hits10_val,hits10_test
-            ), end="")
+            if len(hits10_res) > 0:
+                # 记录 hits 10
+                msg_file_logger += ", [HITS@10(train/val/test)] {:.5f}/{:.5f}/{:.5f}".format(
+                    hits10, hits10_val,hits10_test
+                )
+                print(", [HITS@10(train/val/test)] {:.5f}/{:.5f}/{:.5f}".format(
+                    hits10, hits10_val,hits10_test
+                ), end="")
 
             # 记录 时间
             time2 = time.time()
@@ -241,8 +245,13 @@ def train_process(
                 writer.add_scalar(f"Metric/{metric_label}", metrics[i], e)
             writer.add_scalar("Metric/Err_val", err_val, e)
             writer.add_scalar("Metric/Err_test", err_test, e)
+            if len(hits10_res) > 0:
+                writer.add_scalar("Metric/HITS@10_train", hits10, e)
+                writer.add_scalar("Metric/HITS@10_val", hits10_val, e)
+                writer.add_scalar("Metric/HITS@10_test", hits10_test, e)
             writer.add_scalar("Others/Learning_Rate", lr, e)
             writer.add_scalar("Others/Time(s)", time2 - time1, e)
+            
             # endregion
 
             if early_stop:
@@ -275,15 +284,15 @@ def validate_test_process(model: nn.Module, criterion, dataloader):
         data = tuple(d.to(device) for d in data)
         y_hat, x_case, y_case, x_mob, y_mob, idx_dataset = run_model(data, model)
         # adj_gt = torch.cat([x_mob, y_mob], dim = -3)
+        adj_gt = min_max_adj(torch.cat([x_mob, y_mob], dim = 1))
+        adj_real_res.append(adj_gt.float())
 
         # 读取结果计算 loss
         if isinstance(y_hat, tuple):
             y_hat, adj_hat = y_hat  # 适配启用图学习器的情况
             
-            adj_gt = min_max_adj(torch.cat([x_mob, y_mob], dim = 1))
             adj_hat = min_max_adj(adj_hat)
 
-            adj_real_res.append(adj_gt.float())
             adj_hat_res.append(adj_hat.float())
 
         loss = criterion(y_case.float(), y_hat.float())
@@ -293,7 +302,7 @@ def validate_test_process(model: nn.Module, criterion, dataloader):
     loss = np.mean(loss_res)
 
     y_hat_res = torch.cat(y_hat_res) # 含 batch 维度：cat
-    adj_hat_res = torch.cat(adj_hat_res) # 含 batch 维度：cat
+    adj_hat_res = torch.cat(adj_hat_res) if len(adj_hat_res) > 0 else [] # 含 batch 维度：cat
     adj_real_res = torch.cat(adj_real_res) # 含 batch 维度：cat
 
     y_real_res = torch.stack([d[1] for d in dataloader.dataset]).to(y_hat_res.device) # 不含 batch 维度：stack
@@ -322,15 +331,22 @@ def eval_process(model, criterion, train_loader, val_loader, test_loader, comp_l
     corr_val = compute_correlation(y_hat_val, adj_real_val)[0]
     corr_test = compute_correlation(y_hat_test, adj_real_test)[0]
 
-    hits10_train = compute_hits_at_k(adj_hat_train, adj_real_train)
-    hits10_val = compute_hits_at_k(adj_hat_val, adj_real_val)
-    hits10_test = compute_hits_at_k(adj_hat_test, adj_real_test)
+    if not adj_hat_train == []: 
+        hits10_train = compute_hits_at_k(adj_hat_train, adj_real_train)
+        hits10_val = compute_hits_at_k(adj_hat_val, adj_real_val)
+        hits10_test = compute_hits_at_k(adj_hat_test, adj_real_test)
 
     logger.info(
         "[val(MAE/RMSE)] {:.3f}/{:.3f}, [test(MAE/RMSE)] {:.3f}/{:.3f}".format(*metrics))
-    logger.info(
-        "[err(val/test)] {:.3f}/{}, [corr(train/val/test)] {:.3f}/{:.3f}/{:.3f}, [hits10(train/val/test)] {:.5f}/{:.5f}/{:.5f}".format(
-            err_val, font_green(err_test), corr_train, corr_val, corr_test, hits10_train, hits10_val, hits10_test))
+    
+    if adj_hat_train == []: 
+        logger.info(
+            "[err(val/test)] {:.3f}/{}, [corr(train/val/test)] {:.3f}/{:.3f}/{:.3f}".format(
+                err_val, font_green(err_test), corr_train, corr_val, corr_test))
+    else:
+        logger.info(
+            "[err(val/test)] {:.3f}/{}, [corr(train/val/test)] {:.3f}/{:.3f}/{:.3f}, [hits10(train/val/test)] {:.5f}/{:.5f}/{:.5f}".format(
+                err_val, font_green(err_test), corr_train, corr_val, corr_test, hits10_train, hits10_val, hits10_test))
 
     res = {
         "mae_val": metrics[0],
@@ -341,11 +357,10 @@ def eval_process(model, criterion, train_loader, val_loader, test_loader, comp_l
         "err_test": err_test,
         "corr_train": corr_train,
         "corr_val": corr_val,
-        "corr_test": corr_test,
-        "hits10_train": hits10_train,
-        "hits10_val": hits10_val,
-        "hits10_test": hits10_test,
+        "corr_test": corr_test
     }
+    if not adj_hat_train == []:
+        res = {**res, **{"hits10_train": hits10_train, "hits10_val": hits10_val, "hits10_test": hits10_test}}
     return res
 
 # 训练测试模型的子过程
