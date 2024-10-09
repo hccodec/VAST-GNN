@@ -76,7 +76,7 @@ def hits_at_k(A, A_hat, k, threshold_ratio):
     # 只保留非对角线部分的排序索引
     non_diag_indices = sorted_indices[mask_flat[sorted_indices] == 1]
     # 取前 k 个预测的边索引
-    top_k_indices = non_diag_indices[: int(k / 10 * len(non_diag_indices))]
+    top_k_indices = non_diag_indices[: int(k / 100 * len(non_diag_indices))]
 
     # 将 top_k_indices 转换为矩阵中的 (i, j) 对应的行列索引
     i_indices = top_k_indices // N
@@ -85,11 +85,11 @@ def hits_at_k(A, A_hat, k, threshold_ratio):
     # 统计 Hits@k 中的命中次数
     hits = 0
     for i, j in zip(i_indices, j_indices):
-        if A[i, j] == 1:  # 如果在真实邻接矩阵 A 中存在这条边
+        if A[i, j] > 0:  # 如果在真实邻接矩阵 A 中存在这条边
             hits += 1
 
     # 计算 Hits@k (命中次数 / k)
-    hits_k = hits / k
+    hits_k = hits / len(top_k_indices)
     return hits_k
 
 @torch.no_grad()
@@ -99,21 +99,17 @@ def compute_hits_at_k(A_hat_batch, A_batch, k=10, threshold_ratio=0.5):
 
     # A_hat_batch, A_batch = min_max_adj(A_hat_batch), min_max_adj(A_batch)
 
-    total_hits = 0
+    total_hits = []
     batch_size, num_days, n, _ = A_hat_batch.shape
-    hits_tensor = torch.zeros(batch_size, num_days, n, dtype=torch.float32)
     for b in range(batch_size):
         for d in range(num_days):
             A, A_hat = A_batch[b, d], A_hat_batch[b, d]
             hits_per_user = hits_at_k(A, A_hat, k, threshold_ratio)
 
             # 累加到总 hits@k 计数器
-            total_hits += hits_per_user
-
-            # 记录每个用户是否达到阈值
-            hits_tensor[b, d] = hits_per_user
+            total_hits.append(hits_per_user)
 
         # 计算平均 hits@k
-        average_hits_at_k = total_hits / (batch_size * num_days * k)
+        average_hits_at_k = np.mean(total_hits)
         # average_hits_at_k = average_hits_at_k.item()
         return average_hits_at_k

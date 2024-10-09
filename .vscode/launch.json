@@ -14,6 +14,36 @@
     ],
     "configurations": [
         {
+            "name": "MAIN(lstm)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--device", "7",
+                "--model", "lstm",
+                "--shift", "2", "--ydays", "1"
+            ]
+        },
+        {
+            "name": "MAIN(mpnn_lstm)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--device", "7",
+                "--model", "mpnn_lstm",
+                "--shift", "2", "--ydays", "1"
+            ]
+        },
+        {
             "name": "MAIN(dynst)",
             "type": "debugpy",
             "request": "launch",
@@ -23,8 +53,7 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                // "--enable-graph-learner"
-                // "--exp", "test1006"
+                "--device", "0"
             ]
         },
         {
@@ -44,13 +73,26 @@
             "name": "record results",
             "type": "debugpy",
             "request": "launch",
-            "program": "utils/record_result.py",
+            "program": "show_result.py",
             "console": "integratedTerminal",
             "env": {
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "-s", "results/results_test/exp_test10062/dataforgood/dynst_7_1_w7_s2_20241006222816"
+               "--result-dir", "tests", "--exp", "1009_2"
+            ]
+        },
+        {
+            "name": "test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "test.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+               "--model", "dynst", "--model-dir", "results/tests_old/exp_test1/dataforgood/dynst_7_1_w7_s2_20240924175521"
             ]
         },
     ]

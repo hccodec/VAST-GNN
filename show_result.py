@@ -1,6 +1,6 @@
 import argparse, os, re
 
-from custom_datetime import str2date
+from utils.custom_datetime import str2date
 
 pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
 countries = ["England", "France", "Italy", "Spain"]
@@ -75,16 +75,18 @@ def process_log_segment(lines):
     # 定义正则表达式来匹配日志中的信息
     pattern_country = re.compile(r"训练完毕，开始评估: (\w+)")
     pattern_loss = re.compile(r"\[val\(MAE/RMSE\)\] (\d+\.\d+)/(\d+\.\d+), \[test\(MAE/RMSE\)\] (\d+\.\d+)/(\d+\.\d+)")
-    pattern_err_corr_hits10 = re.compile(
-        r"\[err\(val/test\)\] (\d+\.\d+)/(\d+\.\d+), \[corr\(train/val/test\)\] (\-?\d+\.\d+)/(\-?\d+\.\d+)/(\-?\d+\.\d+), \[hits10\(train/val/test\)\] (\d+\.\d+)/(\d+\.\d+)/(\d+\.\d+)"
-    )
-    pattern_err = re.compile(r"\[err_val\] (\d+\.\d+), \[err_test\] (\d+\.\d+)")
+
+    pattern_err = re.compile(r"\[err\(val/test\)\] (\d+\.\d+)/(\d+\.\d+)")
+    pattern_corr = re.compile(r"\[corr\(train/val/test\)\] (.*)/(.*)/(.*)")
+    pattern_hits10 = re.compile(r"\[hits10\(train/val/test\)\] (\d+\.\d+)/(\d+\.\d+)/(\d+\.\d+)")
+
+    # pattern_err = re.compile(r"\[err_val\] (\d+\.\d+), \[err_test\] (\d+\.\d+)")
     pattern_latest_epoch = re.compile(r"\[最新 \(epoch (\d+)\)\]")
     pattern_min_val_epoch = re.compile(r"\[最小 val loss \(epoch (\d+)\)\]")
 
     match_patterns = [
-        pattern_country, None, pattern_latest_epoch, pattern_loss, pattern_err_corr_hits10,
-        None, pattern_min_val_epoch, pattern_loss, pattern_err_corr_hits10
+        pattern_country, None, pattern_latest_epoch, pattern_loss, pattern_err,
+        None, pattern_min_val_epoch, pattern_loss, pattern_err
     ]
 
     res = {}
@@ -100,9 +102,15 @@ def process_log_segment(lines):
             losses = list(map(float, match.groups())) if match else -1
             res["latest" if i == 3 else "minvalloss"].update(dict(losses=losses))
         elif i == 4 or i == 8:
-            err_val, err_test, corr_train, corr_val, corr_test, hits10_train, hits10_val, hits10_test = list(map(float, match.groups()))
-            res["latest" if i == 4 else "minvalloss"].update(dict(err_val=err_val, err_test=err_test, corr_train=corr_train, corr_val=corr_val, corr_test=corr_test,
-            hits10_train=hits10_train, hits10_val=hits10_val, hits10_test=hits10_test))
+            err_val, err_test = list(map(float, match.groups()))
+            res["latest" if i == 4 else "minvalloss"].update(dict(err_val=err_val, err_test=err_test))
+
+            if pattern_corr.search(line):
+                corr_train, corr_val, corr_test = list(map(str, pattern_corr.search(line).groups()))
+                res["latest" if i == 4 else "minvalloss"].update(dict(corr_train=corr_train, corr_val=corr_val, corr_test=corr_test))
+            if pattern_hits10.search(line):
+                hits10_train, hits10_val, hits10_test = list(map(float, pattern_hits10.search(line).groups()))
+                res["latest" if i == 4 else "minvalloss"].update(dict(hits10_train=hits10_train, hits10_val=hits10_val, hits10_test=hits10_test))
     # print(lines)
     return {country: res}
 
@@ -158,7 +166,7 @@ def print_err(args, results, _models, i):
     for k in s:
         if k != 'minvalloss': continue
         keys = sorted(s[k].keys(), key=sort_key)
-        if not i: print(' | '.join(keys))
+        print(' | '.join(keys))
         print(f'[{_models[i]:>{9}s}]', ' | '.join([' '.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]))
         # print('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
         # print(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))
@@ -171,9 +179,11 @@ if __name__ == "__main__":
     # get models
     models = []
     for result in results: models.append(result['model'])
+    models = list(set(models))
     # assert set(models) == {'dynst', 'mpnn_lstm'}, models
-    models = ['mpnn_lstm', 'dynst']
+    # models = ['mpnn_lstm', 'dynst']
     print()
-    print("[err_test] {}".format(','.join(countries)))
+    print("[err_test] {}\n".format(','.join(countries)))
     for i in range(len(models)):
         print_err(args, results, models, i)
+    print()
