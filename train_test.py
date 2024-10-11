@@ -56,7 +56,7 @@ def train_process(
     logger.info(f"# {params_total} params")
 
 
-    losses = {"train": [], "val": [], "test": []}
+    losses = {"train": [], "train_y": [], "train_adj": [], "val": [], "test": []}
 
     time_start = time.time()
 
@@ -95,7 +95,7 @@ def train_process(
             msg_file_logger += f"[adj_lambda] {adj_lambda}, "
 
             model.train()
-            loss_res = []
+            loss_res, loss_y_res, loss_adj_res = [], [], []
             hits10_res = []
 
             for data in train_loader:
@@ -107,42 +107,62 @@ def train_process(
                 if isinstance(y_hat, tuple):
                     y_hat, adj_hat = y_hat
 
+                    # 此 with 块将 adj_hat 按 μ 缩放到 adj_gt 所在尺度
                     with torch.no_grad():
-
+                        # 拼接真实图结构并去掉自环
                         adj_gt = torch.cat([x_mob, y_mob], dim=1)
                         adj_gt_no_diag = rm_self_loops(adj_gt)
-
+                        # 计算 μ 和 σ
                         mean_adj_hat = adj_hat.mean(axis=(-2, -1), keepdims=True)
                         std_adj_hat = adj_hat.std(axis=(-2, -1), keepdims=True)
                         mean_adj_gt_no_diag = adj_gt_no_diag.mean(axis=(-2, -1), keepdims=True)
                         std_adj_gt_no_diag = adj_gt_no_diag.std(axis=(-2, -1), keepdims=True)
                         
+                        # # 按 μ 和 σ 缩放
                         # adj_hat = (adj_hat - mean_adj_hat) / std_adj_hat * std_adj_gt_no_diag + mean_adj_gt_no_diag
                         # adj_hat = rm_self_loops(adj_hat)
 
+                        # 按 μ 缩放
                         adj_hat = adj_hat * mean_adj_gt_no_diag / mean_adj_hat
 
-                    # loss = criterion(y_case.float(), y_hat.float()) + adj_lambda * criterion(adj_gt_no_diag.float(), adj_hat.float())
-                    loss = criterion(y_case.float(), y_hat.float())
+                    loss_y = criterion(y_case.float(), y_hat.float())
+                    loss_y_res.append(loss_y.item())
+
+                    loss_adj = criterion(adj_gt_no_diag.float(), adj_hat.float())
+                    loss_adj_res.append(loss_adj.item())
+
+                    loss = loss_y + adj_lambda * loss_adj
+                    loss_res.append(loss.item())
 
                     hits10 = compute_hits_at_k(adj_hat.float(), adj_gt_no_diag.float())
                     hits10_res.append(hits10)
+
                 else:
                     loss = criterion(y_case.float(), y_hat.float())
+                    loss_res.append(loss.item())
 
                 loss.backward(retain_graph=True)
                 opt.step()
 
-                loss_res.append(loss.data.cpu().numpy())
-
             loss = np.mean(loss_res)
+            if len(loss_y_res) > 0: loss_y = np.mean(loss_y_res)
+            if len(loss_adj_res) > 0: loss_adj = np.mean(loss_adj_res)
+
             if len(hits10_res) > 0: hits10 = np.mean(hits10_res)
 
-            # 记录 train loss
-            msg_file_logger += f"[Loss(train/val/test)] {loss:.3f}/"
-            print(f", [Loss(train/val/test)] {loss:.3f}/", end="")
+            # 记录总 train loss
+            msg_file_logger += f"[Loss(train/val/test)] {loss:.3f}"
             losses["train"].append(loss)
 
+            if len(loss_adj_res) > 0:
+                msg_file_logger += f"({loss_y:.3f}|{loss_adj:.3f})/"
+                losses["train_y"].append(loss_y)
+                losses["train_adj"].append(loss_adj)
+                print(f", [Loss(train/val/test)] {loss:.3f}({loss_y:.3f}|{loss_adj:.3f})/", end="")
+            else:
+                print(f", [Loss(train/val/test)] {loss:.3f}/", end="")
+
+            # 在验证集评估性能、在测试集查看测试结果
             loss_val, y_real_val, y_hat_val, adj_real_val, adj_hat_val = validate_test_process(model, criterion,
                                                                                                val_loader)
             loss_test, y_real_test, y_hat_test, adj_real_test, adj_hat_test = validate_test_process(model, criterion,
@@ -241,14 +261,17 @@ def train_process(
             writer.add_scalar("Loss/train", loss, e)
             writer.add_scalar("Loss/validate", loss_val, e)
             writer.add_scalar("Loss/test", loss_test, e)
+
             for i, metric_label in enumerate(metrics_labels):
                 writer.add_scalar(f"Metric/{metric_label}", metrics[i], e)
             writer.add_scalar("Metric/Err_val", err_val, e)
             writer.add_scalar("Metric/Err_test", err_test, e)
+            
             if len(hits10_res) > 0:
                 writer.add_scalar("Metric/HITS@10_train", hits10, e)
                 writer.add_scalar("Metric/HITS@10_val", hits10_val, e)
                 writer.add_scalar("Metric/HITS@10_test", hits10_test, e)
+            
             writer.add_scalar("Others/Learning_Rate", lr, e)
             writer.add_scalar("Others/Time(s)", time2 - time1, e)
             

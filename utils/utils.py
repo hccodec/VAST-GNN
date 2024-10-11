@@ -36,7 +36,7 @@ def _style(style, content):
 def _color(color, content):
     assert color in color_code
     _color = f"\033[1;{color_code.index(color) + 31}m"
-    if isinstance(content, float):
+    if isinstance(content, float) or isinstance(content, np.float32):
         return f"{_color}{content:.3f}\033[0m"
     else:
         return f"{_color}{content}\033[0m"
@@ -139,6 +139,7 @@ def select_model(args, train_loader):
         # "hidden": 32,
         "hidden_enc": 32,
         "hidden_dec": 64,
+        "window_size": shape[0][-1],
         "num_heads": 4,
         "num_layers": 2,
         "graph_layers": 2,

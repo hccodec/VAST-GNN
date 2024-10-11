@@ -1,6 +1,33 @@
 
 ##################################################################################################################
 
+# 1011
+python main.py --ydays 1 --shift 2 --result-dir tests_1011 --model mpnn_lstm --device 3 --exp 1_baseline_mpnn_lstm
+python main.py --ydays 1 --shift 6 --result-dir tests_1011 --model mpnn_lstm --device 3 --exp 1_baseline_mpnn_lstm
+python main.py --ydays 1 --shift 13 --result-dir tests_1011 --model mpnn_lstm --device 3 --exp 1_baseline_mpnn_lstm
+
+python main.py --ydays 1 --shift 2 --result-dir tests_1011 --model lstm --device 3 --exp 2_baseline_lstm
+python main.py --ydays 1 --shift 6 --result-dir tests_1011 --model lstm --device 3 --exp 2_baseline_lstm
+python main.py --ydays 1 --shift 13 --result-dir tests_1011 --model lstm --device 3 --exp 2_baseline_lstm
+
+python main.py --ydays 1 --shift 2 --result-dir tests_1011 --device 7 --exp 3_dynst_enc_only
+python main.py --ydays 1 --shift 6 --result-dir tests_1011 --device 7 --exp 3_dynst_enc_only
+python main.py --ydays 1 --shift 13 --result-dir tests_1011 --device 7 --exp 3_dynst_enc_only
+
+python main.py --ydays 3 --comp-last --result-dir tests_1011 --device 7 --exp 4_dynst_enc_only
+python main.py --ydays 7 --comp-last --result-dir tests_1011 --device 7 --exp 4_dynst_enc_only
+python main.py --ydays 14 --comp-last --result-dir tests_1011 --device 7 --exp 4_dynst_enc_only
+
+python main.py --ydays 1 --shift 2 --result-dir tests_1011 --device 3 --exp 5_dynst_gt_only
+python main.py --ydays 1 --shift 6 --result-dir tests_1011 --device 3 --exp 5_dynst_gt_only
+python main.py --ydays 1 --shift 13 --result-dir tests_1011 --device 3 --exp 5_dynst_gt_only
+
+python main.py --ydays 14 --comp-last --result-dir tests_1011 --device 7 --exp 6_dynst_gt_only
+python main.py --ydays 7 --comp-last --result-dir tests_1011 --device 7 --exp 6_dynst_gt_only
+python main.py --ydays 3 --comp-last --result-dir tests_1011 --device 7 --exp 6_dynst_gt_only
+
+##################################################################################################################
+
 # [test1] mpnn_lstm/dynst 隔天
 python main.py --ydays 1 --shift 2 --result-dir tests --model dynst --device 6 --exp test1
 python main.py --ydays 1 --shift 6 --result-dir tests --model dynst --device 7 --exp test1

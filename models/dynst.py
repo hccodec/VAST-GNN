@@ -61,30 +61,29 @@ class DynGraphEncoder(nn.Module):
         batch_size, obs_len, num_nodes, feature_len = x.size()
         pred_len = gt.size(1)
 
-        # seq = torch.cat((x, gt), dim=1).squeeze(-1)
+        # 根据 x 将 y 也拼接成窗口形式，使 y 像 x 一样能作为特征支持递归预测
         _seq = torch.cat([x[:, 0, :, :-1], x[:,:,:,-1].transpose(1, 2), gt.squeeze(-1).transpose(1, 2)], dim=-1)
-        adjust_x = torch.zeros((batch_size, obs_len + pred_len, num_nodes, feature_len)).to(self.device)
+        total_features = torch.zeros((batch_size, obs_len + pred_len, num_nodes, feature_len)).to(self.device)
+        for i in range(obs_len + pred_len): total_features[:, i] = _seq[:, :, i : i + feature_len]
 
-        # for i in range(pred_len): adjust_x[:, i] = _seq[:, :, i : i + obs_len].permute(0, 2, 1).contiguous()
-        for i in range(obs_len + pred_len):
-            adjust_x[:, i] = _seq[:, :, i : i + feature_len]
-
-        adjust_x = adjust_x.flatten(0, -2).unsqueeze(1)
-        x_tcn = self.tcn(adjust_x)
-        x_tcn = x_tcn.reshape(batch_size, pred_len + obs_len, num_nodes, self.hidden)
-        x_tcn = x_tcn.permute(2, 0, 1, 3).reshape(num_nodes, batch_size * (pred_len + obs_len), self.hidden)
+        # tcn 卷积
+        total_features = total_features.flatten(0, -2).unsqueeze(1)
+        x_tcn = self.tcn(total_features)
+        x_tcn = x_tcn.reshape(batch_size, obs_len + pred_len, num_nodes, self.hidden)
+        # 注意力计算 (最后形成)
+        x_tcn = x_tcn.permute(2, 0, 1, 3).reshape(num_nodes, -1, self.hidden)
         x_global, attn_weights = self.global_attention(x_tcn, x_tcn, x_tcn)
-        x_global = x_global.reshape(num_nodes, batch_size, (pred_len + obs_len), self.hidden).permute(1, 2, 0, 3)
+        x_global = x_global.reshape(num_nodes, batch_size, obs_len + pred_len, self.hidden).permute(1, 2, 0, 3)
         edge_features = torch.cat([x_global.unsqueeze(3).expand(-1, -1, -1, num_nodes, -1),
                                    x_global.unsqueeze(2).expand(-1, -1, num_nodes, -1, -1)], dim=-1)
         # lstm
-        edge_features = edge_features.reshape(-1, (pred_len + obs_len), 2 * self.hidden)
+        edge_features = edge_features.transpose(1, -2).reshape(-1, (obs_len + pred_len), 2 * self.hidden)
         edge_features, _ = self.lstm(edge_features)
-        edge_features = edge_features.reshape(batch_size, (pred_len + obs_len), num_nodes, num_nodes, self.hidden)
+        edge_features = edge_features.reshape(batch_size, (obs_len + pred_len), num_nodes, num_nodes, self.hidden)
 
         edge_features = torch.sigmoid(self.fc(edge_features))
 
-        mask = torch.eye(num_nodes).unsqueeze(0).unsqueeze(0).repeat(batch_size, (pred_len + obs_len), 1, 1).to(self.device)
+        mask = torch.eye(num_nodes).unsqueeze(0).unsqueeze(0).repeat(batch_size, (obs_len + pred_len), 1, 1).to(self.device)
         edge_features = edge_features.squeeze(-1) * (1 - mask)
 
         return edge_features
@@ -116,6 +115,8 @@ class GraphConvLayer(nn.Module):
 
 
 def getLaplaceMat(adj):
+    shape = adj.shape
+    adj = adj.flatten(0, -3)
     batch_size, m, _ = adj.size()
     i_mat = torch.eye(m).to(adj.device)
     i_mat = i_mat.unsqueeze(0)
@@ -142,11 +143,12 @@ def getLaplaceMat(adj):
     # laplace_mat = d_mat * adj * d_mat
     laplace_mat = torch.bmm(d_mat, adj)
     # laplace_mat = torch.bmm(laplace_mat, d_mat)
+    laplace_mat = laplace_mat.reshape(shape)
     return laplace_mat
 
 
 class Decoder(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden, graph_layers, dropout, device):
+    def __init__(self, in_dim, out_dim, hidden, window_size, graph_layers, dropout, device):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -157,7 +159,14 @@ class Decoder(nn.Module):
             [GraphConvLayer(in_features=hidden, out_features=hidden) for i in range(graph_layers)])
         self.fc = nn.Linear(hidden * (graph_layers + 1), hidden)
         self.gru_cell = nn.GRUCell(hidden, hidden)
-        self.out = nn.Linear(hidden, out_dim)
+        # self.out = nn.Linear(hidden, out_dim)
+        self.out = nn.Sequential(
+            nn.Linear(hidden + window_size, hidden),
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(hidden, out_dim),
+            nn.ReLU()
+            )
         self.device = device
 
     def forward(self, x, gt, adj_t, use_predict = False):
@@ -188,7 +197,8 @@ class Decoder(nn.Module):
             node_state = self.fc(node_state)
 
             gru_hidden = self.gru_cell(node_state, gru_hidden)
-            predict = self.out(gru_hidden)
+            predict = self.out(torch.cat((gru_hidden, current_x.flatten(0, -2)),
+                                   dim=-1)) # 此处拼接操作与 self.out 相关
             predict = predict.reshape(batch_size, num_nodes, -1)
 
             if i < obs_len:
@@ -219,7 +229,7 @@ class dynst_extra_info():
     #     return self.lambda_range[1] - (self.lambda_range[1] - self.lambda_range[0]) * (self.epoch / self.max_epochs)
 
 class dynst(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden_enc, hidden_dec, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), no_graph_gt = False):
+    def __init__(self, in_dim, out_dim, hidden_enc, hidden_dec, window_size, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), no_graph_gt = False):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
@@ -233,30 +243,21 @@ class dynst(nn.Module):
         self.no_graph_gt = no_graph_gt
 
         self.enc = DynGraphEncoder(in_dim, hidden_enc, num_heads, num_layers, dropout, device).to(device)
-        self.dec = Decoder(in_dim, out_dim, hidden_dec, graph_layers, dropout, device).to(device)
+        self.dec = Decoder(in_dim, out_dim, hidden_dec, window_size, graph_layers, dropout, device).to(device)
 
     def forward(self, X, y, A, A_y, adj_lambda):
-
-        adj_output = self.enc(X, y) # enc 输出的图结构，不可更改，用于返回值
-
-        adj_enc = adj_output # 使用 adj_enc 传入 dec
-
+        # 处理真实矩阵
         adj_gt = torch.cat((A, A_y), dim=1)
-        adj_gt = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
+        adj_gt = getLaplaceMat(adj_gt)
+        adj_enc = adj_gt
+
+        # adj_enc = self.enc(X, y) # enc 输出的图结构，不可更改，用于返回值
+        # adj_enc = getLaplaceMat(adj_enc)
 
 
-        # 求图结构 gt 和 enc_output 的线性结果
-        if self.training and not self.no_graph_gt and adj_lambda is not None:
+        # # 求图结构 gt 和 enc_output 的线性结果
+        # if adj_lambda is not None and not self.no_graph_gt:
+        #     adj_enc = (1 - adj_lambda) * adj_enc + adj_lambda * adj_gt
 
-            # （√）adj_enc 的 mu sigma 和 adj_gt 一致（√）
-            # (已解决，在外部对 adj_enc 按照 mu 执行 adj_enc -> adj_gt 的尺度缩放)
-
-            adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
-
-            adj_enc = (1 - adj_lambda) * adj_enc + adj_lambda * adj_gt
-
-            # 此处已针对具体实验进行临时更改：只传入 adj_output 和只传入 adj_gt （均仅在下一句执行Laplace归一化）
-            adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
-
-        y_hat = self.dec(X, y, adj_enc.float(), not self.training)
-        return y_hat, adj_output
+        y_hat = self.dec(X, y, adj_enc, not self.training)
+        return y_hat, adj_enc

@@ -90,7 +90,7 @@ def _load_data(args, country_name: str, policy: str = "clip"):
 
     cases = np.expand_dims(labels.to_numpy().T, -1)
 
-    # 根据 window_size 拼接特征，并根据拼接特征的策略裁剪 adjs 和 cases
+    # 根据 window_size 拼接特征，并根据策略对 adjs 和 cases 进行裁剪或补零
     if policy == "clip":
         features = np.stack([cases[i : i + window_size].squeeze(-1).T for i in range(len(cases) - window_size + 1)])
         cases, adjs = cases[-features.shape[0]:], adjs[-features.shape[0]:]
@@ -112,10 +112,10 @@ def split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, featu
     train_indices, val_indices, test_indices = generate_indices(num_days - xdays - ydays - shift + 1, train_ratio, val_ratio)
 
     # extract formatted data with xdays/yays as well as shift
-    x_case = torch.stack([features[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)])
-    x_mob = torch.stack([adjs[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)])
-    y_case = torch.stack([cases[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)])
-    y_mob = torch.stack([adjs[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)])
+    x_case = torch.stack([features[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)]).to(torch.float32)
+    x_mob = torch.stack([adjs[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)]).to(torch.float32)
+    y_case = torch.stack([cases[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)]).to(torch.float32)
+    y_mob = torch.stack([adjs[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)]).to(torch.float32)
 
     train_data = (x_case[train_indices], y_case[train_indices], x_mob[train_indices], y_mob[train_indices], torch.tensor(train_indices))
     val_data = (x_case[val_indices], y_case[val_indices], x_mob[val_indices], y_mob[val_indices], torch.tensor(val_indices))
