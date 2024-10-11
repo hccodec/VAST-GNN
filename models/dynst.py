@@ -220,9 +220,12 @@ class dynst_extra_info():
 
 class dynst(nn.Module):
     def __init__(self, in_dim, out_dim, hidden_enc, hidden_dec, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), no_graph_gt = False):
+    def __init__(self, in_dim, out_dim, hidden_enc, hidden_dec, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), no_graph_gt = False):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
+        self.hidden_enc = hidden_enc
+        self.hidden_dec = hidden_dec
         self.hidden_enc = hidden_enc
         self.hidden_dec = hidden_dec
         self.num_heads = num_heads
@@ -232,6 +235,8 @@ class dynst(nn.Module):
         self.device = device
         self.no_graph_gt = no_graph_gt
 
+        self.enc = DynGraphEncoder(in_dim, hidden_enc, num_heads, num_layers, dropout, device).to(device)
+        self.dec = Decoder(in_dim, out_dim, hidden_dec, graph_layers, dropout, device).to(device)
         self.enc = DynGraphEncoder(in_dim, hidden_enc, num_heads, num_layers, dropout, device).to(device)
         self.dec = Decoder(in_dim, out_dim, hidden_dec, graph_layers, dropout, device).to(device)
 
@@ -247,7 +252,11 @@ class dynst(nn.Module):
 
             # （√）adj_enc 的 mu sigma 和 adj_gt 一致（√）
             # (已解决，在外部对 adj_enc 按照 mu 执行 adj_enc -> adj_gt 的尺度缩放)
+            # （√）adj_enc 的 mu sigma 和 adj_gt 一致（√）
+            # (已解决，在外部对 adj_enc 按照 mu 执行 adj_enc -> adj_gt 的尺度缩放)
 
+            adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
+            adj_gt = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
             adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
             adj_gt = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
 

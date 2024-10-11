@@ -87,11 +87,26 @@
             "type": "debugpy",
             "request": "launch",
             "program": "test.py",
+            "program": "show_result.py",
             "console": "integratedTerminal",
             "env": {
                 "DEBUG_MODE": "true"
             },
             "args": [
+               "--result-dir", "tests", "--exp", "1009_2"
+            ]
+        },
+        {
+            "name": "test",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "test.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+               "--model", "dynst", "--model-dir", "results/tests_old/exp_test1/dataforgood/dynst_7_1_w7_s2_20240924175521"
                "--model", "dynst", "--model-dir", "results/tests_old/exp_test1/dataforgood/dynst_7_1_w7_s2_20240924175521"
             ]
         },
