@@ -102,12 +102,14 @@ def process_log_segment(lines):
             losses = list(map(float, match.groups())) if match else -1
             res["latest" if i == 3 else "minvalloss"].update(dict(losses=losses))
         elif i == 4 or i == 8:
+            # 提取 error
             err_val, err_test = list(map(float, match.groups()))
             res["latest" if i == 4 else "minvalloss"].update(dict(err_val=err_val, err_test=err_test))
-
+            # 提取可能存在的 correlation
             if pattern_corr.search(line):
                 corr_train, corr_val, corr_test = list(map(str, pattern_corr.search(line).groups()))
                 res["latest" if i == 4 else "minvalloss"].update(dict(corr_train=corr_train, corr_val=corr_val, corr_test=corr_test))
+            # 提取可能存在的 HITS@10
             if pattern_hits10.search(line):
                 hits10_train, hits10_val, hits10_test = list(map(float, pattern_hits10.search(line).groups()))
                 res["latest" if i == 4 else "minvalloss"].update(dict(hits10_train=hits10_train, hits10_val=hits10_val, hits10_test=hits10_test))
