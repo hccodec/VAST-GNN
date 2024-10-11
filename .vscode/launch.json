@@ -53,20 +53,9 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--device", "0"
-            ]
-        },
-        {
-            "name": "France",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                "--country", "France"
+                "--device", "3",
+                "--shift", "2",
+                "--ydays", "1",
             ]
         },
         {
