@@ -241,15 +241,17 @@ class dynst(nn.Module):
 
         adj_enc = adj_output # 使用 adj_enc 传入 dec
 
+        adj_gt = torch.cat((A, A_y), dim=1)
+        adj_gt = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
+
+
         # 求图结构 gt 和 enc_output 的线性结果
         if self.training and not self.no_graph_gt and adj_lambda is not None:
-            adj_gt = torch.cat((A, A_y), dim=1)
 
             # （√）adj_enc 的 mu sigma 和 adj_gt 一致（√）
             # (已解决，在外部对 adj_enc 按照 mu 执行 adj_enc -> adj_gt 的尺度缩放)
 
             adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
-            adj_gt = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
 
             adj_enc = (1 - adj_lambda) * adj_enc + adj_lambda * adj_gt
 
