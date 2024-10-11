@@ -131,16 +131,9 @@ def print_err(args, results, _models, i):
         s['latest'][key] = {}
         for country in countries:
             if not country in r:
-                s['minvalloss'][key][country] = dict(
-                    err_val="-",
-                    err_test="-",
-                    epoch="-"
-                )
-                s['latest'][key][country] = dict(
-                    err_val="-",
-                    err_test="-",
-                    epoch="-"
-                )
+                # 初始化结果展示
+                s['minvalloss'][key][country] = dict(err_val="-", err_test="-", epoch="-")
+                s['latest'][key][country] = dict(err_val="-", err_test="-", epoch="-")
                 continue
 
             epoch_minvalloss = r[country]['minvalloss']['epoch']
@@ -152,21 +145,20 @@ def print_err(args, results, _models, i):
             err_test_latest = r[country]['latest']['err_test']
 
             s['minvalloss'][key][country] = dict(
+                epoch=f"{epoch_minvalloss}",
                 err_val=f"{err_val_minvalloss}",
                 err_test=f"{err_test_minvalloss}",
-                epoch=f"{epoch_minvalloss}"
             )
             s['latest'][key][country] = dict(
+                epoch=f"{epoch_latest}",
                 err_val=f"{err_val_latest}",
                 err_test=f"{err_test_latest}",
-                epoch=f"{epoch_latest}"
             )
-    _ = 1
-    if args.subdir: print(args.subdir)
+    if args.subdir: print(args.subdir) # 若指定子目录则显示该子目录
     for k in s:
         if k != 'minvalloss': continue
         keys = sorted(s[k].keys(), key=sort_key)
-        print(' | '.join(keys))
+        print(' ' * 11, ' | '.join(keys))
         print(f'[{_models[i]:>{9}s}]', ' | '.join([' '.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]))
         # print('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
         # print(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))

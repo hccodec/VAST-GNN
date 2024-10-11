@@ -112,8 +112,8 @@ def split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, featu
     train_indices, val_indices, test_indices = generate_indices(num_days - xdays - ydays - shift + 1, train_ratio, val_ratio)
 
     # extract formatted data with xdays/yays as well as shift
-    x_case = torch.stack([features[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)])
-    x_mob = torch.stack([adjs[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)])
+    x_case = torch.stack([features[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)]) # 病例数
+    x_mob = torch.stack([adjs[i : i + xdays] for i in range(num_days - xdays - ydays - shift + 1)]) # 图结构
     y_case = torch.stack([cases[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)])
     y_mob = torch.stack([adjs[i : i + ydays] for i in range(xdays + shift, num_days - ydays + 1)])
 

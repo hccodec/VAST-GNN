@@ -133,7 +133,7 @@ def train_process(
                 loss.backward(retain_graph=True)
                 opt.step()
 
-                loss_res.append(loss.data.cpu().numpy())
+                loss_res.append(loss.data.cpu().item())
 
             loss = np.mean(loss_res)
             if len(hits10_res) > 0: hits10 = np.mean(hits10_res)
@@ -291,7 +291,7 @@ def validate_test_process(model: nn.Module, criterion, dataloader):
         if isinstance(y_hat, tuple):
             y_hat, adj_hat = y_hat  # 适配启用图学习器的情况
             
-            adj_hat = min_max_adj(adj_hat)
+            adj_hat = min_max_adj(adj_hat) # TODO: HITS10
 
             adj_hat_res.append(adj_hat.float())
 
@@ -375,7 +375,7 @@ def train_model(data, adj_lambda, model, node_observed_ratio = 0.8):
 def run_model(data, model, adj_lambda = None):
 
     x_case, y_case, x_mob, y_mob, idx_dataset = data
-    y_hat = model(x_case, y_case, x_mob, y_mob, adj_lambda)
+    y_hat = model(x_case.float(), y_case.float(), x_mob.float(), y_mob.float(), adj_lambda)
 
     # 适应模型同时输出图结构的情况
     y_hat_shape = y_hat[0].shape if isinstance(y_hat, tuple) else y_hat.shape
