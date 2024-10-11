@@ -23,7 +23,7 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--device", "5",
+                "--device", "7",
                 "--model", "lstm",
                 "--shift", "2", "--ydays", "1"
             ]
@@ -53,7 +53,7 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--device", "0",
+                "--device", "0"
             ]
         },
         {

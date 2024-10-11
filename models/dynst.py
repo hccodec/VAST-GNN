@@ -263,9 +263,7 @@ class dynst(nn.Module):
             adj_enc = (1 - adj_lambda) * adj_enc + adj_lambda * adj_gt
 
             # 此处已针对具体实验进行临时更改：只传入 adj_output 和只传入 adj_gt （均仅在下一句执行Laplace归一化）
-            # adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
-            # adj_enc = getLaplaceMat(adj_output.flatten(0, 1)).reshape(adj_output.shape)
-            # adj_enc = getLaplaceMat(adj_gt.flatten(0, 1)).reshape(adj_output.shape)
+            adj_enc = getLaplaceMat(adj_enc.flatten(0, 1)).reshape(adj_output.shape)
 
         y_hat = self.dec(X, y, adj_enc.float(), not self.training)
         return y_hat, adj_output

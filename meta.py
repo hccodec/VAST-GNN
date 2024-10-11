@@ -8,8 +8,6 @@ import  numpy as np
 
 from    copy import deepcopy
 
-from argparse import Namespace
-
 
 
 class Meta(nn.Module):
@@ -221,20 +219,10 @@ class Meta(nn.Module):
 
 
 
-def maml_train(args, meta_data=None):
+def maml_train(meta_data=None):
     if meta_data is None: assert NotImplementedError("请传入数据集")
+    
 
-    # self.update_lr = args.update_lr
-    # self.meta_lr = args.meta_lr
-    # self.n_way = args.n_way
-    # self.k_spt = args.k_spt
-    # self.k_qry = args.k_qry
-    # self.task_num = args.task_num
-    # self.update_step = args.update_step
-    # self.update_step_test = args.update_step_test
-    args_new = NameSpace(epoch=60000, n_way=5, k_spt=1, k_qry=15, imgsz=84, imgc=3, task_num=4, meta_lr=0.001, update_lr=0.01, update_step=5, update_step_test=10)
-
-    model = Meta(args, config).to(device)
 
 
 if __name__ == '__main__':

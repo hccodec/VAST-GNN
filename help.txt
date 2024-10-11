@@ -72,9 +72,9 @@ python main.py --ydays 1 --shift 13 --result-dir tests --device 6 --exp 1009_3 -
 ##################################################################################################################
 
 # baseline: LSTM
-python main.py --ydays 1 --shift 2 --result-dir baseline --device 2 --model lstm --exp lstm_1009_1
-python main.py --ydays 1 --shift 6 --result-dir baseline --device 7 --model lstm --exp lstm_1009_1
-python main.py --ydays 1 --shift 13 --result-dir baseline --device 3 --model lstm --exp lstm_1009_1
+python main.py --ydays 1 --shift 2 --result-dir baseline --device 2 --exp lstm_1009_2
+python main.py --ydays 1 --shift 6 --result-dir baseline --device 7 --exp lstm_1009_2
+python main.py --ydays 1 --shift 13 --result-dir baseline --device 3 --exp lstm_1009_2
 
 ##################################################################################################################
 

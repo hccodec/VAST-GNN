@@ -212,7 +212,6 @@ def adjust_lambda(epoch, num_epochs, lambda_0, lambda_n, lambda_epoch_max, metho
 
 def random_mask(data, observed_ratio = 0.8):
     assert observed_ratio > 0 and observed_ratio <= 1
-    if observed_ratio == 1: return data
     
     x_case, y_case, x_mob, y_mob, idx_dataset = data
     (batch_size, num_xdays, num_nodes, num_features), num_ydays = x_case.size(), y_case.size(1)
