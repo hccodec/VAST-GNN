@@ -177,7 +177,7 @@ class Decoder(nn.Module):
         current_x = x[:, 0]
         gru_hidden = torch.zeros(batch_size * num_nodes, self.hidden).to(self.device)
         predict_list = []
-        for i in range(obs_len + pred_len):
+        for i in range(obs_len + pred_len - 1):
             # current_x = current_x.permute(0, 2, 3, 1).contiguous()
             x_tcn = self.tcn(current_x.flatten(0, -2).unsqueeze(1))
             x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
@@ -202,7 +202,7 @@ class Decoder(nn.Module):
                                    dim=-1)) # 此处残差连接与 self.out 相关
             predict = predict.reshape(batch_size, num_nodes, -1)
 
-            if i < obs_len:
+            if i < obs_len - 1:
                 current_x = _seq[:, :, i + 1 : i + obs_len + 1]
             else:
                 if use_predict: current_x = torch.cat((current_x[:, :, 1:], predict), dim=-1)

@@ -169,7 +169,7 @@ def print_err(args, results, _models, i):
         if k != 'minvalloss': continue
         keys = sorted(s[k].keys(), key=sort_key)
         print(' | '.join(keys))
-        print(f'[{_models[i]:>{9}s}]', ' | '.join([' '.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]))
+        print(f'[{_models[i]:>{9}s}]', '\t'.join(['\t'.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]))
         # print('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
         # print(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))
 
