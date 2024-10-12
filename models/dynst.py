@@ -70,14 +70,14 @@ class DynGraphEncoder(nn.Module):
         total_features = total_features.flatten(0, -2).unsqueeze(1)
         x_tcn = self.tcn(total_features)
         x_tcn = x_tcn.reshape(batch_size, obs_len + pred_len, num_nodes, self.hidden)
-        # 注意力计算 (最后形成)
+        # 注意力计算 (最后将所有边的特征进行两两拼接)
         x_tcn = x_tcn.permute(2, 0, 1, 3).reshape(num_nodes, -1, self.hidden)
         x_global, attn_weights = self.global_attention(x_tcn, x_tcn, x_tcn)
         x_global = x_global.reshape(num_nodes, batch_size, obs_len + pred_len, self.hidden).permute(1, 2, 0, 3)
         edge_features = torch.cat([x_global.unsqueeze(3).expand(-1, -1, -1, num_nodes, -1),
                                    x_global.unsqueeze(2).expand(-1, -1, num_nodes, -1, -1)], dim=-1)
         # lstm
-        edge_features = edge_features.transpose(1, -2).reshape(-1, (obs_len + pred_len), 2 * self.hidden)
+        edge_features = edge_features.transpose(1, -2).flatten(0, -3)
         edge_features, _ = self.lstm(edge_features)
         edge_features = edge_features.reshape(batch_size, (obs_len + pred_len), num_nodes, num_nodes, self.hidden)
 
@@ -197,8 +197,9 @@ class Decoder(nn.Module):
             node_state = self.fc(node_state)
 
             gru_hidden = self.gru_cell(node_state, gru_hidden)
+            # predict = self.out(gru_hidden)
             predict = self.out(torch.cat((gru_hidden, current_x.flatten(0, -2)),
-                                   dim=-1)) # 此处拼接操作与 self.out 相关
+                                   dim=-1)) # 此处残差连接与 self.out 相关
             predict = predict.reshape(batch_size, num_nodes, -1)
 
             if i < obs_len:

@@ -259,6 +259,8 @@ def train_process(
             )
             # Scalar
             writer.add_scalar("Loss/train", loss, e)
+            if len(loss_y_res) > 0: writer.add_scalar("Loss/train_y", loss_y, e)
+            if len(loss_adj_res) > 0: writer.add_scalar("Loss/train_adj", loss_adj, e)
             writer.add_scalar("Loss/validate", loss_val, e)
             writer.add_scalar("Loss/test", loss_test, e)
 
