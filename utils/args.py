@@ -93,21 +93,19 @@ def process_args(args, record_log):
     args.window = args.xdays if args.window == -1 else args.window
 
 
-    # 通过规范 subdir 规范 args.result_dir
+    # subdir 用于后续规范实验结果的最终保存位置
     subdir = f"{args.model}_{args.xdays}_{args.ydays}_w{args.window}_s{args.shift}"
     subdir += f"_{now}"
 
-    # 通过 args.dataset 锁定数据集最终位置
+    # 通过 args.dataset 锁定数据集目录
     args.data_dir += "/" + args.dataset
 
-    # 通过数据集以及 arg.exp 锁定实验结果的最终保存位置
+    # 通过数据集以及 arg.exp 锁定实验结果保存目录
     args.exp = str(args.exp)
-    if args.exp == "" or args.exp == "-1":
-        args.result_dir = os.path.join("results", args.result_dir, "tmp", args.dataset, subdir)
-    else:
-        args.result_dir = os.path.join(
-            "results", args.result_dir, f"exp_{args.exp}", args.dataset, subdir
-        )
+    
+    args.result_dir = os.path.join("results", args.result_dir,
+                                   "tmp" if args.exp == "" or args.exp == "-1" else f"exp_{args.exp}",
+                                   args.dataset, subdir)
 
     # 在实验结果最终保存位置创建 log 文件
     if record_log:

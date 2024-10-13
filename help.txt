@@ -1,5 +1,15 @@
 
-##################################################################################################################
+#################################################################################################################
+
+# 1013
+python main.py --ydays 1 --shift 2 --result-dir tests_1013 --model mpnn_lstm --device 6 --exp 0_baseline_mpnn_lstm
+python main.py --ydays 1 --shift 6 --result-dir tests_1013 --model mpnn_lstm --device 7 --exp 0_baseline_mpnn_lstm
+python main.py --ydays 1 --shift 13 --result-dir tests_1013 --model mpnn_lstm --device 8 --exp 0_baseline_mpnn_lstm
+
+python main.py  --ydays 1 --shift 2 --result-dir tests_1013 --device 6 --exp 1_dynst_gt_only
+python main.py  --ydays 1 --shift 6 --result-dir tests_1013 --device 7 --exp 1_dynst_gt_only
+python main.py  --ydays 1 --shift 13 --result-dir tests_1013 --device 8 --exp 1_dynst_gt_only
+
 
 # 1011
 python main.py --ydays 1 --shift 2 --result-dir tests_1011 --model mpnn_lstm --device 3 --exp 1_baseline_mpnn_lstm
@@ -38,6 +48,19 @@ python main.py --ydays 1 --shift 13 --result-dir tests_1012 --device 1 --exp 2_d
 python main.py --ydays 1 --shift 2 --result-dir tests_1012 --device 3 --exp 3_dynst_gt_only
 python main.py --ydays 1 --shift 6 --result-dir tests_1012 --device 3 --exp 3_dynst_gt_only
 python main.py --ydays 1 --shift 13 --result-dir tests_1012 --device 3 --exp 3_dynst_gt_only
+
+python main.py  --ydays 1 --shift 2 --result-dir tests_1012 --device 0 --exp 4_dynst_gt_only
+python main.py  --ydays 1 --shift 6 --result-dir tests_1012 --device 0 --exp 4_dynst_gt_only
+python main.py  --ydays 1 --shift 13 --result-dir tests_1012 --device 0 --exp 4_dynst_gt_only
+
+python main.py  --ydays 1 --shift 2 --result-dir tests_1012 --device 0 --exp 5_dynst_gt_only
+python main.py  --ydays 1 --shift 6 --result-dir tests_1012 --device 0 --exp 5_dynst_gt_only
+python main.py  --ydays 1 --shift 13 --result-dir tests_1012 --device 0 --exp 5_dynst_gt_only
+
+python main.py  --ydays 1 --shift 2 --result-dir tests_1012 --device 0 --exp 6_dynst_dec_w_tcn
+python main.py  --ydays 1 --shift 6 --result-dir tests_1012 --device 3 --exp 6_dynst_dec_w_tcn
+python main.py  --ydays 1 --shift 13 --result-dir tests_1012 --device 8 --exp 6_dynst_dec_w_tcn
+
 
 ##################################################################################################################
 

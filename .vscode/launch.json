@@ -38,7 +38,7 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--device", "7",
+                "--device", "3",
                 "--model", "mpnn_lstm",
                 "--shift", "2", "--ydays", "1"
             ]
@@ -54,8 +54,9 @@
             },
             "args": [
                 "--device", "3",
-                "--shift", "13",
+                "--shift", "2",
                 "--ydays", "1",
+                "--country", "Spain"
             ]
         },
         {

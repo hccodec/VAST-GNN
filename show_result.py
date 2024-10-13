@@ -15,18 +15,14 @@ def sort_key(item):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--result-dir", type=str, default="test")
-    parser.add_argument("--exp", type=str, default="test1")
-    parser.add_argument("-d", "--dir", type=str, default="", help="数据集的上一层文件夹")
-    parser.add_argument("-s", "--subdir", default="", help="指定某一子目录")
+    parser.add_argument("-s", "--subdir", default="", help="指定数据集下层的某目录")
+    parser.add_argument("-d", "--dir", type=str, default="", help="数据集上层的目录")
     args =  parser.parse_args()
     if args.subdir != "":
         args.dir = os.path.dirname(os.path.dirname(args.subdir))
     return args
 
-def extract_results(args):
-    result_dir, exp_name, dir = args.result_dir, args.exp, args.dir
-    if dir == "": dir = f"results/{result_dir}/exp_{exp_name}"
+def extract_results(dir):
     print(f"从 {dir} 中提取结果")
     results = {}
 
@@ -116,7 +112,7 @@ def process_log_segment(lines):
     # print(lines)
     return {country: res}
 
-def print_err(args, results, _models, i):
+def print_err(results, _models, i, subdir = None):
     s = {'minvalloss': {}, 'latest': {}}
 
     for result in results:
@@ -124,8 +120,8 @@ def print_err(args, results, _models, i):
         if model != _models[i]: continue
         r = result['res']
 
-        if args.subdir:
-            if not args.subdir.split("/")[-1] == f"{model}_{x}_{y}_w{window}_s{shift}_{timestr}": continue
+        if subdir:
+            if not subdir.split("/")[-1] == f"{model}_{x}_{y}_w{window}_s{shift}_{timestr}": continue
 
         key = f"{x}->{y} (w{window}s{shift})"
         # key = f"{x}->{y} (w{window}s{shift}) {str(str2date(timestr, '%Y%m%d%H%M%S'))}"
@@ -164,7 +160,7 @@ def print_err(args, results, _models, i):
                 epoch=f"{epoch_latest}"
             )
     _ = 1
-    if args.subdir: print(args.subdir)
+    if subdir: print(subdir)
     for k in s:
         if k != 'minvalloss': continue
         keys = sorted(s[k].keys(), key=sort_key)
@@ -173,11 +169,10 @@ def print_err(args, results, _models, i):
         # print('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
         # print(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))
 
+def show_result(dir, subdir = ""):
 
-if __name__ == "__main__":
-    args = parse_args()
-    results = extract_results(args)
-    
+    results = extract_results(dir)
+
     # get models
     models = []
     for result in results: models.append(result['model'])
@@ -187,5 +182,10 @@ if __name__ == "__main__":
     print()
     print("[err_test] {}\n".format(','.join(countries)))
     for i in range(len(models)):
-        print_err(args, results, models, i)
+        print_err(results, models, i, subdir)
+
+if __name__ == "__main__":
+    args = parse_args()
+    subdir, dir = args.subdir, args.dir
+    show_result(dir, subdir)
     print()

@@ -2,15 +2,17 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-class CNN(nn.Module):
-    def __init__(self, n_in: int, n_hid: int, n_out: int, do_prob: float=0.):
+
+# region TCN
+class TCN(nn.Module):
+    def __init__(self, n_in: int, n_hid: int, n_out: int, num_layers: int = 2, do_prob: float=0.):
         """
         Args:
             n_in: input dimension
             n_hid: dimension of hidden layers
             n_out: output dimension
         """
-        super(CNN, self).__init__()
+        super(TCN, self).__init__()
         self.cnn = nn.Sequential(
             nn.Conv1d(n_in, n_hid, kernel_size=2, stride=1, padding=0),
             nn.ReLU(),
@@ -21,7 +23,7 @@ class CNN(nn.Module):
                          ceil_mode=False),
             nn.Conv1d(n_hid, n_hid, kernel_size=2, stride=1, padding=0),
             nn.ReLU(),
-            nn.BatchNorm1d(n_hid)
+            nn.BatchNorm1d(n_hid),
         )
         self.out = nn.Conv1d(n_hid, n_out, kernel_size=1)
         self.att = nn.Conv1d(n_hid, 1, kernel_size=1)
@@ -43,17 +45,18 @@ class CNN(nn.Module):
         attention = self.att(x).softmax(2)
         edge_prob = (pred * attention).mean(dim=2)
         return edge_prob
-
+# endregion
+# from models.layers.TCN import TCN
 
 class DynGraphEncoder(nn.Module):
-    def  __init__(self, in_dim, hidden, num_heads, num_layers, dropout, device):
+    def  __init__(self, in_dim, hidden, num_heads, tcn_layers, lstm_layers, dropout, device):
         super().__init__()
         # self.dropout = dropout
-        self.tcn = CNN(1, hidden, hidden, dropout).to(device)
+        self.tcn = TCN(1, hidden, hidden, tcn_layers, dropout).to(device)
         self.hidden = hidden
         self.num_heads = 4
         self.global_attention = nn.MultiheadAttention(embed_dim = hidden, num_heads=num_heads)
-        self.lstm = nn.LSTM(self.hidden * 2, self.hidden, num_layers, batch_first=True, dropout=dropout)
+        self.lstm = nn.LSTM(self.hidden * 2, self.hidden, lstm_layers, batch_first=True, dropout=dropout)
         self.fc = nn.Linear(self.hidden, 1)
         self.device = device
 
@@ -76,6 +79,7 @@ class DynGraphEncoder(nn.Module):
         x_global = x_global.reshape(num_nodes, batch_size, obs_len + pred_len, self.hidden).permute(1, 2, 0, 3)
         edge_features = torch.cat([x_global.unsqueeze(3).expand(-1, -1, -1, num_nodes, -1),
                                    x_global.unsqueeze(2).expand(-1, -1, num_nodes, -1, -1)], dim=-1)
+        
         # lstm
         edge_features = edge_features.transpose(1, -2).flatten(0, -3)
         edge_features, _ = self.lstm(edge_features)
@@ -148,15 +152,17 @@ def getLaplaceMat(adj):
 
 
 class Decoder(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden, window_size, graph_layers, dropout, device):
+    def __init__(self, in_dim, out_dim, hidden, window_size, tcn_layers, graph_layers, dropout, device):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.hidden = hidden
         self.graph_layers = graph_layers
-        self.tcn = CNN(1, hidden, hidden, dropout).to(device)
+
+        self.tcn = TCN(1, hidden, hidden, tcn_layers, dropout).to(device)
         self.GNNBlocks = nn.ModuleList(
             [GraphConvLayer(in_features=hidden, out_features=hidden) for i in range(graph_layers)])
+        
         self.fc = nn.Linear(hidden * (graph_layers + 1), hidden)
         self.gru_cell = nn.GRUCell(hidden, hidden)
         # self.out = nn.Linear(hidden, out_dim)
@@ -166,8 +172,10 @@ class Decoder(nn.Module):
             nn.Dropout(),
             nn.Linear(hidden, out_dim),
             nn.ReLU()
-            )
+        )
         self.device = device
+
+        self.tcn_replace = nn.Linear(window_size, hidden)
 
     def forward(self, x, gt, adj_t, use_predict = False):
         batch_size, obs_len, num_nodes, pred_len = x.size(0), x.size(1), x.size(2), gt.size(1)
@@ -178,9 +186,11 @@ class Decoder(nn.Module):
         gru_hidden = torch.zeros(batch_size * num_nodes, self.hidden).to(self.device)
         predict_list = []
         for i in range(obs_len + pred_len - 1):
-            # current_x = current_x.permute(0, 2, 3, 1).contiguous()
-            x_tcn = self.tcn(current_x.flatten(0, -2).unsqueeze(1))
+            # TCN
+            x_tcn = current_x.flatten(0, -2).unsqueeze(1)
+            x_tcn = self.tcn(x_tcn)
             x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
+            # x_tcn = self.tcn_replace(current_x)
             adj = adj_t[:, i]
             node_state_list = [x_tcn]
             node_state = x_tcn
@@ -199,7 +209,7 @@ class Decoder(nn.Module):
             gru_hidden = self.gru_cell(node_state, gru_hidden)
             # predict = self.out(gru_hidden)
             predict = self.out(torch.cat((gru_hidden, current_x.flatten(0, -2)),
-                                   dim=-1)) # 此处残差连接与 self.out 相关
+                                   dim=-1))
             predict = predict.reshape(batch_size, num_nodes, -1)
 
             if i < obs_len - 1:
@@ -230,21 +240,21 @@ class dynst_extra_info():
     #     return self.lambda_range[1] - (self.lambda_range[1] - self.lambda_range[0]) * (self.epoch / self.max_epochs)
 
 class dynst(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden_enc, hidden_dec, window_size, num_heads, num_layers, graph_layers, dropout = 0, device = torch.device('cpu'), no_graph_gt = False):
+    def __init__(self, in_dim, out_dim, hidden_enc, hidden_dec, window_size, num_heads, tcn_layers, lstm_layers, graph_layers, dropout = 0, device = torch.device('cpu'), no_graph_gt = False):
         super().__init__()
-        self.in_dim = in_dim
-        self.out_dim = out_dim
-        self.hidden_enc = hidden_enc
-        self.hidden_dec = hidden_dec
-        self.num_heads = num_heads
-        self.num_layers = num_layers
-        self.graph_layers = graph_layers
+        # self.in_dim = in_dim
+        # self.out_dim = out_dim
+        # self.hidden_enc = hidden_enc
+        # self.hidden_dec = hidden_dec
+        # self.num_heads = num_heads
+        # self.tcn_layers = tcn_layers
+        # self.graph_layers = graph_layers
 
         self.device = device
         self.no_graph_gt = no_graph_gt
 
-        self.enc = DynGraphEncoder(in_dim, hidden_enc, num_heads, num_layers, dropout, device).to(device)
-        self.dec = Decoder(in_dim, out_dim, hidden_dec, window_size, graph_layers, dropout, device).to(device)
+        self.enc = DynGraphEncoder(in_dim, hidden_enc, num_heads, tcn_layers, lstm_layers, dropout, device).to(device)
+        self.dec = Decoder(in_dim, out_dim, hidden_dec, window_size, tcn_layers, graph_layers, dropout, device).to(device)
 
     def forward(self, X, y, A, A_y, adj_lambda):
         # 处理真实矩阵

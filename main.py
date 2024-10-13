@@ -12,6 +12,8 @@ from utils.logger import logger
 from utils.utils import font_green, font_yellow, select_model, set_random_seed, get_exp_desc
 from utils.args import parse_args
 
+from show_result import show_result
+
 def exp_main(args):
     logger.info(f"实验【{get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift)}】开始")
 
@@ -194,6 +196,10 @@ def main():
     finally:
         logger.info(f"实验结果已保存至 {args.result_dir}")
 
+    print()
+
+    # 显示结果
+    show_result(os.path.dirname(os.path.dirname(args.result_dir)))
 
 if __name__ == "__main__":
     main()
