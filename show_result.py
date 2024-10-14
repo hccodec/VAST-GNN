@@ -23,7 +23,6 @@ def parse_args():
     return args
 
 def extract_results(dir):
-    print(f"从 {dir} 中提取结果")
     results = {}
 
     datasets = os.listdir(dir)

@@ -15,7 +15,8 @@ from utils.args import parse_args
 from show_result import show_result
 
 def exp_main(args):
-    logger.info(f"实验【{get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift)}】开始")
+    exp_desc = get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift, args.node_observed_ratio)
+    logger.info(f"实验【{exp_desc}】开始")
 
     from utils.data_process.dataforgood import load_data
 
@@ -45,7 +46,7 @@ def exp_main(args):
     else:
         print(f"参数错误 args.country: {args.country}")
 
-    logger.info(f"实验【{get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift)}】结束")
+    logger.info(f"实验【{exp_desc}】结束")
 
 def train_country(args, result_paths, meta_data, i_country):
     country_name = meta_data["country_names"][i_country]

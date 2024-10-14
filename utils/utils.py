@@ -232,7 +232,7 @@ def random_mask(data, observed_ratio = 0.8):
 
     return x_case, y_case, x_mob, y_mob, idx_dataset
 
-def get_exp_desc(modelstr, xdays, ydays, window, shift) -> str:
+def get_exp_desc(modelstr, xdays, ydays, window, shift, node_observed_ratio) -> str:
     '''
 
     Args:
@@ -245,12 +245,20 @@ def get_exp_desc(modelstr, xdays, ydays, window, shift) -> str:
     Returns:
 
     '''
+
+    # 描述预测天数信息
     y_desc = ""
     if shift == 0: y_desc += f" {ydays}"
     elif ydays == 1: y_desc += f"第 {shift + 1}"
     else: y_desc += f"第 {shift + 1}-{shift + ydays}"
 
-    return f"历史 {xdays} 天预测未来{y_desc} 天 ({modelstr}_w{window})"
+    node_observed_ratio_desc = ""
+    # 描述 mask 结点信息
+    if node_observed_ratio < 1:
+        node_observed_ratio_desc = f" (图节点保留 {node_observed_ratio * 100:.2f}%)"
+    
+    desc = f"历史 {xdays} 天预测未来{y_desc} 天 ({modelstr}_w{window}){node_observed_ratio_desc}"
+    return desc
 
 @torch.no_grad()
 def min_max_adj(adj: torch.Tensor, epsilon = 1e-8):

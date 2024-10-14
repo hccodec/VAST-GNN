@@ -14,6 +14,21 @@ python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --device 8 --exp 3_m
 python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --device 8 --exp 3_missing_nodes_no_mask
 python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --device 8 --exp 3_missing_nodes_no_mask
 
+python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --device 7 --exp 4_missing_nodes_80_mask
+python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --device 8 --exp 4_missing_nodes_80_mask
+python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --device 9 --exp 4_missing_nodes_80_mask
+
+python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --model lstm --device 6 --exp 5_lstm
+python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --model lstm --device 6 --exp 5_lstm
+python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --model lstm --device 6 --exp 5_lstm
+
+python main.py --ydays 1 --shift 2 --result-dir tests_1014 --model mpnn_lstm --device 7 --exp 6_mpnn_lstm_80_mask
+python main.py --ydays 1 --shift 6 --result-dir tests_1014 --model mpnn_lstm --device 7 --exp 6_mpnn_lstm_80_mask
+python main.py --ydays 1 --shift 13 --result-dir tests_1014 --model mpnn_lstm --device 7 --exp 6_mpnn_lstm_80_mask
+
+python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --model lstm --device 8 --exp 7_lstm_80_mask
+python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --model lstm --device 8 --exp 7_lstm_80_mask
+python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --model lstm --device 8 --exp 7_lstm_80_mask
 #################################################################################################################
 
 # 1013
