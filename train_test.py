@@ -397,7 +397,7 @@ def train_model(data, adj_lambda, model, node_observed_ratio = 0.8):
     x_case, y_case, x_mob, y_mob, idx_dataset = data
     x_case, y_case, x_mob, y_mob, idx_dataset = random_mask((x_case, y_case, x_mob, y_mob, idx_dataset), node_observed_ratio)
 
-    return run_model(data, model, adj_lambda)
+    return run_model((x_case, y_case, x_mob, y_mob, idx_dataset), model, adj_lambda)
 
 def run_model(data, model, adj_lambda = None):
 
