@@ -1,6 +1,21 @@
 
 #################################################################################################################
 
+# 1014
+python main.py --ydays 1 --shift 2 --result-dir tests_1014 --model mpnn_lstm --device 8 --exp 1_baseline_mpnn_lstm
+python main.py --ydays 1 --shift 6 --result-dir tests_1014 --model mpnn_lstm --device 8 --exp 1_baseline_mpnn_lstm
+python main.py --ydays 1 --shift 13 --result-dir tests_1014 --model mpnn_lstm --device 8 --exp 1_baseline_mpnn_lstm
+
+python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --device 9 --exp 2_dynst_gt_only
+python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --device 9 --exp 2_dynst_gt_only
+python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --device 9 --exp 2_dynst_gt_only
+
+python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --device 8 --exp 3_missing_nodes_no_mask
+python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --device 8 --exp 3_missing_nodes_no_mask
+python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --device 8 --exp 3_missing_nodes_no_mask
+
+#################################################################################################################
+
 # 1013
 python main.py --ydays 1 --shift 2 --result-dir tests_1013 --model mpnn_lstm --device 6 --exp 0_baseline_mpnn_lstm
 python main.py --ydays 1 --shift 6 --result-dir tests_1013 --model mpnn_lstm --device 7 --exp 0_baseline_mpnn_lstm

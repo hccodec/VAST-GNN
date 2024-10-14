@@ -111,6 +111,7 @@ def train_process(
                     with torch.no_grad():
                         # 拼接真实图结构并去掉自环
                         adj_gt = torch.cat([x_mob, y_mob], dim=1)
+                        adj_hat = rm_self_loops(adj_hat)
                         adj_gt_no_diag = rm_self_loops(adj_gt)
                         # 计算 μ 和 σ
                         mean_adj_hat = adj_hat.mean(axis=(-2, -1), keepdims=True)
@@ -206,14 +207,15 @@ def train_process(
             #     if early_stop_wait == early_stop_patience:
             #         early_stop = True
 
-            # early stop 规则：loss val 连续 3 次差值小于 1e-2
-            else:
-                last = 3
-                last_losses = losses['val'][-min(last, len(losses['val'])):]
-                if len(losses['val']) > 2 and max(last_losses) - min(last_losses) < 1e-1:
-                    msg_file_logger += " (Early stop)"
-                    print(" (Early stop)")
-                    early_stop = True
+            # # early stop 规则：loss val 连续 3 次差值小于 1e-2
+            # else:
+            #     last = 10
+            #     if len(losses['val']) > last:
+            #     last_losses = losses['val'][-min(last, len(losses['val'])):]
+            #     if max(last_losses) - min(last_losses) < 1e-1:
+            #         msg_file_logger += " (Early stop)"
+            #         print(" (Early stop)")
+            #         early_stop = True
 
             print()
             file_logger.info(msg_file_logger)

@@ -24,3 +24,13 @@ Alternate-day forecasting aims to predict specific future days with a day's inte
 # Running this command will execute on GPU 8, using the dynst model to predict the third day's cases from the past 7 days, and save the results to the results/results_test/test/dataforge/ext_test1 directory
 python main.py --xdays 7 --ydays 1 --shift 2 --model dynst --dataset dataforgood --result-dir test --exp test1 --device 8
 ```
+
+### Missing Node Forecasting
+
+For missing node forecasting, specify the percentage of observed nodes in the config file `args.cfg` (default `cfg/config.yaml`) using the `node_observed_ratio` parameter. For example:
+
+```yaml
+node_observed_ratio: 100.0  # Percentage of observed nodes
+```
+
+Setting this to a value below 100 will randomly mask some nodes, allowing the model to predict the missing ones based on the remaining observed nodes.

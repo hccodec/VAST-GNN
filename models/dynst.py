@@ -192,26 +192,47 @@ class Decoder(nn.Module):
             x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
             # x_tcn = self.tcn_replace(current_x)
             adj = adj_t[:, i]
-            node_state_list = [x_tcn]
-            node_state = x_tcn
-
-            # TODO: 以 105 pooling 初始化，神经网络 源节点
 
             # GNN
-            for layer in self.GNNBlocks:
-                node_state = layer(node_state, adj)
-                node_state_list.append(node_state)
-            node_state = torch.cat(node_state_list, dim=-1)
+            # Add missing nodes
+            pooled_node_state = x_tcn.mean(dim=1, keepdim=True)
+            
+            x_tcn_with_missing = torch.cat([x_tcn, pooled_node_state], dim=1)
+
+            missing_adj_row = adj.mean(dim=1, keepdim=True)
+            missing_adj_col = adj.mean(dim=2, keepdim=True)
+
+            adj_with_missing = torch.cat([adj, missing_adj_row], dim=1) 
+            missing_adj_col = torch.cat([missing_adj_col, torch.zeros(batch_size, 1, 1).to(self.device)], dim=1)  
+            adj_with_missing = torch.cat([adj_with_missing, missing_adj_col], dim=2)
+
+            # node_state_list = [x_tcn]
+            # node_state = x_tcn
+
+            # node_state_list = [x_tcn_with_missing]
+            # node_state = x_tcn_with_missing
+            # for layer in self.GNNBlocks:
+            #     node_state = layer(node_state, adj)
+            #     node_state_list.append(node_state)
+            # node_state = torch.cat(node_state_list, dim=-1)
+            node_state = [x_tcn_with_missing]
+            for layer in self.GNNBlocks: node_state.append(layer(node_state[-1], adj_with_missing))
+            node_state = torch.cat(node_state, dim=-1)
+            # Remove missing nodes
+            node_state = node_state[:, :-1]
+
+            # GRU
             node_state = node_state.flatten(0, -2)
-
             node_state = self.fc(node_state)
-
             gru_hidden = self.gru_cell(node_state, gru_hidden)
             # predict = self.out(gru_hidden)
+
+            # Output
             predict = self.out(torch.cat((gru_hidden, current_x.flatten(0, -2)),
                                    dim=-1))
             predict = predict.reshape(batch_size, num_nodes, -1)
 
+            # 
             if i < obs_len - 1:
                 current_x = _seq[:, :, i + 1 : i + obs_len + 1]
             else:
