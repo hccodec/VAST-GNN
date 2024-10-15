@@ -1,13 +1,10 @@
 #!/bin/bash
 
-# 假设exp是一个别名，您需要在您的shell配置文件中定义它
-# alias exp='source activate myenv && cd /path/to/experiment'
-
 # 命令列表
 commands=$(cat <<EOF
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
+python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 0 --exp 5_missing_nodes_80_mask_tcn_current_x
+python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 0 --exp 5_missing_nodes_80_mask_tcn_current_x
+python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 0 --exp 5_missing_nodes_80_mask_tcn_current_x
 EOF
 )
 
