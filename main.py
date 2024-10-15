@@ -12,11 +12,15 @@ from utils.logger import logger
 from utils.utils import font_green, font_yellow, select_model, set_random_seed, get_exp_desc
 from utils.args import parse_args
 
+from utils.custom_datetime import datetime
+
 from show_result import show_result
 
 def exp_main(args):
     exp_desc = get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift, args.node_observed_ratio)
-    logger.info(f"实验【{exp_desc}】开始")
+
+    starttime = datetime.now()
+    logger.info(f"实验 [{exp_desc}] 开始于 {starttime.strftime('%Y-%m-%d %H:%M:%S')}")
 
     from utils.data_process.dataforgood import load_data
 
@@ -40,13 +44,19 @@ def exp_main(args):
     elif "country" not in args:
         for i_country in range(len(meta_data["country_names"])):
             train_country(args, result_paths, meta_data, i_country)
-    elif args.country in meta_data["country_names"]:
-        i_country = meta_data["country_names"].index(args.country)
-        train_country(args, result_paths, meta_data, i_country)
     else:
-        print(f"参数错误 args.country: {args.country}")
+        # 处理 args.country 使之接受形如 "England,Spain" 的参数并整理成数组
+        countries = [e.title() for e in args.country.split(',')]
+        if set(countries).issubset(set(meta_data["country_names"])):
+            logger.info(f"将对国家 {args.country} 的数据进行训练")
+            for country in countries:
+                i_country = meta_data["country_names"].index(country)
+                train_country(args, result_paths, meta_data, i_country)
+        else:
+            print(f"参数错误 args.country: {args.country}")
 
-    logger.info(f"实验【{exp_desc}】结束")
+    endtime = datetime.now()
+    logger.info(f"实验 [{exp_desc}] 结束。\n总用时 {(datetime.min + (endtime - starttime)).strftime('%H:%M:%S')} （{starttime.strftime('%Y-%m-%d %H:%M:%S')} - {endtime.strftime('%Y-%m-%d %H:%M:%S')}）")
 
 def train_country(args, result_paths, meta_data, i_country):
     country_name = meta_data["country_names"][i_country]

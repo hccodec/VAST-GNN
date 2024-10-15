@@ -16,15 +16,18 @@ import pandas as pd
 pattern_graph_file = re.compile("(.*)_(.*).csv")
 
 def load_data(args, enable_cache = True):
+    preprocessed_data_dir = args.preprocessed_data_dir
     data_dir, databinfile, batch_size = args.data_dir, args.databinfile, args.batch_size
-    xdays, ydays, window, shift = args.xdays, args.ydays, args.window, args.shift
+    xdays, ydays, window_size, shift = args.xdays, args.ydays, args.window, args.shift
     train_ratio, val_ratio = args.train_ratio, args.val_ratio
+    node_observed_ratio = args.node_observed_ratio
 
     if enable_cache and os.path.exists(databinfile):
         with open(databinfile, 'rb') as f:
             meta_data = pickle.load(f)
-        logger.info('已从数据文件读取 dataforgood 数据集')
+        logger.info(f'已从数据文件 [{databinfile}] 读取 dataforgood 数据集')
     else:
+        #从数据集里读取数据
         meta_data = {}
 
         country_names = [d for d in os.listdir(data_dir)
@@ -36,14 +39,14 @@ def load_data(args, enable_cache = True):
 
         for i in range(len(country_names)):
             logger.info(f"正在读取国家 {country_names[i]:{max([len(n) for n in country_names])}s} 的数据...")
-            data = _load_data(args, country_names[i])
+            data = _load_data(window_size, data_dir, node_observed_ratio, country_names[i])
             dataloaders = split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, *data)
             meta_data[country_names[i]] = (dataloaders, data)
 
         meta_data = {"country_names": country_names, "country_codes": country_codes, "data": meta_data}
 
         if not os.path.exists(databinfile):
-            os.makedirs(args.preprocessed_data_dir, exist_ok=True)
+            os.makedirs(preprocessed_data_dir, exist_ok=True)
             with open(databinfile, 'wb') as f:
                 pickle.dump(meta_data, f)
 
@@ -54,13 +57,12 @@ def load_data(args, enable_cache = True):
     return meta_data
 
 
-def _load_data(args, country_name: str, policy: str = "clip"):
+def _load_data(window_size, data_dir, node_observed_ratio, country_name: str, policy: str = "clip"):
     """
     按国家从文件加载数据集
     """
     assert policy in ['clip', 'pad']
-
-    window_size, data_country_path = args.window, os.path.join(args.data_dir, country_name)
+    data_country_path = os.path.join(data_dir, country_name)
 
     Gs, dates, nodes = [], [], []
 
@@ -99,6 +101,15 @@ def _load_data(args, country_name: str, policy: str = "clip"):
         features = np.stack([cases_pad[i : i + window_size].squeeze(-1).T for i in range(len(dates))])
 
     features, cases, adjs = torch.tensor(features), torch.tensor(cases), torch.tensor(adjs)
+
+    # random_mask
+    num_nodes = len(nodes)
+    mask = torch.cat([torch.ones(int(num_nodes * node_observed_ratio)), torch.zeros(num_nodes - int(num_nodes * node_observed_ratio))])
+    mask = mask[torch.randperm(num_nodes)]
+    selected_indices = torch.nonzero(mask).squeeze()
+    features = features[:, selected_indices]
+    cases = cases[:, selected_indices]
+    adjs = adjs[:, selected_indices][:, :, selected_indices]
 
     return features, cases, adjs
 

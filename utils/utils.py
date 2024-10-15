@@ -212,25 +212,25 @@ def adjust_lambda(epoch, num_epochs, lambda_0, lambda_n, lambda_epoch_max, metho
 #
 #     return x_case, y_case, x_mob, y_mob, idx_dataset
 
-def random_mask(data, observed_ratio = 0.8):
-    assert observed_ratio > 0 and observed_ratio <= 1
+# def random_mask(data, observed_ratio = 0.8):
+#     assert observed_ratio > 0 and observed_ratio <= 1
     
-    x_case, y_case, x_mob, y_mob, idx_dataset = data
-    (batch_size, num_xdays, num_nodes, num_features), num_ydays = x_case.size(), y_case.size(1)
+#     x_case, y_case, x_mob, y_mob, idx_dataset = data
+#     (batch_size, num_xdays, num_nodes, num_features), num_ydays = x_case.size(), y_case.size(1)
 
-    mask = torch.cat([torch.ones(int(num_nodes * observed_ratio)), torch.zeros(num_nodes - int(num_nodes * observed_ratio))])
-    mask = mask[torch.randperm(num_nodes)]
-    # mask = mask.unsqueeze(0).unsqueeze(0).expand(batch_size, num_xdays, -1)
-    selected_indices = torch.nonzero(mask).squeeze().to(x_case.device)
+#     mask = torch.cat([torch.ones(int(num_nodes * observed_ratio)), torch.zeros(num_nodes - int(num_nodes * observed_ratio))])
+#     mask = mask[torch.randperm(num_nodes)]
+#     # mask = mask.unsqueeze(0).unsqueeze(0).expand(batch_size, num_xdays, -1)
+#     selected_indices = torch.nonzero(mask).squeeze().to(x_case.device)
     
-    if x_case is not None: x_case = x_case[:, :, selected_indices]
-    if y_case is not None: y_case = y_case[:, :, selected_indices]
-    if x_mob is not None: x_mob = x_mob[:, :, selected_indices][:, :, :, selected_indices]
-    if y_mob is not None: y_mob = y_mob[:, :, selected_indices][:, :, :, selected_indices]
-    # if idx is not None: idx = idx[selected_indices]
-    # if extra_info is not None: extra_info = extra_info[:, :, selected_indices][:, :, :, selected_indices]
+#     if x_case is not None: x_case = x_case[:, :, selected_indices]
+#     if y_case is not None: y_case = y_case[:, :, selected_indices]
+#     if x_mob is not None: x_mob = x_mob[:, :, selected_indices][:, :, :, selected_indices]
+#     if y_mob is not None: y_mob = y_mob[:, :, selected_indices][:, :, :, selected_indices]
+#     # if idx is not None: idx = idx[selected_indices]
+#     # if extra_info is not None: extra_info = extra_info[:, :, selected_indices][:, :, :, selected_indices]
 
-    return x_case, y_case, x_mob, y_mob, idx_dataset
+#     return x_case, y_case, x_mob, y_mob, idx_dataset
 
 def get_exp_desc(modelstr, xdays, ydays, window, shift, node_observed_ratio) -> str:
     '''

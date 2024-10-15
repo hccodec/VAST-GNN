@@ -16,7 +16,7 @@ def get_parser(parent_parser=None):
         assert isinstance(parent_parser, ArgumentParser)
         parser = parent_parser
     # 配置文件以及各种目录
-    parser.add_argument("--config", type=str, default="cfg/config.yaml", help="配置文件路径")
+    parser.add_argument("--config", type=str, default="cfg/config_base.yaml", help="基础配置文件路径")
     parser.add_argument("--country", type=str, default=None, help="指定训练某个国家")
     # parser.add_argument("--data-dir", default="data", help="数据集目录")
     # parser.add_argument("--dataset", default='dataforgood', help="选择的数据集")
@@ -76,7 +76,7 @@ def process_args(args, record_log):
 
     # 遍历 args 中的每个属性
     for key, value in vars(args).items():
-        # cfg 优先
+        # # cfg 优先
         # if key not in cfg: cfg[key] = value
         # args 优先
         if value is not None: cfg[key] = value
@@ -102,12 +102,17 @@ def process_args(args, record_log):
 
     # 通过数据集以及 arg.exp 锁定实验结果保存目录
     args.exp = str(args.exp)
-    
     args.result_dir = os.path.join("results", args.result_dir,
                                    "tmp" if args.exp == "" or args.exp == "-1" else f"exp_{args.exp}",
                                    args.dataset, subdir)
+    # 确定处理好的数据集的目录
+    args.databinfile = ("" if args.databinfile == "" else f"{args.databinfile}_") +\
+        f"{args.dataset}_x{args.xdays}_y{args.ydays}_w{args.window}_s{args.shift}" +\
+        ("" if int(args.node_observed_ratio) == 100 else f"_m{int(args.node_observed_ratio)}") + ".bin"
+    args.databinfile = os.path.join(args.preprocessed_data_dir, args.databinfile)
 
-    # 在实验结果最终保存位置创建 log 文件
+
+    # 实验结果保存目录，初始化 log
     if record_log:
         os.makedirs(args.result_dir, exist_ok=True)
         print("结果目录:", args.result_dir)
@@ -116,26 +121,17 @@ def process_args(args, record_log):
     # 设置 GPU 设备
     args.device = set_device(args.device)
 
-    # 确定处理好的数据集的位置
-    if args.databinfile == "":
-        args.databinfile = f"{args.dataset}_x{args.xdays}_y{args.ydays}_w{args.window}_s{args.shift}.bin"
-    else:
-        args.databinfile = f"{args.databinfile}_{args.dataset}_x{args.xdays}_y{args.ydays}_w{args.window}_s{args.shift}.bin"
-    args.databinfile = os.path.join(args.preprocessed_data_dir, args.databinfile)
-
-    # 通过百分点确定隐藏结点比例
+    # 通过百分点将隐藏结点比例规范化至0-1
     assert 0 <= args.node_observed_ratio <= 100
     args.node_observed_ratio /= 100
 
-    # 通过百分点确定训练集划分比例
+    # 通过百分点将训练集划分比例规范化至0-1
     assert 0 < args.train_ratio < 100 and 0 < args.val_ratio < 100
     args.train_ratio /= 100
     args.val_ratio /= 100
 
     if args.dataset == 'dataforgood':
         args.case_normalize_ratio = 1
-
-
 
     return args
 

@@ -160,6 +160,9 @@ class Decoder(nn.Module):
         self.graph_layers = graph_layers
 
         self.tcn = TCN(1, hidden, hidden, tcn_layers, dropout).to(device)
+        self.tcn_mlp = nn.Linear(window_size, hidden)
+        self.tcn_out_fc = nn.Linear(hidden * 2, hidden)
+        
         self.GNNBlocks = nn.ModuleList(
             [GraphConvLayer(in_features=hidden, out_features=hidden) for i in range(graph_layers)])
         
@@ -175,7 +178,6 @@ class Decoder(nn.Module):
         )
         self.device = device
 
-        self.tcn_replace = nn.Linear(window_size, hidden)
 
     def forward(self, x, gt, adj_t, use_predict = False):
         batch_size, obs_len, num_nodes, pred_len = x.size(0), x.size(1), x.size(2), gt.size(1)
@@ -187,27 +189,32 @@ class Decoder(nn.Module):
         predict_list = []
         for i in range(obs_len + pred_len - 1):
             # TCN
+            # 以下 TCN 模块输出方式三选一
+            # 1. 仅 TCN
             x_tcn = current_x.flatten(0, -2).unsqueeze(1)
             x_tcn = self.tcn(x_tcn)
             x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
-            # x_tcn = self.tcn_replace(current_x)
-            adj = adj_t[:, i]
+            x_tcn_out = x_tcn
+            # 2. 仅 MLP
+            x_tcn_mlp = self.tcn_mlp(current_x)
+            x_tcn_out = x_tcn_mlp
+            # 3.拼接 TCN 和 MLP
+            x_tcn_out = self.tcn_out_fc(torch.cat((x_tcn, x_tcn_mlp), dim = -1))
 
             # GNN
-            # Add missing nodes
-            pooled_node_state = x_tcn.mean(dim=1, keepdim=True)
-            
-            x_tcn_with_missing = torch.cat([x_tcn, pooled_node_state], dim=1)
+            pooled_node_state = x_tcn_out.mean(dim=1, keepdim=True)
+            x_tcn_with_missing = torch.cat([x_tcn_out, pooled_node_state], dim=1)
 
+            adj = adj_t[:, i]
             missing_adj_row = adj.mean(dim=1, keepdim=True)
-            missing_adj_col = adj.mean(dim=2, keepdim=True)
+            missing_adj_col = torch.cat(
+                [adj.mean(dim=2, keepdim=True), torch.zeros(batch_size, 1, 1).to(self.device)], dim=1)  
 
             adj_with_missing = torch.cat([adj, missing_adj_row], dim=1) 
-            missing_adj_col = torch.cat([missing_adj_col, torch.zeros(batch_size, 1, 1).to(self.device)], dim=1)  
             adj_with_missing = torch.cat([adj_with_missing, missing_adj_col], dim=2)
 
-            # node_state_list = [x_tcn]
-            # node_state = x_tcn
+            # node_state_list = [x_tcn_out]
+            # node_state = x_tcn_out
 
             # node_state_list = [x_tcn_with_missing]
             # node_state = x_tcn_with_missing

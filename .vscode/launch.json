@@ -13,6 +13,16 @@
         // }
     ],
     "configurations": [
+
+        {
+            "type": "bashdb",
+            "request": "launch",
+            "name": "Bash-Debug (hardcoded script name)",
+            "cwd": "${workspaceFolder}",
+            "program": "run.sh",
+            "args": []
+        },
+
         {
             "name": "MAIN(lstm)",
             "type": "debugpy",
@@ -56,7 +66,7 @@
                 "--device", "8",
                 "--shift", "2",
                 "--ydays", "1",
-                "--country", "Spain"
+                "--country", "England,Spain"
             ]
         },
         {
@@ -69,7 +79,7 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-               "--result-dir", "tests", "--exp", "1009_2"
+               "-d", "results/tests_1014/exp_9_lstm_80_mask"
             ]
         },
         {

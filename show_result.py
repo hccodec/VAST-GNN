@@ -140,11 +140,11 @@ def print_err(results, _models, i, subdir = None):
                 )
                 continue
 
-            epoch_minvalloss = r[country]['minvalloss']['epoch']
+            epoch_minvalloss = int(r[country]['minvalloss']['epoch'])
             err_val_minvalloss = r[country]['minvalloss']['err_val']
             err_test_minvalloss = r[country]['minvalloss']['err_test']
 
-            epoch_latest = r[country]['latest']['epoch']
+            epoch_latest = int(r[country]['latest']['epoch'])
             err_val_latest = r[country]['latest']['err_val']
             err_test_latest = r[country]['latest']['err_test']
 
@@ -165,6 +165,7 @@ def print_err(results, _models, i, subdir = None):
         keys = sorted(s[k].keys(), key=sort_key)
         print(' | '.join(keys))
         print(f'[{_models[i]:>{9}s}]', '\t'.join(['\t'.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]))
+        print(f'[{"epoch":>{9}s}]', '\t'.join(['\t'.join(map(lambda c: c['epoch'], v.values())) for v in [s[k][_k] for _k in keys]]))
         # print('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
         # print(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))
 

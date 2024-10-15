@@ -6,7 +6,7 @@ from eval import compute_err, compute_mae_rmse, metrics_labels, compute_correlat
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
-from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, min_max_adj, random_mask, rm_self_loops
+from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, min_max_adj, rm_self_loops
 from models.dynst import dynst_extra_info
 
 
@@ -102,7 +102,7 @@ def train_process(
                 opt.zero_grad()
 
                 data = tuple(d.to(device) for d in data)
-                y_hat, x_case, y_case, x_mob, y_mob, idx_dataset = train_model(data, adj_lambda, model, node_observed_ratio)
+                y_hat, x_case, y_case, x_mob, y_mob, idx_dataset = run_model(data, model, adj_lambda)
 
                 if isinstance(y_hat, tuple):
                     y_hat, adj_hat = y_hat
@@ -391,14 +391,6 @@ def eval_process(model, criterion, train_loader, val_loader, test_loader, comp_l
     return res
 
 # 训练测试模型的子过程
-
-def train_model(data, adj_lambda, model, node_observed_ratio = 0.8):
-    
-    x_case, y_case, x_mob, y_mob, idx_dataset = data
-    x_case, y_case, x_mob, y_mob, idx_dataset = random_mask((x_case, y_case, x_mob, y_mob, idx_dataset), node_observed_ratio)
-
-    return run_model((x_case, y_case, x_mob, y_mob, idx_dataset), model, adj_lambda)
-
 def run_model(data, model, adj_lambda = None):
 
     x_case, y_case, x_mob, y_mob, idx_dataset = data
