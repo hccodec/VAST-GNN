@@ -161,12 +161,14 @@ class Decoder(nn.Module):
 
         self.tcn = TCN(1, hidden, hidden, tcn_layers, dropout).to(device)
         self.tcn_mlp = nn.Linear(window_size, hidden)
-        self.tcn_out_fc = nn.Linear(hidden * 2, hidden)
+        # self.tcn_out_fc = nn.Linear(hidden * 2, hidden)
         
-        self.GNNBlocks = nn.ModuleList(
-            [GraphConvLayer(in_features=hidden, out_features=hidden) for i in range(graph_layers)])
-        
-        self.fc = nn.Linear(hidden * (graph_layers + 1), hidden)
+        # 这里第一层 GNN 的 in_features 随上面 TCN 的拼接策略更改
+        self.GNNBlocks = nn.ModuleList((GraphConvLayer(in_features=hidden * 2, out_features=hidden),
+            *[GraphConvLayer(in_features=hidden, out_features=hidden) for i in range(graph_layers - 1)]
+            ))
+        self.fc = nn.Linear(self.GNNBlocks[0].in_features + sum([l.out_features for l in self.GNNBlocks]), hidden)
+
         self.gru_cell = nn.GRUCell(hidden, hidden)
         # self.out = nn.Linear(hidden, out_dim)
         self.out = nn.Sequential(
@@ -177,7 +179,41 @@ class Decoder(nn.Module):
             nn.ReLU()
         )
         self.device = device
+    
+    def TCN_Module(self, current_x):
+        batch_size, num_nodes, _ = current_x.shape
+        # TCN
+        # 以下 TCN 模块输出方式三选一
+        # 1. 仅 TCN
+        x_tcn = current_x.flatten(0, -2).unsqueeze(1)
+        x_tcn = self.tcn(x_tcn)
+        x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
+        x_tcn_out = x_tcn
+        # 2. 仅 MLP
+        x_tcn_mlp = self.tcn_mlp(current_x)
+        x_tcn_out = x_tcn_mlp
+        # 3.拼接 TCN 和 MLP
+        # x_tcn_out = self.tcn_out_fc(torch.cat((x_tcn, x_tcn_mlp), dim = -1))
+        x_tcn_out = torch.cat((x_tcn, x_tcn_mlp), dim = -1)
+        return x_tcn_out
 
+    def GNN_Module(self, x_tcn_out, adj):
+        batch_size = x_tcn_out.shape[0]
+        # 添加缺失节点
+        x_tcn_with_missing = torch.cat([x_tcn_out, x_tcn_out.mean(dim=1, keepdim=True)], dim=1)
+        
+        missing_adj_row = adj.mean(dim=1, keepdim=True)
+        missing_adj_col = torch.cat([adj.mean(dim=2, keepdim=True), torch.zeros(batch_size, 1, 1).to(self.device)], dim=1)
+
+        adj_with_missing = torch.cat([adj, missing_adj_row], dim=1) 
+        adj_with_missing = torch.cat([adj_with_missing, missing_adj_col], dim=2)
+        # 图卷积
+        node_state = [x_tcn_with_missing]
+        for layer in self.GNNBlocks: node_state.append(layer(node_state[-1], adj_with_missing))
+        node_state = torch.cat(node_state, dim=-1)
+        # 移除缺失节点
+        node_state = node_state[:, :-1]
+        return node_state
 
     def forward(self, x, gt, adj_t, use_predict = False):
         batch_size, obs_len, num_nodes, pred_len = x.size(0), x.size(1), x.size(2), gt.size(1)
@@ -189,45 +225,9 @@ class Decoder(nn.Module):
         predict_list = []
         for i in range(obs_len + pred_len - 1):
             # TCN
-            # 以下 TCN 模块输出方式三选一
-            # 1. 仅 TCN
-            x_tcn = current_x.flatten(0, -2).unsqueeze(1)
-            x_tcn = self.tcn(x_tcn)
-            x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
-            x_tcn_out = x_tcn
-            # 2. 仅 MLP
-            x_tcn_mlp = self.tcn_mlp(current_x)
-            x_tcn_out = x_tcn_mlp
-            # 3.拼接 TCN 和 MLP
-            x_tcn_out = self.tcn_out_fc(torch.cat((x_tcn, x_tcn_mlp), dim = -1))
-
+            x_tcn_out = self.TCN_Module(current_x)
             # GNN
-            pooled_node_state = x_tcn_out.mean(dim=1, keepdim=True)
-            x_tcn_with_missing = torch.cat([x_tcn_out, pooled_node_state], dim=1)
-
-            adj = adj_t[:, i]
-            missing_adj_row = adj.mean(dim=1, keepdim=True)
-            missing_adj_col = torch.cat(
-                [adj.mean(dim=2, keepdim=True), torch.zeros(batch_size, 1, 1).to(self.device)], dim=1)  
-
-            adj_with_missing = torch.cat([adj, missing_adj_row], dim=1) 
-            adj_with_missing = torch.cat([adj_with_missing, missing_adj_col], dim=2)
-
-            # node_state_list = [x_tcn_out]
-            # node_state = x_tcn_out
-
-            # node_state_list = [x_tcn_with_missing]
-            # node_state = x_tcn_with_missing
-            # for layer in self.GNNBlocks:
-            #     node_state = layer(node_state, adj)
-            #     node_state_list.append(node_state)
-            # node_state = torch.cat(node_state_list, dim=-1)
-            node_state = [x_tcn_with_missing]
-            for layer in self.GNNBlocks: node_state.append(layer(node_state[-1], adj_with_missing))
-            node_state = torch.cat(node_state, dim=-1)
-            # Remove missing nodes
-            node_state = node_state[:, :-1]
-
+            node_state = self.GNN_Module(x_tcn_out, adj_t[:, i])
             # GRU
             node_state = node_state.flatten(0, -2)
             node_state = self.fc(node_state)
@@ -235,8 +235,7 @@ class Decoder(nn.Module):
             # predict = self.out(gru_hidden)
 
             # Output
-            predict = self.out(torch.cat((gru_hidden, current_x.flatten(0, -2)),
-                                   dim=-1))
+            predict = self.out(torch.cat((gru_hidden, current_x.flatten(0, -2)), dim=-1))
             predict = predict.reshape(batch_size, num_nodes, -1)
 
             # 

@@ -14,6 +14,10 @@ python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_10
 python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --exp 3_missing_nodes_80_mask_tcn_mlp
 python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --exp 3_missing_nodes_80_mask_tcn_mlp
 
+python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
+python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
+python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
+
 # 1014
 python main.py --ydays 1 --shift 2 --result-dir tests_1014 --model mpnn_lstm --device 8 --exp 1_baseline_mpnn_lstm
 python main.py --ydays 1 --shift 6 --result-dir tests_1014 --model mpnn_lstm --device 8 --exp 1_baseline_mpnn_lstm

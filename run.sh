@@ -5,9 +5,9 @@
 
 # 命令列表
 commands=$(cat <<EOF
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --exp 3_missing_nodes_80_mask_tcn_mlp
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --exp 3_missing_nodes_80_mask_tcn_mlp
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --exp 3_missing_nodes_80_mask_tcn_mlp
+python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
+python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
+python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
 EOF
 )
 
