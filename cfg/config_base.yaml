@@ -18,7 +18,7 @@ seed: 5                    # 随机种子
 #shift: 0                   # 大于 0 则启用隔 shift 天预测
 
 # 实验设置：比率
-node_observed_ratio:  80.0   # 观测到的结点百分点
+node_observed_ratio:  50.0   # 观测到的结点百分点
 case_normalize_ratio: 100.0  # 训练集比例百分点
 train_ratio: 70              # 训练集比例百分点
 val_ratio: 10                # 验证集比例百分点

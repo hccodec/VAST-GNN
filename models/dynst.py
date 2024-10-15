@@ -164,7 +164,7 @@ class Decoder(nn.Module):
         # self.tcn_out_fc = nn.Linear(hidden * 2, hidden)
         
         # 这里第一层 GNN 的 in_features 随上面 TCN 的拼接策略更改
-        self.GNNBlocks = nn.ModuleList((GraphConvLayer(in_features=hidden + in_dim, out_features=hidden),
+        self.GNNBlocks = nn.ModuleList((GraphConvLayer(in_features=hidden * 2, out_features=hidden),
             *[GraphConvLayer(in_features=hidden, out_features=hidden) for i in range(graph_layers - 1)]
             ))
         self.fc = nn.Linear(self.GNNBlocks[0].in_features + sum([l.out_features for l in self.GNNBlocks]), hidden)
@@ -189,13 +189,13 @@ class Decoder(nn.Module):
         x_tcn = self.tcn(x_tcn)
         x_tcn = x_tcn.reshape(batch_size, num_nodes, -1)
         x_tcn_out = x_tcn
-        # # 2. 仅 MLP
-        # x_tcn_mlp = self.tcn_mlp(current_x)
-        # x_tcn_out = x_tcn_mlp
+        # 2. 仅 MLP
+        x_tcn_mlp = self.tcn_mlp(current_x)
+        x_tcn_out = x_tcn_mlp
         # 3.拼接 TCN 和 MLP
         # x_tcn_out = self.tcn_out_fc(torch.cat((x_tcn, x_tcn_mlp), dim = -1))
-        x_tcn_out = torch.cat((x_tcn, current_x), dim = -1)
-        # x_tcn_out = torch.cat((x_tcn, x_tcn_mlp), dim = -1)
+        # x_tcn_out = torch.cat((x_tcn, current_x), dim = -1)
+        x_tcn_out = torch.cat((x_tcn, x_tcn_mlp), dim = -1)
         return x_tcn_out
 
     def GNN_Module(self, x_tcn_out, adj):
