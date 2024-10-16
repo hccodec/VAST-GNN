@@ -285,13 +285,13 @@ class dynst(nn.Module):
         self.dec = Decoder(in_dim, out_dim, hidden_dec, window_size, tcn_layers, graph_layers, dropout, device).to(device)
 
     def forward(self, X, y, A, A_y, adj_lambda):
-        # 处理真实矩阵
-        adj_gt = torch.cat((A, A_y), dim=1)
-        adj_gt = getLaplaceMat(adj_gt)
-        adj_enc = adj_gt
+        # # 处理真实矩阵
+        # adj_gt = torch.cat((A, A_y), dim=1)
+        # adj_gt = getLaplaceMat(adj_gt)
+        # adj_enc = adj_gt
 
-        # adj_enc = self.enc(X, y) # enc 输出的图结构，不可更改，用于返回值
-        # adj_enc = getLaplaceMat(adj_enc)
+        adj_enc = self.enc(X, y) # enc 输出的图结构，不可更改，用于返回值
+        adj_enc = getLaplaceMat(adj_enc)
 
 
         # # 求图结构 gt 和 enc_output 的线性结果

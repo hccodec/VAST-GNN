@@ -1,0 +1,6 @@
+{
+    "workbench.editorAssociations": {
+        "{git,gitlens}:/**/*.{md,csv,svg}": "default",
+        "file:/**/*.csv": "jupyter-data-wrangler"
+    }
+}

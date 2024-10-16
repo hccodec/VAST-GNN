@@ -2,6 +2,7 @@ __pycache__
 .idea/
 data_preprocessed/
 results*/
-*.bin
+**/*.bak
 epilearn/
 history_codes/
+test.ipynb

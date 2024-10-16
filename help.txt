@@ -1,6 +1,19 @@
 
 #################################################################################################################
 
+
+# 1016
+python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1016 --device 7 --exp 1_enc_only
+python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1016 --device 8 --exp 1_enc_only
+python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1016 --device 9 --exp 1_enc_only
+python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1016 --device 7 --exp 1_enc_only_countries_left
+python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1016 --device 8 --exp 1_enc_only_countries_left
+python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1016 --device 9 --exp 1_enc_only_countries_left
+
+python main.py --ydays 1 --shift 2 --result-dir tests_1016 --device 3 --model mpnn_lstm --exp 2_mpnn_lstm_50_mask
+python main.py --ydays 1 --shift 6 --result-dir tests_1016 --device 3 --model mpnn_lstm --exp 2_mpnn_lstm_50_mask
+python main.py --ydays 1 --shift 13 --result-dir tests_1016 --device 3 --model mpnn_lstm --exp 2_mpnn_lstm_50_mask
+
 # 1015
 python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 0 --exp 1_missing_nodes_80_mask_tcn
 python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 0 --exp 1_missing_nodes_80_mask_tcn

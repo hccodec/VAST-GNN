@@ -2,21 +2,12 @@
 
 # 命令列表
 commands=$(cat <<EOF
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --exp 6_missing_nodes_50_mask_tcn_mlp
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --exp 6_missing_nodes_50_mask_tcn_mlp
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --exp 6_missing_nodes_50_mask_tcn_mlp
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --model mpnn_lstm --exp 7_mpnn_lstm_50_mask
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --model mpnn_lstm --exp 7_mpnn_lstm_50_mask
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --model mpnn_lstm --exp 7_mpnn_lstm_50_mask
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --model lstm --exp 8_lstm_50_mask
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --model lstm --exp 8_lstm_50_mask
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --model lstm --exp 8_lstm_50_mask
 EOF
 )
 
 # tmux会话名称
 SESSION_NAME=hbj
-WINDOW_NAME="1015"
+WINDOW_NAME="1016"
 
 # 读取所有命令到数组
 readarray -t cmd_array <<< "$commands"
