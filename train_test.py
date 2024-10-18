@@ -6,7 +6,7 @@ from eval import compute_err, compute_mae_rmse, metrics_labels, compute_correlat
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
-from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, min_max_adj, rm_self_loops
+from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, min_max_adj, rm_self_loops, getLaplaceMat
 from models.dynst import dynst_extra_info
 
 
@@ -108,23 +108,29 @@ def train_process(
                     y_hat, adj_hat = y_hat
 
                     # 此 with 块将 adj_hat 按 μ 缩放到 adj_gt 所在尺度
-                    with torch.no_grad():
-                        # 拼接真实图结构并去掉自环
-                        adj_gt = torch.cat([x_mob, y_mob], dim=1)
-                        adj_hat = rm_self_loops(adj_hat)
-                        adj_gt_no_diag = rm_self_loops(adj_gt)
-                        # 计算 μ 和 σ
-                        mean_adj_hat = adj_hat.mean(axis=(-2, -1), keepdims=True)
-                        std_adj_hat = adj_hat.std(axis=(-2, -1), keepdims=True)
-                        mean_adj_gt_no_diag = adj_gt_no_diag.mean(axis=(-2, -1), keepdims=True)
-                        std_adj_gt_no_diag = adj_gt_no_diag.std(axis=(-2, -1), keepdims=True)
-                        
-                        # # 按 μ 和 σ 缩放
-                        # adj_hat = (adj_hat - mean_adj_hat) / std_adj_hat * std_adj_gt_no_diag + mean_adj_gt_no_diag
-                        # adj_hat = rm_self_loops(adj_hat)
+                    # with torch.no_grad():
+                    # 拼接真实图结构并去掉自环
+                    adj_gt = torch.cat([x_mob, y_mob], dim=1)
+                    adj_hat = rm_self_loops(adj_hat)
+                    adj_gt_no_diag = rm_self_loops(adj_gt)
+                    # 计算 μ 和 σ
+                    mean_adj_hat = adj_hat.mean(axis=(-2, -1), keepdims=True)
+                    std_adj_hat = adj_hat.std(axis=(-2, -1), keepdims=True)
+                    mean_adj_gt_no_diag = adj_gt_no_diag.mean(axis=(-2, -1), keepdims=True)
+                    std_adj_gt_no_diag = adj_gt_no_diag.std(axis=(-2, -1), keepdims=True)
 
-                        # 按 μ 缩放
-                        adj_hat = adj_hat * mean_adj_gt_no_diag / mean_adj_hat
+                    # # # 按 μ 和 σ 缩放
+                    # # adj_hat = (adj_hat - mean_adj_hat) / std_adj_hat * std_adj_gt_no_diag + mean_adj_gt_no_diag
+                    # # adj_hat = rm_self_loops(adj_hat)
+
+                    # 按 μ 缩放
+                    adj_hat = adj_hat * mean_adj_gt_no_diag / mean_adj_hat
+                    
+                    # # 均做拉普拉斯变换
+                    # adj_hat = getLaplaceMat(adj_hat)
+                    # adj_gt_no_diag = getLaplaceMat(adj_gt_no_diag)
+
+                    #######################
 
                     loss_y = criterion(y_case.float(), y_hat.float())
                     loss_y_res.append(loss_y.item())

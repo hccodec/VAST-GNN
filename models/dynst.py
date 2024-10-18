@@ -117,40 +117,6 @@ class GraphConvLayer(nn.Module):
         else:
             return self.act(output)
 
-
-def getLaplaceMat(adj):
-    shape = adj.shape
-    adj = adj.flatten(0, -3)
-    batch_size, m, _ = adj.size()
-    i_mat = torch.eye(m).to(adj.device)
-    i_mat = i_mat.unsqueeze(0)
-    o_mat = torch.ones(m).to(adj.device)
-    o_mat = o_mat.unsqueeze(0)
-    i_mat = i_mat.expand(batch_size, m, m)
-    o_mat = o_mat.expand(batch_size, m, m)
-    adj = torch.where(adj > 0, o_mat, adj)
-    '''
-    d_mat = torch.bmm(adj, adj.permute(0, 2, 1))
-    d_mat = torch.where(i_mat>0, d_mat, i_mat)
-    print('d_mat version 1', d_mat)
-    '''
-    d_mat_in = torch.sum(adj, dim=1)
-    d_mat_out = torch.sum(adj, dim=2)
-    d_mat = torch.sum(adj, dim=2)  # attention: dim=2
-    d_mat = d_mat.unsqueeze(2)
-    d_mat = d_mat + 1e-12
-    # d_mat = torch.pow(d_mat, -0.5) if is 1/2
-    d_mat = torch.pow(d_mat, -1)
-    d_mat = d_mat.expand(d_mat.shape[0], d_mat.shape[1], d_mat.shape[1])
-    d_mat = i_mat * d_mat
-
-    # laplace_mat = d_mat * adj * d_mat
-    laplace_mat = torch.bmm(d_mat, adj)
-    # laplace_mat = torch.bmm(laplace_mat, d_mat)
-    laplace_mat = laplace_mat.reshape(shape)
-    return laplace_mat
-
-
 class Decoder(nn.Module):
     def __init__(self, in_dim, out_dim, hidden, window_size, tcn_layers, graph_layers, dropout, device):
         super().__init__()
@@ -291,8 +257,7 @@ class dynst(nn.Module):
         # adj_enc = adj_gt
 
         adj_enc = self.enc(X, y) # enc 输出的图结构，不可更改，用于返回值
-        adj_enc = getLaplaceMat(adj_enc)
-
+        # adj_enc_laplaced = getLaplaceMat(adj_enc)
 
         # # 求图结构 gt 和 enc_output 的线性结果
         # if adj_lambda is not None and not self.no_graph_gt:

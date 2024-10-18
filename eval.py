@@ -42,19 +42,6 @@ def compute_mae_rmse(y_hat, y):
 
 
 def hits_at_k(A, A_hat, k, threshold_ratio):
-    """
-    计算 Hits@k 指标，用于图链接预测的评估（适用于有向图）。
-
-    参数:
-    - A: torch.tensor, 真实邻接矩阵 (N x N)，0 或 1 表示是否有边
-    - A_hat: torch.tensor, 预测邻接矩阵 (N x N)，小数表示边存在的概率
-    - k: int, 取前 k 个预测边进行 Hits@k 评估
-    - threshold_ratio: float, 用于判断 A_hat 中的概率是否足够高以认为存在边
-
-    返回:
-    - hits_k: float, Hits@k 值
-    """
-    # 确保 A 和 A_hat 是方阵
     assert A.shape == A_hat.shape, "A and A_hat must have the same shape"
 
     A, A_hat = A.clone(), A_hat.clone()
@@ -65,31 +52,29 @@ def hits_at_k(A, A_hat, k, threshold_ratio):
     N = A.shape[0]
 
     # 将 A_hat 拉直并根据得分排序，忽略对角线
-    A_hat_flat = A_hat.view(-1)
-    sorted_indices = torch.argsort(A_hat_flat, descending=True)
-
-    # 构建一个忽略对角线的 mask
-    mask = torch.ones_like(A_hat)
-    mask.fill_diagonal_(0)  # 忽略对角线
-    mask_flat = mask.view(-1)  # 将 mask 拉平
-
+    sorted_indices = torch.argsort(A_hat.view(-1), descending=True)
+    mask = (1 - torch.eye(N)).view(-1)
     # 只保留非对角线部分的排序索引
-    non_diag_indices = sorted_indices[mask_flat[sorted_indices] == 1]
-    # 取前 k 个预测的边索引
+    non_diag_indices = sorted_indices[mask[sorted_indices] == 1]
+    # 取前 k% 个预测的边索引
     top_k_indices = non_diag_indices[: int(k / 100 * len(non_diag_indices))]
 
-    # 将 top_k_indices 转换为矩阵中的 (i, j) 对应的行列索引
-    i_indices = top_k_indices // N
-    j_indices = top_k_indices % N
+    indices_A_hat_top_k = torch.tensor([(i.item(), j.item()) for i, j in zip(top_k_indices // N, top_k_indices % N)])
 
+    A_non_diag = A * (1 - torch.eye(A.shape[0]))
+    indices_A = A_non_diag.nonzero_static(size=A_non_diag.count_nonzero())
     # 统计 Hits@k 中的命中次数
-    hits = 0
-    for i, j in zip(i_indices, j_indices):
-        if A[i, j] > 0:  # 如果在真实邻接矩阵 A 中存在这条边
-            hits += 1
+    # hits = 0
+    # for i, j in zip(i_indices, j_indices):
+    #     if A[i, j] > 0:  # 如果在真实邻接矩阵 A 中存在这条边
+    #         hits += 1
+    # # 计算 Hits@k (命中次数 / k)
+    # hits_k = hits / A.count_zero().item()
 
-    # 计算 Hits@k (命中次数 / k)
-    hits_k = hits / len(top_k_indices)
+    # A 中所有边，是否在 A_hat 的前 10%
+    hits = sum([pos_edge in indices_A_hat_top_k for pos_edge in indices_A])
+    hits_k = hits / len(indices_A)
+
     return hits_k
 
 @torch.no_grad()

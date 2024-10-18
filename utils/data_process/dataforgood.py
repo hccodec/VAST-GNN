@@ -45,7 +45,7 @@ def load_data(args, enable_cache = True):
 
         meta_data = {"country_names": country_names, "country_codes": country_codes, "data": meta_data}
 
-        if not os.path.exists(databinfile):
+        if enable_cache and not os.path.exists(databinfile):
             os.makedirs(preprocessed_data_dir, exist_ok=True)
             with open(databinfile, 'wb') as f:
                 pickle.dump(meta_data, f)

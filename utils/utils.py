@@ -273,5 +273,36 @@ def min_max_adj(adj: torch.Tensor, epsilon = 1e-8):
 
     return adj
 
-@torch.no_grad()
 def rm_self_loops(a): return a * (1 - torch.eye(a.size(-1)).to(a.device))
+
+def getLaplaceMat(adj):
+    shape = adj.shape
+    adj = adj.flatten(0, -3)
+    batch_size, m, _ = adj.size()
+    i_mat = torch.eye(m).to(adj.device)
+    i_mat = i_mat.unsqueeze(0)
+    o_mat = torch.ones(m).to(adj.device)
+    o_mat = o_mat.unsqueeze(0)
+    i_mat = i_mat.expand(batch_size, m, m)
+    o_mat = o_mat.expand(batch_size, m, m)
+    adj = torch.where(adj > 0, o_mat, adj)
+    '''
+    d_mat = torch.bmm(adj, adj.permute(0, 2, 1))
+    d_mat = torch.where(i_mat>0, d_mat, i_mat)
+    print('d_mat version 1', d_mat)
+    '''
+    d_mat_in = torch.sum(adj, dim=1)
+    d_mat_out = torch.sum(adj, dim=2)
+    d_mat = torch.sum(adj, dim=2)  # attention: dim=2
+    d_mat = d_mat.unsqueeze(2)
+    d_mat = d_mat + 1e-12
+    # d_mat = torch.pow(d_mat, -0.5) if is 1/2
+    d_mat = torch.pow(d_mat, -1)
+    d_mat = d_mat.expand(d_mat.shape[0], d_mat.shape[1], d_mat.shape[1])
+    d_mat = i_mat * d_mat
+
+    # laplace_mat = d_mat * adj * d_mat
+    laplace_mat = torch.bmm(d_mat, adj)
+    # laplace_mat = torch.bmm(laplace_mat, d_mat)
+    laplace_mat = laplace_mat.reshape(shape)
+    return laplace_mat
