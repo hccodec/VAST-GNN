@@ -5,6 +5,7 @@ To prepare the environment, the following commands are recommended.
 
 ```bash
 conda create -n <env_name> python=3.8
+conda activate <env_name>
 conda install pytorch pytorch-cuda=11.8 -c pytorch -c nvidia
 pip install -r  requirements.txt
 ```

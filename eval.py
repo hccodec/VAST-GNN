@@ -62,7 +62,7 @@ def hits_at_k(A, A_hat, k, threshold_ratio):
     indices_A_hat_top_k = torch.tensor([(i.item(), j.item()) for i, j in zip(top_k_indices // N, top_k_indices % N)])
 
     A_non_diag = A * (1 - torch.eye(A.shape[0]))
-    indices_A = A_non_diag.nonzero_static(size=A_non_diag.count_nonzero())
+    indices_A = A_non_diag.nonzero()
     # 统计 Hits@k 中的命中次数
     # hits = 0
     # for i, j in zip(i_indices, j_indices):

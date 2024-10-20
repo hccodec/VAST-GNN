@@ -71,7 +71,8 @@ def parse_args(record_log = True, parent_parser = None):
 
 def process_args(args, record_log):
 
-    with open(args.config) as f:
+    # 读取 yaml
+    with open(args.config, encoding='utf-8') as f:
         cfg = yaml.safe_load(f)
 
     # 遍历 args 中的每个属性
@@ -145,8 +146,8 @@ def set_device(device_id):
             logger.info(f"使用 GPU {device_id} 进行计算")
             return torch.device(f"cuda:{device_id}")
         else:
-            logger.info(f"警告: 无效的 GPU 号 {device_id}, 切换到CPU")
-            return torch.device("cpu")
+            logger.info(f"警告: 无效的 GPU 号 {device_id}, 尝试切换到 0 号 GPU")
+            return set_device(0)
     else:
         logger.info("警告: 未检测到可用的GPU, 使用CPU进行计算")
         return torch.device("cpu")
