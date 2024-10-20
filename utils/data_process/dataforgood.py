@@ -23,7 +23,7 @@ def load_data(args, enable_cache = True):
     node_observed_ratio = args.node_observed_ratio
 
     if enable_cache and os.path.exists(databinfile):
-        with open(databinfile, 'rb', encoding="utf-8") as f:
+        with open(databinfile, 'rb') as f:
             meta_data = pickle.load(f)
         logger.info(f'已从数据文件 [{databinfile}] 读取 dataforgood 数据集')
     else:
@@ -47,7 +47,7 @@ def load_data(args, enable_cache = True):
 
         if enable_cache and not os.path.exists(databinfile):
             os.makedirs(preprocessed_data_dir, exist_ok=True)
-            with open(databinfile, 'wb', encoding="utf-8") as f:
+            with open(databinfile, 'wb') as f:
                 pickle.dump(meta_data, f)
 
     meta_info = [list(k[0].shape[:2]) for k in map(lambda x: x[1], meta_data['data'].values())]
