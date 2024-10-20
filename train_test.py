@@ -60,9 +60,9 @@ def train_process(
 
     time_start = time.time()
 
-    # with open(result_paths["csv"], "w"):
+    # with open(result_paths["csv"], "w", encoding="utf-8"):
     #     pass
-    # with open(result_paths["csv"], "a") as fw:
+    # with open(result_paths["csv"], "a", encoding="utf-8") as fw:
     #     fw.write(
     #         f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,err,lr,time\n"
     #     )
@@ -234,7 +234,7 @@ def train_process(
             logger.info(f"[err_val] {err_val:.3f}, [err_test] {font_green(err_test)}")
 
             # # fw.write(f"Epoch,loss_train,loss_val,loss_test,mae_val,rmse_val,mae_test,rmse_test,time\n")
-            # with open(result_paths["csv"], "a") as fw:
+            # with open(result_paths["csv"], "a", encoding="utf-8") as fw:
             #     fw.write(
             #         "{},{:.5f},{:.5f},{:.5f},{},{},{},{},{},{},{},{:2f}s\n".format(
             #             e, loss, loss_val, loss_test, *metrics, err_val, err_test, lr, time2 - time1

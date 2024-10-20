@@ -51,7 +51,7 @@ def extract_from_logfile(logpath):
     lines_to_keep = []
     capture = -1
 
-    with open(logpath) as f:
+    with open(logpath, encoding="utf-8") as f:
         for line in f:
             if "训练完毕，开始评估" in line:
                 capture = 8
