@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
+from utils.utils import rm_self_loops
+
 # region TCN
 class TCN(nn.Module):
     def __init__(self, n_in: int, n_hid: int, n_out: int, num_layers: int = 2, do_prob: float=0.):
@@ -42,6 +44,7 @@ class TCN(nn.Module):
     def forward(self, inputs):
         x = self.cnn(inputs.float())
         pred = self.out(x)
+        # return pred
         attention = self.att(x).softmax(2)
         edge_prob = (pred * attention).mean(dim=2)
         return edge_prob
@@ -81,14 +84,21 @@ class DynGraphEncoder(nn.Module):
                                    x_global.unsqueeze(2).expand(-1, -1, num_nodes, -1, -1)], dim=-1)
         
         # lstm
-        edge_features = edge_features.transpose(1, -2).flatten(0, -3)
+        
+        # edge_features = edge_features.transpose(1, -2).flatten(0, -3)
+        edge_features = edge_features.permute(0, 2, 3, 1, 4).flatten(0, -3) # 这是真的 bug 2024年10月20日10点41分
+
         edge_features, _ = self.lstm(edge_features)
-        edge_features = edge_features.reshape(batch_size, (obs_len + pred_len), num_nodes, num_nodes, self.hidden)
+
+        # edge_features = edge_features.reshape(batch_size, (obs_len + pred_len), num_nodes, num_nodes, self.hidden)
+        edge_features = edge_features.reshape(batch_size, num_nodes, num_nodes, (obs_len + pred_len), self.hidden)\
+            .permute(0, 3, 1, 2, 4) # 这是真的 bug 2024年10月20日10点41分
 
         edge_features = torch.sigmoid(self.fc(edge_features))
 
-        mask = torch.eye(num_nodes).unsqueeze(0).unsqueeze(0).repeat(batch_size, (obs_len + pred_len), 1, 1).to(self.device)
-        edge_features = edge_features.squeeze(-1) * (1 - mask)
+        # mask = torch.eye(num_nodes).unsqueeze(0).unsqueeze(0).repeat(batch_size, (obs_len + pred_len), 1, 1).to(self.device)
+        # edge_features = edge_features.squeeze(-1) * (1 - mask)
+        edge_features = rm_self_loops(edge_features.squeeze(-1))
 
         return edge_features
 

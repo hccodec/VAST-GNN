@@ -2,18 +2,15 @@
 
 # 命令列表
 commands=$(cat <<EOF
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1018 --device 7 --exp 2_enc_only_mu_scale_no_laplace
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1018 --device 8 --exp 2_enc_only_mu_scale_no_laplace
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1018 --device 6 --exp 2_enc_only_mu_scale_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1018 --device 7 --exp 2_enc_only_FR_IT_mu_scale_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1018 --device 8 --exp 2_enc_only_FR_IT_mu_scale_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1018 --device 6 --exp 2_enc_only_FR_IT_mu_scale_no_laplace
+python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1020 --device 1 --exp 2_enc_lstm_transpose_modify
+python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1020 --device 8 --exp 2_enc_lstm_transpose_modify
+python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1020 --device 9 --exp 2_enc_lstm_transpose_modify
 EOF
 )
 
 # tmux会话名称
 SESSION_NAME=hbj
-WINDOW_NAME="1018"
+WINDOW_NAME="1020"
 
 # 读取所有命令到数组
 readarray -t cmd_array <<< "$commands"

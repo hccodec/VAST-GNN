@@ -9,7 +9,8 @@ from meta import maml_train
 from train_test import train_process, eval_process
 
 from utils.logger import logger
-from utils.utils import font_green, font_yellow, select_model, set_random_seed, get_exp_desc
+from utils.model_selector import select_model
+from utils.utils import font_green, font_yellow, set_random_seed, get_exp_desc
 from utils.args import parse_args
 
 from utils.custom_datetime import datetime
