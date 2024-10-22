@@ -63,10 +63,11 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--device", "8",
+                "--device", "7",
                 "--shift", "2",
                 "--ydays", "1",
-                "--country", "England,Spain"
+                "--country", "England",
+                "--graph-lambda", "0.9"
             ]
         },
         {

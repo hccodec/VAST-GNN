@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-from utils.utils import rm_self_loops
+from utils.utils import getLaplaceMat, rm_self_loops
 
 # region TCN
 class TCN(nn.Module):
@@ -94,11 +94,11 @@ class DynGraphEncoder(nn.Module):
         edge_features = edge_features.reshape(batch_size, num_nodes, num_nodes, (obs_len + pred_len), self.hidden)\
             .permute(0, 3, 1, 2, 4) # 这是真的 bug 2024年10月20日10点41分
 
-        edge_features = torch.sigmoid(self.fc(edge_features))
+        edge_features = torch.sigmoid(self.fc(edge_features)).squeeze(-1)
 
         # mask = torch.eye(num_nodes).unsqueeze(0).unsqueeze(0).repeat(batch_size, (obs_len + pred_len), 1, 1).to(self.device)
-        # edge_features = edge_features.squeeze(-1) * (1 - mask)
-        edge_features = rm_self_loops(edge_features.squeeze(-1))
+        # edge_features = edge_features * (1 - mask)
+        edge_features = rm_self_loops(edge_features)
 
         return edge_features
 

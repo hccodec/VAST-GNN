@@ -112,19 +112,19 @@ def train_process(
                     # 拼接真实图结构并去掉自环
                     adj_gt = torch.cat([x_mob, y_mob], dim=1)
                     adj_hat = rm_self_loops(adj_hat)
-                    adj_gt_no_diag = rm_self_loops(adj_gt)
+                    adj_gt = rm_self_loops(adj_gt)
                     # 计算 μ 和 σ
                     mean_adj_hat = adj_hat.mean(axis=(-2, -1), keepdims=True)
                     std_adj_hat = adj_hat.std(axis=(-2, -1), keepdims=True)
-                    mean_adj_gt_no_diag = adj_gt_no_diag.mean(axis=(-2, -1), keepdims=True)
-                    std_adj_gt_no_diag = adj_gt_no_diag.std(axis=(-2, -1), keepdims=True)
+                    mean_adj_gt = adj_gt.mean(axis=(-2, -1), keepdims=True)
+                    std_adj_gt = adj_gt.std(axis=(-2, -1), keepdims=True)
 
                     # # # 按 μ 和 σ 缩放
                     # # adj_hat = (adj_hat - mean_adj_hat) / std_adj_hat * std_adj_gt_no_diag + mean_adj_gt_no_diag
                     # # adj_hat = rm_self_loops(adj_hat)
 
                     # 按 μ 缩放
-                    adj_hat = adj_hat * mean_adj_gt_no_diag / mean_adj_hat
+                    adj_hat = adj_hat * mean_adj_gt / mean_adj_hat
                     
                     # # 均做拉普拉斯变换
                     # adj_hat = getLaplaceMat(adj_hat)
@@ -135,13 +135,15 @@ def train_process(
                     loss_y = criterion(y_case.float(), y_hat.float())
                     loss_y_res.append(loss_y.item())
 
-                    loss_adj = criterion(adj_gt_no_diag.float(), adj_hat.float())
+                    loss_adj = criterion(adj_gt.float(), adj_hat.float())
                     loss_adj_res.append(loss_adj.item())
 
                     loss = loss_y + adj_lambda * loss_adj
+
+                    # loss = loss_y # 这一行的效果是不带 adj loss
                     loss_res.append(loss.item())
 
-                    hits10 = compute_hits_at_k(adj_hat.float(), adj_gt_no_diag.float())
+                    hits10 = compute_hits_at_k(adj_hat.float(), adj_gt.float())
                     hits10_res.append(hits10)
 
                 else:

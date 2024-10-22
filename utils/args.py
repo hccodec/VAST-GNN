@@ -31,9 +31,9 @@ def get_parser(parent_parser=None):
     parser.add_argument("--device", default=None, help="GPU号")
     # 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
     parser.add_argument("--xdays", type=int, default=7, help="预测所需历史天数")
-    parser.add_argument("--ydays", type=int, default=3, help="预测未来天数")
+    parser.add_argument("--ydays", type=int, default=1, help="预测未来天数")
     parser.add_argument("--window", type=int, default=-1, help="作为特征的历史天数窗口大小，值为-1时和xdays相同")
-    parser.add_argument("--shift", type=int, default=0,
+    parser.add_argument("--shift", type=int, default=2,
                         help="大于 0 则启用隔 shift 天预测。如xdays=7, ydays=2, shift=1 即 0-6 天预测 8-9 天。")
     # # 实验设置：比率
     # parser.add_argument("--nodes-observed-ratio", type=float, default=100.0, help="观测到的结点百分点")
@@ -52,6 +52,7 @@ def get_parser(parent_parser=None):
     # parser.add_argument("--early-stop-patience", type=float, default=100)
     #
     # # 实验：图结构相关参数设置
+    parser.add_argument("--graph-lambda", type=float, default=None)
     # parser.add_argument("--graph-lambda-0", type=float, default=0.8)
     # parser.add_argument("--graph-lambda-n", type=float, default=0)
     # parser.add_argument("--graph-lambda-epoch-max", type=float, default=-1)
@@ -65,8 +66,10 @@ def get_parser(parent_parser=None):
     return parser
 
 def parse_args(record_log = True, parent_parser = None):
+    logger.info("正在读取参数，请不要修改配置文件")
     args = get_parser(parent_parser).parse_args()
     args = process_args(args, record_log)
+    logger.info("参数读取完毕：", str(args))
     return args
 
 def process_args(args, record_log):
@@ -75,15 +78,16 @@ def process_args(args, record_log):
     with open(args.config, encoding='utf-8') as f:
         cfg = yaml.safe_load(f)
 
-    # 遍历 args 中的每个属性
+    # 把 args 中的参数加入 cfg
     for key, value in vars(args).items():
-        # # cfg 优先
-        # if key not in cfg: cfg[key] = value
-        # args 优先
-        if value is not None: cfg[key] = value
+        # if key not in cfg: cfg[key] = value # 冲突则跳过
+        if value is not None: cfg[key] = value # 冲突且部位不为 None 则覆盖。即可设 args 对应参数为 None 避免覆盖
 
     args = EasyDict(cfg)
 
+    # 处理loss正则化项参数 graph_lambda
+    if 'graph_lambda' in args: args["graph_lambda_0"] = args["graph_lambda_n"] = args["graph_lambda"]
+    
     now = date2str(datetime.now(), "%Y%m%d%H%M%S")
 
     # args.comp_last 仅支持多天连续预测

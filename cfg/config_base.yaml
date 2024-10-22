@@ -27,8 +27,8 @@ val_ratio: 10                # 验证集比例百分点
 epochs: 500                  # 训练轮数
 batch_size: 8                # 批次大小
 # 实验：图结构相关参数设置
-graph_lambda_0: 0.9         # 初始图正则化参数
-graph_lambda_n: 0.5        # 最终图正则化参数
+graph_lambda_0: 0.5         # 初始图正则化参数
+graph_lambda_n: 0.5         # 最终图正则化参数
 graph_lambda_epoch_max: 500 # 图正则化参数达到最大值的轮次
 graph_lambda_method: "cos"  # 图正则化方法
 # 实验设置：学习率

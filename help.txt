@@ -1,306 +1,69 @@
 
 #################################################################################################################
 
-# 1020
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1020 --device 1 --exp 1_enc_only_mu_scale_no_laplace
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1020 --device 1 --exp 1_enc_only_mu_scale_no_laplace
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1020 --device 8 --exp 1_enc_only_mu_scale_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1020 --device 9 --exp 1_enc_only_FR_IT_mu_scale_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1020 --device 9 --exp 1_enc_only_FR_IT_mu_scale_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1020 --device 9 --exp 1_enc_only_FR_IT_mu_scale_no_laplace
-
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1020 --device 1 --exp 2_enc_lstm_transpose_modify
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1020 --device 8 --exp 2_enc_lstm_transpose_modify
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1020 --device 9 --exp 2_enc_lstm_transpose_modify
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1020 --device 9 --exp 2_FR_IT_enc_lstm_transpose_modify
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1020 --device 9 --exp 2_FR_IT_enc_lstm_transpose_modify
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1020 --device 9 --exp 2_FR_IT_enc_lstm_transpose_modify
-
-
-# 1018
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1018 --device 7 --exp 1_enc_only_no_laplace
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1018 --device 8 --exp 1_enc_only_no_laplace
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1018 --device 6 --exp 1_enc_only_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1018 --device 7 --exp 1_enc_only_FR_IT_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1018 --device 8 --exp 1_enc_only_FR_IT_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1018 --device 6 --exp 1_enc_only_FR_IT_no_laplace
-
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1018 --device 7 --exp 2_enc_only_mu_scale_no_laplace
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1018 --device 8 --exp 2_enc_only_mu_scale_no_laplace
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1018 --device 6 --exp 2_enc_only_mu_scale_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1018 --device 7 --exp 2_enc_only_FR_IT_mu_scale_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1018 --device 8 --exp 2_enc_only_FR_IT_mu_scale_no_laplace
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1018 --device 6 --exp 2_enc_only_FR_IT_mu_scale_no_laplace
-
-
-# 1017
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1017 --device 7 --exp 1_enc_only
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1017 --device 8 --exp 1_enc_only
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1017 --device 6 --exp 1_enc_only
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1017 --device 7 --exp 1_enc_only_countries_left
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1017 --device 8 --exp 1_enc_only_countries_left
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1017 --device 6 --exp 1_enc_only_countries_left
-
-
-# 1016
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1016 --device 7 --exp 1_enc_only
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1016 --device 8 --exp 1_enc_only
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1016 --device 9 --exp 1_enc_only
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1016 --device 7 --exp 1_enc_only_countries_left
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1016 --device 8 --exp 1_enc_only_countries_left
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1016 --device 9 --exp 1_enc_only_countries_left
-
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1016 --device 7 --exp 3_enc_only
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1016 --device 8 --exp 3_enc_only
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1016 --device 9 --exp 3_enc_only
-
-python main.py --ydays 1 --shift 2 --result-dir tests_1016 --device 3 --model mpnn_lstm --exp 2_mpnn_lstm_50_mask
-python main.py --ydays 1 --shift 6 --result-dir tests_1016 --device 3 --model mpnn_lstm --exp 2_mpnn_lstm_50_mask
-python main.py --ydays 1 --shift 13 --result-dir tests_1016 --device 3 --model mpnn_lstm --exp 2_mpnn_lstm_50_mask
-
-# 1015
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 0 --exp 1_missing_nodes_80_mask_tcn
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 0 --exp 1_missing_nodes_80_mask_tcn
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 0 --exp 1_missing_nodes_80_mask_tcn
-
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 1 --exp 2_missing_nodes_80_mask_mlp
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 1 --exp 2_missing_nodes_80_mask_mlp
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 1 --exp 2_missing_nodes_80_mask_mlp
-
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --exp 3_missing_nodes_80_mask_tcn_mlp
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --exp 3_missing_nodes_80_mask_tcn_mlp
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --exp 3_missing_nodes_80_mask_tcn_mlp
-
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --exp 4_missing_nodes_80_mask_tcn_mlp
-
-python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1015 --device 0 --exp 5_missing_nodes_80_mask_tcn_current_x
-python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1015 --device 0 --exp 5_missing_nodes_80_mask_tcn_current_x
-python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1015 --device 0 --exp 5_missing_nodes_80_mask_tcn_current_x
-
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --exp 6_missing_nodes_50_mask_tcn_mlp
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --exp 6_missing_nodes_50_mask_tcn_mlp
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --exp 6_missing_nodes_50_mask_tcn_mlp
-
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --model mpnn_lstm --exp 7_mpnn_lstm_50_mask
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --model mpnn_lstm --exp 7_mpnn_lstm_50_mask
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --model mpnn_lstm --exp 7_mpnn_lstm_50_mask
-
-python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1015 --device 3 --model lstm --exp 8_lstm_50_mask
-python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1015 --device 3 --model lstm --exp 8_lstm_50_mask
-python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1015 --device 3 --model lstm --exp 8_lstm_50_mask
-
-# 1014
-python main.py --ydays 1 --shift 2 --result-dir tests_1014 --model mpnn_lstm --device 8 --exp 1_baseline_mpnn_lstm
-python main.py --ydays 1 --shift 6 --result-dir tests_1014 --model mpnn_lstm --device 8 --exp 1_baseline_mpnn_lstm
-python main.py --ydays 1 --shift 13 --result-dir tests_1014 --model mpnn_lstm --device 8 --exp 1_baseline_mpnn_lstm
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --device 9 --exp 2_dynst_gt_only
-python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --device 9 --exp 2_dynst_gt_only
-python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --device 9 --exp 2_dynst_gt_only
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --device 8 --exp 3_missing_nodes_no_mask
-python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --device 8 --exp 3_missing_nodes_no_mask
-python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --device 8 --exp 3_missing_nodes_no_mask
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --device 7 --exp 4_missing_nodes_80_mask
-python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --device 8 --exp 4_missing_nodes_80_mask
-python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --device 9 --exp 4_missing_nodes_80_mask
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --model lstm --device 6 --exp 5_lstm
-python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --model lstm --device 6 --exp 5_lstm
-python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --model lstm --device 6 --exp 5_lstm
-
-python main.py --ydays 1 --shift 2 --result-dir tests_1014 --model mpnn_lstm --device 7 --exp 6_mpnn_lstm_80_mask
-python main.py --ydays 1 --shift 6 --result-dir tests_1014 --model mpnn_lstm --device 7 --exp 6_mpnn_lstm_80_mask
-python main.py --ydays 1 --shift 13 --result-dir tests_1014 --model mpnn_lstm --device 7 --exp 6_mpnn_lstm_80_mask
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --model lstm --device 8 --exp 7_lstm_80_mask
-python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --model lstm --device 8 --exp 7_lstm_80_mask
-python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --model lstm --device 8 --exp 7_lstm_80_mask
-
-
-python main.py --ydays 1 --shift 2 --result-dir tests_1014 --model mpnn_lstm --device 0 --exp 8_mpnn_lstm_80_mask
-python main.py --ydays 1 --shift 6 --result-dir tests_1014 --model mpnn_lstm --device 0 --exp 8_mpnn_lstm_80_mask
-python main.py --ydays 1 --shift 13 --result-dir tests_1014 --model mpnn_lstm --device 0 --exp 8_mpnn_lstm_80_mask
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --model lstm --device 1 --exp 9_lstm_80_mask
-python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --model lstm --device 1 --exp 9_lstm_80_mask
-python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --model lstm --device 1 --exp 9_lstm_80_mask
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1014 --device 3 --exp 10_missing_nodes_80_mask
-python main.py  --ydays 1 --shift 6 --result-dir tests_1014 --device 3 --exp 10_missing_nodes_80_mask
-python main.py  --ydays 1 --shift 13 --result-dir tests_1014 --device 3 --exp 10_missing_nodes_80_mask
-
-#################################################################################################################
-
-# 1013
-python main.py --ydays 1 --shift 2 --result-dir tests_1013 --model mpnn_lstm --device 6 --exp 0_baseline_mpnn_lstm
-python main.py --ydays 1 --shift 6 --result-dir tests_1013 --model mpnn_lstm --device 7 --exp 0_baseline_mpnn_lstm
-python main.py --ydays 1 --shift 13 --result-dir tests_1013 --model mpnn_lstm --device 8 --exp 0_baseline_mpnn_lstm
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1013 --device 6 --exp 1_dynst_gt_only
-python main.py  --ydays 1 --shift 6 --result-dir tests_1013 --device 7 --exp 1_dynst_gt_only
-python main.py  --ydays 1 --shift 13 --result-dir tests_1013 --device 8 --exp 1_dynst_gt_only
-
-
-# 1011
-python main.py --ydays 1 --shift 2 --result-dir tests_1011 --model mpnn_lstm --device 3 --exp 1_baseline_mpnn_lstm
-python main.py --ydays 1 --shift 6 --result-dir tests_1011 --model mpnn_lstm --device 3 --exp 1_baseline_mpnn_lstm
-python main.py --ydays 1 --shift 13 --result-dir tests_1011 --model mpnn_lstm --device 3 --exp 1_baseline_mpnn_lstm
-
-python main.py --ydays 1 --shift 2 --result-dir tests_1011 --model lstm --device 3 --exp 2_baseline_lstm
-python main.py --ydays 1 --shift 6 --result-dir tests_1011 --model lstm --device 3 --exp 2_baseline_lstm
-python main.py --ydays 1 --shift 13 --result-dir tests_1011 --model lstm --device 3 --exp 2_baseline_lstm
-
-python main.py --ydays 1 --shift 2 --result-dir tests_1011 --device 7 --exp 3_dynst_enc_only
-python main.py --ydays 1 --shift 6 --result-dir tests_1011 --device 7 --exp 3_dynst_enc_only
-python main.py --ydays 1 --shift 13 --result-dir tests_1011 --device 7 --exp 3_dynst_enc_only
-
-python main.py --ydays 3 --comp-last --result-dir tests_1011 --device 7 --exp 4_dynst_enc_only
-python main.py --ydays 7 --comp-last --result-dir tests_1011 --device 7 --exp 4_dynst_enc_only
-python main.py --ydays 14 --comp-last --result-dir tests_1011 --device 7 --exp 4_dynst_enc_only
-
-python main.py --ydays 1 --shift 2 --result-dir tests_1011 --device 3 --exp 5_dynst_gt_only
-python main.py --ydays 1 --shift 6 --result-dir tests_1011 --device 3 --exp 5_dynst_gt_only
-python main.py --ydays 1 --shift 13 --result-dir tests_1011 --device 3 --exp 5_dynst_gt_only
-
-python main.py --ydays 14 --comp-last --result-dir tests_1011 --device 7 --exp 6_dynst_gt_only
-python main.py --ydays 7 --comp-last --result-dir tests_1011 --device 7 --exp 6_dynst_gt_only
-python main.py --ydays 3 --comp-last --result-dir tests_1011 --device 7 --exp 6_dynst_gt_only
-
-# 1012
-python main.py  --ydays 1 --shift 2 --result-dir tests_1012 --device 3 --exp 1_dynst_gt_only
-python main.py  --ydays 1 --shift 6 --result-dir tests_1012 --device 3 --exp 1_dynst_gt_only
-python main.py  --ydays 1 --shift 13 --result-dir tests_1012 --device 3 --exp 1_dynst_gt_only
-
-python main.py --ydays 1 --shift 2 --result-dir tests_1012 --device 1 --exp 2_dynst_gt_only
-python main.py --ydays 1 --shift 6 --result-dir tests_1012 --device 1 --exp 2_dynst_gt_only
-python main.py --ydays 1 --shift 13 --result-dir tests_1012 --device 1 --exp 2_dynst_gt_only
-
-python main.py --ydays 1 --shift 2 --result-dir tests_1012 --device 3 --exp 3_dynst_gt_only
-python main.py --ydays 1 --shift 6 --result-dir tests_1012 --device 3 --exp 3_dynst_gt_only
-python main.py --ydays 1 --shift 13 --result-dir tests_1012 --device 3 --exp 3_dynst_gt_only
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1012 --device 0 --exp 4_dynst_gt_only
-python main.py  --ydays 1 --shift 6 --result-dir tests_1012 --device 0 --exp 4_dynst_gt_only
-python main.py  --ydays 1 --shift 13 --result-dir tests_1012 --device 0 --exp 4_dynst_gt_only
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1012 --device 0 --exp 5_dynst_gt_only
-python main.py  --ydays 1 --shift 6 --result-dir tests_1012 --device 0 --exp 5_dynst_gt_only
-python main.py  --ydays 1 --shift 13 --result-dir tests_1012 --device 0 --exp 5_dynst_gt_only
-
-python main.py  --ydays 1 --shift 2 --result-dir tests_1012 --device 0 --exp 6_dynst_dec_w_tcn
-python main.py  --ydays 1 --shift 6 --result-dir tests_1012 --device 3 --exp 6_dynst_dec_w_tcn
-python main.py  --ydays 1 --shift 13 --result-dir tests_1012 --device 8 --exp 6_dynst_dec_w_tcn
-
-
-##################################################################################################################
-
-# [test1] mpnn_lstm/dynst 隔天
-python main.py --ydays 1 --shift 2 --result-dir tests --model dynst --device 6 --exp test1
-python main.py --ydays 1 --shift 6 --result-dir tests --model dynst --device 7 --exp test1
-python main.py --ydays 1 --shift 13 --result-dir tests --model dynst --device 5 --exp test1
-
-python main.py --ydays 1 --shift 2 --result-dir tests --model mpnn_lstm --device 5 --exp test1
-python main.py --ydays 1 --shift 6 --result-dir tests --model mpnn_lstm --device 7 --exp test1
-python main.py --ydays 1 --shift 13 --result-dir tests --model mpnn_lstm --device 6 --exp test1
-
-python utils.record_result.py -d results/tests/exp_test1
-
-# [test2] dynst 连续 --comp-last
-python main.py --ydays 3 --result-dir tests --model dynst --comp-last --device 2 --exp test2
-python main.py --ydays 7 --result-dir tests --model dynst --comp-last --device 3 --exp test2
-python main.py --ydays 14 --result-dir tests --model dynst --comp-last --device 4 --exp test2
-
-# [test3] 连续
-
-python main.py --ydays 3 --result-dir tests --model dynst --comp-last --device 7 --exp test2g --enable-graph-learner
-python main.py --ydays 7 --result-dir tests --model dynst --comp-last --device 6 --exp test2g --enable-graph-learner # (hidden=32)
-python main.py --ydays 14 --result-dir tests --model dynst --comp-last --device 5 --exp test2g --enable-graph-learner # (hidden=32)
-
-python utils.record_result.py -d results/tests/exp_test2
-
-# [test_1008_1]
-graph_lambda 参数设置为：(0, 0.9) -> (300, 0.5)
-python main.py --ydays 3 --result-dir tests --comp-last --device 8 --exp test_1008_1
-python main.py --ydays 1 --shift 2 --result-dir tests --device 8 --exp test_1008_1
-
-[更新] graph_lambda 参数设置为：(0, 0.9) -> (500, 0.5)
-python main.py --ydays 3 --result-dir tests --comp-last --device 2 --exp test_1008_2
-python main.py --ydays 1 --shift 2 --result-dir tests --device 3 --exp test_1008_2
-
-只在后面应用一次 laplacemat 尝试复现最好结果
-python main.py --ydays 3 --result-dir tests --comp-last --device 7 --exp test_1008_3（卡 7。。。）
-python main.py --ydays 1 --shift 2 --result-dir tests --device 8 --exp test_1008_3（卡 8。。。）
-python main.py --ydays 7 --result-dir tests --comp-last --device 7 --exp test_1008_3 (显存不够 失败)
-python main.py --ydays 1 --shift 6 --result-dir tests --device 8 --exp test_1008_3 （√）
-
-loss 邻接矩阵 adj_hat 改为 adj_gt 的尺度（A_hat * mu_gt / mu_hat）
-python main.py --ydays 3 --result-dir tests --comp-last --device 8 --exp test_1008_4 （×）
-python main.py --ydays 1 --shift 2 --result-dir tests --device 0 --exp test_1008_4 （×）
-
-只用 y loss 训练
-python main.py --ydays 3 --result-dir tests --comp-last --device 8 --exp test_1008_5（卡 8。。。）
-python main.py --ydays 1 --shift 2 --result-dir tests --device 0 --exp test_1008_5 （卡 0。。。）
-python main.py --ydays 1 --shift 6 --result-dir tests --device 8 --exp test_1008_5 （卡 8。。。）
-python main.py --ydays 1 --shift 13 --result-dir tests --device 7 --exp test_1008_5 （卡 。。。）
-
-python main.py --ydays 7 --result-dir tests --comp-last --device 8 --exp test_1008_5（卡 。。。）
-python main.py --ydays 14 --result-dir tests --comp-last --device 8 --exp test_1008_5（卡 。。。）
-
-##################################################################################################################
-
-# 重新训练 mpnn_lstm
-python main.py --ydays 1 --shift 2 --result-dir tests --model mpnn_lstm --device 8 --exp 1009_1
-python main.py --ydays 1 --shift 6 --result-dir tests --model mpnn_lstm --device 7 --exp 1009_1
-python main.py --ydays 1 --shift 13 --result-dir tests --model mpnn_lstm --device 6 --exp 1009_1
-
-# 只用 encoder
-python main.py --ydays 1 --shift 2 --result-dir tests --device 8 --exp 1009_2 --desc "只用 enc 结果"
-python main.py --ydays 1 --shift 6 --result-dir tests --device 7 --exp 1009_2 --desc "只用 enc 结果"
-python main.py --ydays 1 --shift 13 --result-dir tests --device 6 --exp 1009_2 --desc "只用 enc 结果"
-# 只用 groundtruth
-python main.py --ydays 1 --shift 2 --result-dir tests --device 8 --exp 1009_3 --desc "只用 dec 结果"
-python main.py --ydays 1 --shift 6 --result-dir tests --device 7 --exp 1009_3 --desc "只用 dec 结果"
-python main.py --ydays 1 --shift 13 --result-dir tests --device 6 --exp 1009_3 --desc "只用 dec 结果"
-
-##################################################################################################################
-
-# baseline: LSTM
-python main.py --ydays 1 --shift 2 --result-dir baseline --device 2 --exp lstm_1009_2
-python main.py --ydays 1 --shift 6 --result-dir baseline --device 7 --exp lstm_1009_2
-python main.py --ydays 1 --shift 13 --result-dir baseline --device 3 --exp lstm_1009_2
-
-##################################################################################################################
-
-
-test1 用最后一天计算 error
-python main.py --xdays 14 --ydays 3 --window 7 --result-dir test --device 5 --exp test1
-python main.py --xdays 14 --ydays 7 --window 7 --result-dir test --device 7 --exp test1
-python main.py --xdays 14 --ydays 14 --window 7 --result-dir test --device 8 --exp test1
-test2 用预测的所有天 计算 error
-python main.py --xdays 14 --ydays 3 --window 7 --result-dir test --device 5 --exp test2
-python main.py --xdays 14 --ydays 7 --window 7 --result-dir test --device 7 --exp test2
-python main.py --xdays 14 --ydays 14 --window 7 --result-dir test --device 8 --exp test2
-
-test3 用所有天计算 error ，dropout=0.5
-python main.py --xdays 14 --ydays 3 --window 7 --result-dir test --device 9 --exp test3
-python main.py --xdays 14 --ydays 7 --window 7 --result-dir test --device 7 --exp test3
-python main.py --xdays 14 --ydays 14 --window 7 --result-dir test --device 8 --exp test3
-test4 test3的最后一天
-python main.py --xdays 14 --ydays 3 --window 7 --result-dir test --device 9 --exp test4
-python main.py --xdays 14 --ydays 7 --window 7 --result-dir test --device 7 --exp test4
-python main.py --xdays 14 --ydays 14 --window 7 --result-dir test --device 8 --exp test4
-
-
-python main.py --xdays 7 --ydays 3 --window 7 --result-dir test_mpnn_lstm --model mpnn_lstm --device 6 --exp test2
-python main.py --xdays 7 --ydays 3 --window 7 --result-dir test_mpnn_lstm --model dynst --device 8 --exp test2
-python main.py --xdays 7 --ydays 7 --window 7 --result-dir test_mpnn_lstm --model mpnn_lstm --device 7 --exp test2
-python main.py --xdays 7 --ydays 7 --window 7 --result-dir test_mpnn_lstm --model dynst --device 7 --exp test2
-python main.py --xdays 7 --ydays 14 --window 7 --result-dir test_mpnn_lstm --model mpnn_lstm --device 8 --exp test2
-python main.py --xdays 7 --ydays 14 --window 7 --result-dir test_mpnn_lstm --model dynst --device 6 --exp test2
-
+# 1022
+python main.py --country England,Spain --result-dir tests_1022 --shift 2  --device 5 --exp 1_EN_ES --graph-lambda 0.2 
+python main.py --country England,Spain --result-dir tests_1022 --shift 6  --device 5 --exp 1_EN_ES --graph-lambda 0.2 
+python main.py --country England,Spain --result-dir tests_1022 --shift 13 --device 5 --exp 1_EN_ES --graph-lambda 0.2 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 2  --device 5 --exp 1_FR_IT --graph-lambda 0.2 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 6  --device 5 --exp 1_FR_IT --graph-lambda 0.2 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 13 --device 5 --exp 1_FR_IT --graph-lambda 0.2 
+
+python main.py --country England,Spain --result-dir tests_1022 --shift 2  --device 7 --exp 2_EN_ES --graph-lambda 0.3 
+python main.py --country England,Spain --result-dir tests_1022 --shift 6  --device 7 --exp 2_EN_ES --graph-lambda 0.3 
+python main.py --country England,Spain --result-dir tests_1022 --shift 13 --device 7 --exp 2_EN_ES --graph-lambda 0.3 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 2  --device 7 --exp 2_FR_IT --graph-lambda 0.3 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 6  --device 7 --exp 2_FR_IT --graph-lambda 0.3 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 13 --device 7 --exp 2_FR_IT --graph-lambda 0.3 
+
+python main.py --country England,Spain --result-dir tests_1022 --shift 2  --device 6 --exp 3_EN_ES --graph-lambda 0.4 
+python main.py --country England,Spain --result-dir tests_1022 --shift 6  --device 6 --exp 3_EN_ES --graph-lambda 0.4 
+python main.py --country England,Spain --result-dir tests_1022 --shift 13 --device 6 --exp 3_EN_ES --graph-lambda 0.4 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 2  --device 6 --exp 3_FR_IT --graph-lambda 0.4 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 6  --device 6 --exp 3_FR_IT --graph-lambda 0.4 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 13 --device 6 --exp 3_FR_IT --graph-lambda 0.4 
+
+python main.py --country England,Spain --result-dir tests_1022 --shift 2  --device 8 --exp 4_EN_ES --graph-lambda 0.6 
+python main.py --country England,Spain --result-dir tests_1022 --shift 6  --device 8 --exp 4_EN_ES --graph-lambda 0.6 
+python main.py --country England,Spain --result-dir tests_1022 --shift 13 --device 8 --exp 4_EN_ES --graph-lambda 0.6 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 2  --device 8 --exp 4_FR_IT --graph-lambda 0.6 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 6  --device 8 --exp 4_FR_IT --graph-lambda 0.6 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 13 --device 8 --exp 4_FR_IT --graph-lambda 0.6 
+
+python main.py --country England,Spain --result-dir tests_1022 --shift 2  --device 9 --exp 5_EN_ES --graph-lambda 0.7 
+python main.py --country England,Spain --result-dir tests_1022 --shift 6  --device 9 --exp 5_EN_ES --graph-lambda 0.7 
+python main.py --country England,Spain --result-dir tests_1022 --shift 13 --device 9 --exp 5_EN_ES --graph-lambda 0.7 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 2  --device 9 --exp 5_FR_IT --graph-lambda 0.7 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 6  --device 9 --exp 5_FR_IT --graph-lambda 0.7 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 13 --device 9 --exp 5_FR_IT --graph-lambda 0.7 
+
+python main.py --country England,Spain --result-dir tests_1022 --shift 2  --device 6 --exp 6_EN_ES --graph-lambda 0.8 
+python main.py --country England,Spain --result-dir tests_1022 --shift 6  --device 6 --exp 6_EN_ES --graph-lambda 0.8 
+python main.py --country England,Spain --result-dir tests_1022 --shift 13 --device 6 --exp 6_EN_ES --graph-lambda 0.8 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 2  --device 6 --exp 6_FR_IT --graph-lambda 0.8 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 6  --device 6 --exp 6_FR_IT --graph-lambda 0.8 
+python main.py --country France,Italy  --result-dir tests_1022 --shift 13 --device 6 --exp 6_FR_IT --graph-lambda 0.8 
+
+# 1021
+python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1021 --device 6 --exp 3_loss_y_only
+python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1021 --device 6 --exp 3_loss_y_only
+python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1021 --device 6 --exp 3_loss_y_only
+python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1021 --device 7 --exp 3_FR_IT_loss_y_only
+python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1021 --device 7 --exp 3_FR_IT_loss_y_only
+python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1021 --device 7 --exp 3_FR_IT_loss_y_only
+
+python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1021 --device 6 --exp 4_loss_y_only_rmselfloop
+python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1021 --device 6 --exp 4_loss_y_only_rmselfloop
+python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1021 --device 6 --exp 4_loss_y_only_rmselfloop
+python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1021 --device 7 --exp 4_FR_IT_loss_y_only_rmselfloop
+python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1021 --device 7 --exp 4_FR_IT_loss_y_only_rmselfloop
+python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1021 --device 7 --exp 4_FR_IT_loss_y_only_rmselfloop
+
+python main.py --country England,Spain --ydays 1 --shift 2 --result-dir tests_1021 --device 6 --exp 1_enc_only_no_selfloop
+python main.py --country England,Spain --ydays 1 --shift 6 --result-dir tests_1021 --device 6 --exp 1_enc_only_no_selfloop
+python main.py --country England,Spain --ydays 1 --shift 13 --result-dir tests_1021 --device 6 --exp 1_enc_only_no_selfloop
+python main.py --country France,Italy --ydays 1 --shift 2 --result-dir tests_1021 --device 7 --exp 1_enc_only_FR_IT_no_selfloop
+python main.py --country France,Italy --ydays 1 --shift 6 --result-dir tests_1021 --device 7 --exp 1_enc_only_FR_IT_no_selfloop
+python main.py --country France,Italy --ydays 1 --shift 13 --result-dir tests_1021 --device 7 --exp 1_enc_only_FR_IT_no_selfloop
 
 
