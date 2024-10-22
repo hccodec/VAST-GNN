@@ -2,18 +2,24 @@
 
 # 命令列表
 commands=$(cat <<EOF
-python main.py --country England,Spain --result-dir tests_1022 --shift 2  --device 6 --exp 6_EN_ES --graph-lambda 0.8 
-python main.py --country England,Spain --result-dir tests_1022 --shift 6  --device 6 --exp 6_EN_ES --graph-lambda 0.8 
-python main.py --country England,Spain --result-dir tests_1022 --shift 13 --device 6 --exp 6_EN_ES --graph-lambda 0.8 
-python main.py --country France,Italy  --result-dir tests_1022 --shift 2  --device 6 --exp 6_FR_IT --graph-lambda 0.8 
-python main.py --country France,Italy  --result-dir tests_1022 --shift 6  --device 6 --exp 6_FR_IT --graph-lambda 0.8 
-python main.py --country France,Italy  --result-dir tests_1022 --shift 13 --device 6 --exp 6_FR_IT --graph-lambda 0.8 
+python main.py --country England,Spain --model mpnn_lstm --result-dir tests_1023 --shift 2  --exp 1_EN_ES_mpnn_lstm --node-observed-ratio 80 --device 8
+python main.py --country England,Spain --model mpnn_lstm --result-dir tests_1023 --shift 6  --exp 1_EN_ES_mpnn_lstm --node-observed-ratio 80 --device 8
+python main.py --country England,Spain --model mpnn_lstm --result-dir tests_1023 --shift 13 --exp 1_EN_ES_mpnn_lstm --node-observed-ratio 80 --device 8
+python main.py --country France,Italy  --model mpnn_lstm --result-dir tests_1023 --shift 2  --exp 1_FR_IT_mpnn_lstm --node-observed-ratio 80 --device 8
+python main.py --country France,Italy  --model mpnn_lstm --result-dir tests_1023 --shift 6  --exp 1_FR_IT_mpnn_lstm --node-observed-ratio 80 --device 8
+python main.py --country France,Italy  --model mpnn_lstm --result-dir tests_1023 --shift 13 --exp 1_FR_IT_mpnn_lstm --node-observed-ratio 80 --device 8
+python main.py --country England,Spain --model mpnn_lstm --result-dir tests_1023 --shift 2  --exp 2_EN_ES_lstm --node-observed-ratio 80 --device 9
+python main.py --country England,Spain --model mpnn_lstm --result-dir tests_1023 --shift 6  --exp 2_EN_ES_lstm --node-observed-ratio 80 --device 9
+python main.py --country England,Spain --model mpnn_lstm --result-dir tests_1023 --shift 13 --exp 2_EN_ES_lstm --node-observed-ratio 80 --device 9
+python main.py --country France,Italy  --model mpnn_lstm --result-dir tests_1023 --shift 2  --exp 2_FR_IT_lstm --node-observed-ratio 80 --device 9
+python main.py --country France,Italy  --model mpnn_lstm --result-dir tests_1023 --shift 6  --exp 2_FR_IT_lstm --node-observed-ratio 80 --device 9
+python main.py --country France,Italy  --model mpnn_lstm --result-dir tests_1023 --shift 13 --exp 2_FR_IT_lstm --node-observed-ratio 80 --device 9
 EOF
 )
 
 # tmux会话名称
 SESSION_NAME=hbj
-WINDOW_NAME="1022 5-6"
+WINDOW_NAME="1023 1-2"
 
 # 读取所有命令到数组
 readarray -t cmd_array <<< "$commands"

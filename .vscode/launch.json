@@ -50,7 +50,8 @@
             "args": [
                 "--device", "3",
                 "--model", "mpnn_lstm",
-                "--shift", "2", "--ydays", "1"
+                "--shift", "2", "--ydays", "1",
+                "--node-observed-ratio", "80"
             ]
         },
         {
@@ -63,11 +64,11 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--device", "7",
+                "--device", "5",
                 "--shift", "2",
                 "--ydays", "1",
                 "--country", "England",
-                "--graph-lambda", "0.9"
+                "--node-observed-ratio", "50"
             ]
         },
         {

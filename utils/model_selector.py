@@ -1,7 +1,4 @@
 
-from models.LSTM_ONLY import LSTM_MODEL
-from models.MPNN_LSTM import MPNN_LSTM
-from models.dynst import dynst_extra_info, dynst
 from utils.args import models_list
 
 def select_model(args, train_loader):
@@ -38,12 +35,15 @@ def select_model(args, train_loader):
     index = models_list.index(args.model)
 
     if index == 0:
+        from models.LSTM_ONLY import LSTM_MODEL
         model_args = lstm_model_args
         model = LSTM_MODEL(args, model_args).to(args.device)
     elif index == 1:
+        from models.dynst import dynst_extra_info, dynst
         model_args = dynst_model_args
         model = dynst(*model_args.values()).to(args.device)
     elif index == 2:
+        from models.MPNN_LSTM import MPNN_LSTM
         model_args = mpnn_lstm_model_args
         model = MPNN_LSTM(*model_args.values()).to(args.device)
     else:

@@ -1,8 +1,7 @@
 # 配置文件以及各种目录
 data_dir: "data"           # 数据集目录
 dataset: "dataforgood"      # 选择的数据集
-preprocessed_data_dir: "data_preprocessed"  # 处理后的数据集目录
-databinfile: ""            # 处理后的数据集文件名称，实际文件名为 <databinfile>_xdays_ydays_window_shift.bin
+dataset_cache_dir: "dataset_cache"  # 处理后的数据集目录
 # exp: -1                    # 实验编号 -1 表示不编号
 model: "dynst"             # 设置实验所用模型
 # result_dir: "results_test" # 实验结果目录
@@ -18,7 +17,7 @@ seed: 5                    # 随机种子
 #shift: 0                   # 大于 0 则启用隔 shift 天预测
 
 # 实验设置：比率
-node_observed_ratio:  50.0   # 观测到的结点百分点
+# node_observed_ratio:  50.0   # 观测到的结点百分点
 case_normalize_ratio: 100.0  # 训练集比例百分点
 train_ratio: 70              # 训练集比例百分点
 val_ratio: 10                # 验证集比例百分点
@@ -26,11 +25,16 @@ val_ratio: 10                # 验证集比例百分点
 # 训练参数
 epochs: 500                  # 训练轮数
 batch_size: 8                # 批次大小
-# 实验：图结构相关参数设置
-graph_lambda_0: 0.5         # 初始图正则化参数
-graph_lambda_n: 0.5         # 最终图正则化参数
-graph_lambda_epoch_max: 500 # 图正则化参数达到最大值的轮次
-graph_lambda_method: "cos"  # 图正则化方法
+# 实验：图损失相关参数设置
+lambda_graph_loss: {
+  "country_idx": ["England", "France", "Italy", "Spain"],
+  "ydays_idx": [3, 7, 14],
+  "arr": [[0.9, 0.7, 0.4, 0.3], [0.2, 0.9, 0.5, 0.1], [0.6, 0.6, 0.1, 0.5]]
+}
+# graph_lambda_0: 0.5         # 初始图正则化参数
+# graph_lambda_n: 0.5         # 最终图正则化参数
+# graph_lambda_epoch_max: 500 # 图正则化参数达到最大值的轮次
+# graph_lambda_method: "cos"  # 图正则化方法
 # 实验设置：学习率
 lr: 0.001                   # 初始学习率
 lr_min: 0.001               # 最小学习率

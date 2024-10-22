@@ -6,6 +6,8 @@ from easydict import EasyDict
 from utils.custom_datetime import date2str, datetime
 from utils.logger import set_logger, logger
 
+import pandas as pd
+
 models_list = ["lstm", "dynst", "mpnn_lstm"]
 graph_lambda_methods = ['exp', 'cos']
 
@@ -22,7 +24,7 @@ def get_parser(parent_parser=None):
     # parser.add_argument("--dataset", default='dataforgood', help="选择的数据集")
     # parser.add_argument("--databinfile", type=str, default="",
     #                     help="处理后的数据集文件名称。其实际文件名为 <databinfile>_xdays_ydays_window_shift.bin")
-    # parser.add_argument("--preprocessed-data-dir", default="data_preprocessed",help="处理后的数据集目录")
+    # parser.add_argument("--dataset-cache", default="data_preprocessed",help="处理后的数据集目录")
     parser.add_argument("--exp", default="-1", help="实验编号.-1 表示不编号")
     parser.add_argument("--model", default="dynst", choices=models_list, help="设置实验所用模型")
     parser.add_argument("--result-dir", default="results_test", help="")
@@ -36,7 +38,7 @@ def get_parser(parent_parser=None):
     parser.add_argument("--shift", type=int, default=2,
                         help="大于 0 则启用隔 shift 天预测。如xdays=7, ydays=2, shift=1 即 0-6 天预测 8-9 天。")
     # # 实验设置：比率
-    # parser.add_argument("--nodes-observed-ratio", type=float, default=100.0, help="观测到的结点百分点")
+    parser.add_argument("--node-observed-ratio", type=float, default=50, help="观测到的结点百分点")
     # parser.add_argument("--case-normalize-ratio", type=float, default=100.0, help="训练集比例百分点")
     # parser.add_argument("--train-ratio", type=int, default=70, help="训练集比例百分点")
     # parser.add_argument("--val-ratio", type=int, default=10, help="验证集比例百分点")
@@ -52,7 +54,7 @@ def get_parser(parent_parser=None):
     # parser.add_argument("--early-stop-patience", type=float, default=100)
     #
     # # 实验：图结构相关参数设置
-    parser.add_argument("--graph-lambda", type=float, default=None)
+    # parser.add_argument("--graph-lambda", type=float, default=None) # 此参数用于覆盖下方设置
     # parser.add_argument("--graph-lambda-0", type=float, default=0.8)
     # parser.add_argument("--graph-lambda-n", type=float, default=0)
     # parser.add_argument("--graph-lambda-epoch-max", type=float, default=-1)
@@ -66,10 +68,10 @@ def get_parser(parent_parser=None):
     return parser
 
 def parse_args(record_log = True, parent_parser = None):
-    logger.info("正在读取参数，请不要修改配置文件")
+    # logger.info("正在读取参数，请不要修改配置文件")
     args = get_parser(parent_parser).parse_args()
     args = process_args(args, record_log)
-    logger.info("参数读取完毕：", str(args))
+    logger.info("参数处理完毕：" + str(args))
     return args
 
 def process_args(args, record_log):
@@ -85,8 +87,9 @@ def process_args(args, record_log):
 
     args = EasyDict(cfg)
 
-    # 处理loss正则化项参数 graph_lambda
-    if 'graph_lambda' in args: args["graph_lambda_0"] = args["graph_lambda_n"] = args["graph_lambda"]
+    # # 处理loss正则化项参数 graph_lambda
+    # if 'graph_lambda' in args: args["graph_lambda_0"] = args["graph_lambda_n"] = args["graph_lambda"]
+    args["lambda_graph_loss"] = pd.DataFrame(cfg["lambda_graph_loss"]['arr'], index=cfg["lambda_graph_loss"]['ydays_idx'], columns=cfg["lambda_graph_loss"]['country_idx'])
     
     now = date2str(datetime.now(), "%Y%m%d%H%M%S")
 
@@ -110,11 +113,6 @@ def process_args(args, record_log):
     args.result_dir = os.path.join("results", args.result_dir,
                                    "tmp" if args.exp == "" or args.exp == "-1" else f"exp_{args.exp}",
                                    args.dataset, subdir)
-    # 确定处理好的数据集的目录
-    args.databinfile = ("" if args.databinfile == "" else f"{args.databinfile}_") +\
-        f"{args.dataset}_x{args.xdays}_y{args.ydays}_w{args.window}_s{args.shift}" +\
-        ("" if int(args.node_observed_ratio) == 100 else f"_m{int(args.node_observed_ratio)}") + ".bin"
-    args.databinfile = os.path.join(args.preprocessed_data_dir, args.databinfile)
 
 
     # 实验结果保存目录，初始化 log

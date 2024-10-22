@@ -63,6 +63,26 @@ def train_country(args, result_paths, meta_data, i_country):
     country_name = meta_data["country_names"][i_country]
     country_code = meta_data["country_codes"][i_country]
 
+    # 从 args 读取数据
+    lr = args.lr
+    lr_min = args.lr_min
+    lr_scheduler_stepsize = args.lr_scheduler_stepsize
+    lr_weight_decay = args.lr_weight_decay
+    lr_scheduler_gamma = args.lr_scheduler_gamma
+    epochs = args.epochs
+    device = args.device
+    early_stop_patience = args.early_stop_patience
+    node_observed_ratio = args.node_observed_ratio
+    case_normalize_ratio = args.case_normalize_ratio
+
+    comp_last = args.comp_last
+
+    graph_lambda = args.lambda_graph_loss[country_name][(1 + args.shift) if args.ydays == 1 else args.ydays]
+    # graph_lambda_0 = args.graph_lambda_0
+    # graph_lambda_n = args.graph_lambda_n
+    # graph_lambda_epoch_max = args.graph_lambda_epoch_max
+    # graph_lambda_method = args.graph_lambda_method
+
     train_loader, val_loader, test_loader = meta_data['data'][country_name][0]
 
     logger.info(f"开始训练 {country_name} ...")
@@ -95,24 +115,6 @@ def train_country(args, result_paths, meta_data, i_country):
 
     # 初始化 tensorboard 记录器
     with SummaryWriter(result_paths["tensorboard"]) as writer:
-        lr = args.lr
-        lr_min = args.lr_min
-        lr_scheduler_stepsize = args.lr_scheduler_stepsize
-        lr_weight_decay = args.lr_weight_decay
-        lr_scheduler_gamma = args.lr_scheduler_gamma
-        epochs = args.epochs
-        device = args.device
-        early_stop_patience = args.early_stop_patience
-        node_observed_ratio = args.node_observed_ratio
-        case_normalize_ratio = args.case_normalize_ratio
-
-        comp_last = args.comp_last
-
-        graph_lambda_0 = args.graph_lambda_0
-        graph_lambda_n = args.graph_lambda_n
-        graph_lambda_epoch_max = args.graph_lambda_epoch_max
-        graph_lambda_method = args.graph_lambda_method
-
         losses, trained_model, epoch_best, loss_best = train_process(
             model,
             criterion,
@@ -128,10 +130,11 @@ def train_country(args, result_paths, meta_data, i_country):
             early_stop_patience,
             node_observed_ratio,
             case_normalize_ratio,
-            graph_lambda_0,
-            graph_lambda_n,
-            graph_lambda_epoch_max,
-            graph_lambda_method,
+            graph_lambda,
+            # graph_lambda_0,
+            # graph_lambda_n,
+            # graph_lambda_epoch_max,
+            # graph_lambda_method,
             device,
             writer,
             result_paths,

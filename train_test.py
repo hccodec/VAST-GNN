@@ -29,10 +29,11 @@ def train_process(
     early_stop_patience,
     node_observed_ratio,
     case_normalize_ratio,
-    graph_lambda_0,
-    graph_lambda_n,
-    graph_lambda_epoch_max,
-    graph_lambda_method,
+    graph_lambda,
+    # graph_lambda_0,
+    # graph_lambda_n,
+    # graph_lambda_epoch_max,
+    # graph_lambda_method,
     device,
     writer,
     result_paths,
@@ -79,10 +80,9 @@ def train_process(
 
             _lr = opt.param_groups[0]["lr"]
 
-
-            adj_lambda = adjust_lambda(
-                e, epochs, graph_lambda_0, graph_lambda_n, graph_lambda_epoch_max, graph_lambda_method
-            )
+            # graph_lambda = adjust_lambda(
+            #     e, epochs, graph_lambda_0, graph_lambda_n, graph_lambda_epoch_max, graph_lambda_method
+            # )
             print(
                 f"[Epoch] {font_underlined(font_yellow(e))}/{epochs}, [lr] {_lr}",
                 end="",
@@ -91,8 +91,8 @@ def train_process(
                 f"[Epoch] {e}/{epochs}, [lr] {_lr}, "
             )
 
-            print(f", [adj_lambda] {adj_lambda:.5f}", end="")
-            msg_file_logger += f"[adj_lambda] {adj_lambda}, "
+            print(f", [graph_lambda] {graph_lambda:.5f}", end="")
+            msg_file_logger += f"[graph_lambda] {graph_lambda}, "
 
             model.train()
             loss_res, loss_y_res, loss_adj_res = [], [], []
@@ -102,7 +102,7 @@ def train_process(
                 opt.zero_grad()
 
                 data = tuple(d.to(device) for d in data)
-                y_hat, x_case, y_case, x_mob, y_mob, idx_dataset = run_model(data, model, adj_lambda)
+                y_hat, x_case, y_case, x_mob, y_mob, idx_dataset = run_model(data, model, graph_lambda)
 
                 if isinstance(y_hat, tuple):
                     y_hat, adj_hat = y_hat
@@ -138,7 +138,7 @@ def train_process(
                     loss_adj = criterion(adj_gt.float(), adj_hat.float())
                     loss_adj_res.append(loss_adj.item())
 
-                    loss = loss_y + adj_lambda * loss_adj
+                    loss = loss_y + graph_lambda * loss_adj
 
                     # loss = loss_y # 这一行的效果是不带 adj loss
                     loss_res.append(loss.item())
@@ -399,10 +399,10 @@ def eval_process(model, criterion, train_loader, val_loader, test_loader, comp_l
     return res
 
 # 训练测试模型的子过程
-def run_model(data, model, adj_lambda = None):
+def run_model(data, model, graph_lambda = None):
 
     x_case, y_case, x_mob, y_mob, idx_dataset = data
-    y_hat = model(x_case, y_case, x_mob, y_mob, adj_lambda)
+    y_hat = model(x_case, y_case, x_mob, y_mob, graph_lambda)
 
     # 适应模型同时输出图结构的情况
     y_hat_shape = y_hat[0].shape if isinstance(y_hat, tuple) else y_hat.shape

@@ -16,11 +16,17 @@ import pandas as pd
 pattern_graph_file = re.compile("(.*)_(.*).csv")
 
 def load_data(args, enable_cache = True):
-    preprocessed_data_dir = args.preprocessed_data_dir
-    data_dir, databinfile, batch_size = args.data_dir, args.databinfile, args.batch_size
+    '''
+    为了缓存，此阶段将读取全部国家并缓存
+    '''
+    dataset_cache_dir = args.dataset_cache_dir
+    data_dir, dataset, batch_size = args.data_dir, args.dataset, args.batch_size
     xdays, ydays, window_size, shift = args.xdays, args.ydays, args.window, args.shift
     train_ratio, val_ratio = args.train_ratio, args.val_ratio
     node_observed_ratio = args.node_observed_ratio
+
+    databinfile = os.path.join(dataset_cache_dir, f"{dataset}_x{xdays}_y{ydays}_w{window_size}_s{shift}" +\
+        ("" if int(node_observed_ratio) == 100 else f"_m{int(node_observed_ratio * 100)}") + ".bin")
 
     if enable_cache and os.path.exists(databinfile):
         with open(databinfile, 'rb') as f:
@@ -46,7 +52,7 @@ def load_data(args, enable_cache = True):
         meta_data = {"country_names": country_names, "country_codes": country_codes, "data": meta_data}
 
         if enable_cache and not os.path.exists(databinfile):
-            os.makedirs(preprocessed_data_dir, exist_ok=True)
+            os.makedirs(dataset_cache_dir, exist_ok=True)
             with open(databinfile, 'wb') as f:
                 pickle.dump(meta_data, f)
 
