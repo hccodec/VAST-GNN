@@ -15,16 +15,15 @@ import pandas as pd
 # meta_info = {"name": country_names, "code": country_codes}
 pattern_graph_file = re.compile("(.*)_(.*).csv")
 
-def load_data(args, enable_cache = True):
+def load_data(dataset_cache_dir, data_dir, dataset, batch_size,
+              xdays, ydays, window_size, shift,
+              train_ratio, val_ratio, node_observed_ratio,
+              enable_cache = True):
     '''
     为了缓存，此阶段将读取全部国家并缓存
     '''
-    dataset_cache_dir = args.dataset_cache_dir
-    data_dir, dataset, batch_size = args.data_dir, args.dataset, args.batch_size
-    xdays, ydays, window_size, shift = args.xdays, args.ydays, args.window, args.shift
-    train_ratio, val_ratio = args.train_ratio, args.val_ratio
-    node_observed_ratio = args.node_observed_ratio
-
+    # 通过 args.dataset 锁定数据集目录
+    dataset_dir = f"{data_dir}/{dataset}"
     databinfile = os.path.join(dataset_cache_dir, f"{dataset}_x{xdays}_y{ydays}_w{window_size}_s{shift}" +\
         ("" if int(node_observed_ratio) == 100 else f"_m{int(node_observed_ratio * 100)}") + ".bin")
 
@@ -36,16 +35,16 @@ def load_data(args, enable_cache = True):
         #从数据集里读取数据
         meta_data = {}
 
-        country_names = [d for d in os.listdir(data_dir)
-                         if os.path.isdir(os.path.join(data_dir, d))]
+        country_names = [d for d in os.listdir(dataset_dir)
+                         if os.path.isdir(os.path.join(dataset_dir, d))]
         country_codes = list(map(lambda x: x if x is None else x.groups()[0],
-                                 [pattern_graph_file.search(os.listdir(os.path.join(data_dir, d, "graphs"))[0])
-                                  for d in os.listdir(data_dir)
-                                  if os.path.isdir(os.path.join(data_dir, d))]))
+                                 [pattern_graph_file.search(os.listdir(os.path.join(dataset_dir, d, "graphs"))[0])
+                                  for d in os.listdir(dataset_dir)
+                                  if os.path.isdir(os.path.join(dataset_dir, d))]))
 
         for i in range(len(country_names)):
             logger.info(f"正在读取国家 {country_names[i]:{max([len(n) for n in country_names])}s} 的数据...")
-            data = _load_data(window_size, data_dir, node_observed_ratio, country_names[i])
+            data = _load_data(window_size, dataset_dir, node_observed_ratio, country_names[i])
             dataloaders = split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, *data)
             meta_data[country_names[i]] = (dataloaders, data)
 

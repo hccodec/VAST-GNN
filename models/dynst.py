@@ -84,13 +84,8 @@ class DynGraphEncoder(nn.Module):
                                    x_global.unsqueeze(2).expand(-1, -1, num_nodes, -1, -1)], dim=-1)
         
         # lstm
-        
-        # edge_features = edge_features.transpose(1, -2).flatten(0, -3)
         edge_features = edge_features.permute(0, 2, 3, 1, 4).flatten(0, -3) # 这是真的 bug 2024年10月20日10点41分
-
         edge_features, _ = self.lstm(edge_features)
-
-        # edge_features = edge_features.reshape(batch_size, (obs_len + pred_len), num_nodes, num_nodes, self.hidden)
         edge_features = edge_features.reshape(batch_size, num_nodes, num_nodes, (obs_len + pred_len), self.hidden)\
             .permute(0, 3, 1, 2, 4) # 这是真的 bug 2024年10月20日10点41分
 

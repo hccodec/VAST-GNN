@@ -64,11 +64,12 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--device", "5",
+                "--device", "2",
                 "--shift", "2",
                 "--ydays", "1",
-                "--country", "England",
-                "--node-observed-ratio", "50"
+                "--country", "England,Spain",
+                "--node-observed-ratio", "50",
+                "--graph-lambda", "0.1"
             ]
         },
         {

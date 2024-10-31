@@ -18,43 +18,59 @@ from utils.custom_datetime import datetime
 from show_result import show_result
 
 def exp_main(args):
-    exp_desc = get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift, args.node_observed_ratio)
-
-    starttime = datetime.now()
-    logger.info(f"实验 [{exp_desc}] 开始于 {starttime.strftime('%Y-%m-%d %H:%M:%S')}")
-
-    from utils.data_process.dataforgood import load_data
-
-    meta_data = load_data(args)
-
-    logger.info(f"")
+    result_dir          = args.result_dir
+    country             = args.country
+    model               = args.model
+    dataset_cache_dir   = args.dataset_cache_dir
+    data_dir            = args.data_dir
+    dataset             = args.dataset
+    batch_size          = args.batch_size
+    xdays               = args.xdays
+    ydays               = args.ydays
+    window              = args.window
+    shift               = args.shift
+    train_ratio         = args.train_ratio
+    val_ratio           = args.val_ratio
+    node_observed_ratio = args.node_observed_ratio
 
     result_paths = {
-        "log": os.path.join(args.result_dir, "log.txt"),
-        "args": os.path.join(args.result_dir, "args.txt"),
+        "log": os.path.join(result_dir, "log.txt"),
+        "args": os.path.join(result_dir, "args.txt"),
     }
 
     with open(result_paths["args"], "w", encoding="utf-8") as f:
         f.write("[args]\n")
         for k in args: f.write("{}: {}\n".format(k, args[k]))
 
+    exp_desc = get_exp_desc(model, xdays, ydays, window, shift, node_observed_ratio)
 
+    starttime = datetime.now()
+    logger.info(f"实验 [{exp_desc}] 开始于 {starttime.strftime('%Y-%m-%d %H:%M:%S')}")
+
+    from utils.data_process.dataforgood import load_data
+
+    meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
+                          xdays, ydays, window, shift,
+                          train_ratio, val_ratio, node_observed_ratio)
+
+    logger.info(f"")
     # 根据是否指定国家进行相应训练
-    if args.maml is True:
-        maml_train(meta_data)
-    elif "country" not in args:
+    # if args.maml is True:
+    #     maml_train(meta_data)
+    # el
+    if "country" not in args:
         for i_country in range(len(meta_data["country_names"])):
             train_country(args, result_paths, meta_data, i_country)
     else:
         # 处理 args.country 使之接受形如 "England,Spain" 的参数并整理成数组
-        countries = [e.title() for e in args.country.split(',')]
+        countries = [e.title() for e in country.split(',')]
         if set(countries).issubset(set(meta_data["country_names"])):
-            logger.info(f"将对国家 {args.country} 的数据进行训练")
+            logger.info(f"将对国家 {country} 的数据进行训练")
             for country in countries:
                 i_country = meta_data["country_names"].index(country)
                 train_country(args, result_paths, meta_data, i_country)
         else:
-            print(f"参数错误 args.country: {args.country}")
+            print(f"参数错误 args.country: {country}")
 
     endtime = datetime.now()
     logger.info(f"实验 [{exp_desc}] 结束。\n总用时 {(datetime.min + (endtime - starttime)).strftime('%H:%M:%S')} （{starttime.strftime('%Y-%m-%d %H:%M:%S')} - {endtime.strftime('%Y-%m-%d %H:%M:%S')}）")

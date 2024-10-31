@@ -54,7 +54,7 @@ def get_parser(parent_parser=None):
     # parser.add_argument("--early-stop-patience", type=float, default=100)
     #
     # # 实验：图结构相关参数设置
-    # parser.add_argument("--graph-lambda", type=float, default=None) # 此参数用于覆盖下方设置
+    parser.add_argument("--graph-lambda", type=float, default=None) # 此参数用于覆盖下方设置
     # parser.add_argument("--graph-lambda-0", type=float, default=0.8)
     # parser.add_argument("--graph-lambda-n", type=float, default=0)
     # parser.add_argument("--graph-lambda-epoch-max", type=float, default=-1)
@@ -89,7 +89,8 @@ def process_args(args, record_log):
 
     # # 处理loss正则化项参数 graph_lambda
     # if 'graph_lambda' in args: args["graph_lambda_0"] = args["graph_lambda_n"] = args["graph_lambda"]
-    args["lambda_graph_loss"] = pd.DataFrame(cfg["lambda_graph_loss"]['arr'], index=cfg["lambda_graph_loss"]['ydays_idx'], columns=cfg["lambda_graph_loss"]['country_idx'])
+    args["lambda_graph_loss"] = pd.DataFrame(cfg["lambda_graph_loss"][f'arr_{int(cfg["node_observed_ratio"])}'], index=cfg["lambda_graph_loss"]['ydays_idx'], columns=cfg["lambda_graph_loss"]['country_idx'])
+    if 'graph_lambda' in args: args["lambda_graph_loss"].loc[:, :] = args["graph_lambda"]
     
     now = date2str(datetime.now(), "%Y%m%d%H%M%S")
 
@@ -104,9 +105,6 @@ def process_args(args, record_log):
     # subdir 用于后续规范实验结果的最终保存位置
     subdir = f"{args.model}_{args.xdays}_{args.ydays}_w{args.window}_s{args.shift}"
     subdir += f"_{now}"
-
-    # 通过 args.dataset 锁定数据集目录
-    args.data_dir += "/" + args.dataset
 
     # 通过数据集以及 arg.exp 锁定实验结果保存目录
     args.exp = str(args.exp)
@@ -133,8 +131,7 @@ def process_args(args, record_log):
     args.train_ratio /= 100
     args.val_ratio /= 100
 
-    if args.dataset == 'dataforgood':
-        args.case_normalize_ratio = 1
+    if args.dataset == 'dataforgood': args.case_normalize_ratio = 1
 
     return args
 
