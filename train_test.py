@@ -207,7 +207,7 @@ def train_process(
                 msg_file_logger += " (Best model saved)"
                 print(font_yellow(" (Best model saved)"), end="")
                 loss_best, model_best, epoch_best = loss_val, model, e
-                torch.save(model_best, result_paths["model"])
+                torch.save(model_best.state_dict(), result_paths["model"])
             # # early stop 规则：连续 args.early_stop_patience 个 epoch没有更优结果，停止训练
             #     early_stop_wait = 0
             # else:
@@ -346,12 +346,13 @@ def validate_test_process(model: nn.Module, criterion, dataloader):
 
 def eval_process(model, criterion, train_loader, val_loader, test_loader, comp_last):
     # 读取模型
-    trained_model = None
-    if isinstance(model, str):
-        assert os.path.exists(model)
-        trained_model = torch.load(model)
-    else:
-        trained_model = model
+    # trained_model = None
+    # if isinstance(model, str):
+    #     assert os.path.exists(model)
+    #     trained_model = torch.load(model)
+    # else:
+    #     trained_model = model
+    trained_model = model
 
     # 分别在 train/val/test 三个数据集上跑出结果
 
@@ -384,6 +385,9 @@ def eval_process(model, criterion, train_loader, val_loader, test_loader, comp_l
                 err_val, font_green(err_test), corr_train, corr_val, corr_test, hits10_train, hits10_val, hits10_test))
 
     res = {
+        "outputs": ((loss_train, y_real_train, y_hat_train, adj_real_train, adj_hat_train),
+                    (loss_val, y_real_val, y_hat_val, adj_real_val, adj_hat_val),
+                    (loss_test, y_real_test, y_hat_test, adj_real_test, adj_hat_test)),
         "mae_val": metrics[0],
         "rmse_val": metrics[1],
         "mae_test": metrics[2],

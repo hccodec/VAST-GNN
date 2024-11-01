@@ -33,22 +33,23 @@ def load_data(dataset_cache_dir, data_dir, dataset, batch_size,
         logger.info(f'已从数据文件 [{databinfile}] 读取 dataforgood 数据集')
     else:
         #从数据集里读取数据
-        meta_data = {}
 
         country_names = [d for d in os.listdir(dataset_dir)
                          if os.path.isdir(os.path.join(dataset_dir, d))]
         country_codes = list(map(lambda x: x if x is None else x.groups()[0],
-                                 [pattern_graph_file.search(os.listdir(os.path.join(dataset_dir, d, "graphs"))[0])
+                                 [pattern_graph_file.search([f for f in os.listdir(os.path.join(dataset_dir, d, "graphs")) if f.endswith(".csv")][0])
                                   for d in os.listdir(dataset_dir)
                                   if os.path.isdir(os.path.join(dataset_dir, d))]))
+        
+        meta_data = {"country_names": country_names, "country_codes": country_codes, "data": {}, "regions": {}, "selected_indices": {}}
 
         for i in range(len(country_names)):
             logger.info(f"正在读取国家 {country_names[i]:{max([len(n) for n in country_names])}s} 的数据...")
-            data = _load_data(window_size, dataset_dir, node_observed_ratio, country_names[i])
+            data, (nodes, selected_indices) = _load_data(window_size, dataset_dir, node_observed_ratio, country_names[i])
             dataloaders = split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, *data)
-            meta_data[country_names[i]] = (dataloaders, data)
-
-        meta_data = {"country_names": country_names, "country_codes": country_codes, "data": meta_data}
+            meta_data["data"][country_names[i]] = (dataloaders, data)
+            meta_data["regions"][country_names[i]] = nodes
+            meta_data["selected_indices"][country_names[i]] = selected_indices
 
         if enable_cache and not os.path.exists(databinfile):
             os.makedirs(dataset_cache_dir, exist_ok=True)
@@ -69,30 +70,39 @@ def _load_data(window_size, data_dir, node_observed_ratio, country_name: str, po
     assert policy in ['clip', 'pad']
     data_country_path = os.path.join(data_dir, country_name)
 
-    Gs, dates, nodes = [], [], []
+    Gs, dates, nodes_graph = [], [], []
+
+    label_file = [i for i in os.listdir(data_country_path) if i.endswith("_labels.csv")]
+    assert len(label_file) == 1
+    label_file = label_file[0]
+    # 读标签，本实验为病例数
+    labels = pd.read_csv(os.path.join(data_country_path, label_file)).set_index("name")
+
+    nodes_label = list(labels.index)
 
     # 读图，并提取图中包含的结点 nodes 和日期 dates
     for i_date, graph_file in enumerate(os.listdir(os.path.join(data_country_path, "graphs"))):
+        if not graph_file.endswith(".csv"): continue
         graph = pd.read_csv(os.path.join(data_country_path, "graphs", graph_file), header=None)
 
         country_code, date = pattern_graph_file.search(graph_file).groups()
         dates.append(date)
 
-        _nodes = sorted(set(list(graph[0]) + list(graph[1])))
+        nodes = sorted(set(list(graph[0]) + list(graph[1])))
+        assert not len(nodes_graph) or nodes_graph == nodes  # 所有图的结点都应相同
+        if nodes_graph == []: nodes_graph = nodes
+
+        nodes = sorted(set(nodes_graph) & set(nodes_label))
 
         G = nx.DiGraph()
-        G.add_nodes_from(_nodes)
+        G.add_nodes_from(nodes)
         for row in graph.iterrows():
             G.add_edge(row[1][0], row[1][1], weight=row[1][2])
         Gs.append(G)
 
-        assert not len(nodes) or nodes == _nodes  # 所有图的结点都应相同
-        nodes = _nodes
 
     adjs = np.stack([nx.adjacency_matrix(G).toarray() for G in Gs])
 
-    # 读标签，本实验为病例数
-    labels = pd.read_csv(os.path.join(data_country_path, f"{country_name.lower()}_labels.csv")).set_index("name")
     labels = labels.loc[nodes, dates]
 
     cases = np.expand_dims(labels.to_numpy().T, -1)
@@ -111,12 +121,14 @@ def _load_data(window_size, data_dir, node_observed_ratio, country_name: str, po
     num_nodes = len(nodes)
     mask = torch.cat([torch.ones(int(num_nodes * node_observed_ratio)), torch.zeros(num_nodes - int(num_nodes * node_observed_ratio))])
     mask = mask[torch.randperm(num_nodes)]
-    selected_indices = torch.nonzero(mask).squeeze()
+    selected_indices = torch.nonzero(mask).squeeze().numpy()
+    if selected_indices.shape == ():
+        selected_indices = selected_indices.reshape(-1,)
     features = features[:, selected_indices]
     cases = cases[:, selected_indices]
     adjs = adjs[:, selected_indices][:, :, selected_indices]
 
-    return features, cases, adjs
+    return (features, cases, adjs), (nodes, selected_indices)
 
 
 # 分割数据集

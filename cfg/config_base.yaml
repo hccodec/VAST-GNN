@@ -8,7 +8,7 @@ model: "dynst"             # 设置实验所用模型
 
 # 实验设置：随机种子和设备号
 seed: 5                    # 随机种子
-# device: 0                  # GPU号
+device: 0                  # GPU号
 
 ## 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
 #xdays: 7                   # 预测所需历史天数

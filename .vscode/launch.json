@@ -15,6 +15,15 @@
     "configurations": [
 
         {
+            "type": "debugpy",
+            "request": "launch",
+            "name": "可视化",
+            "cwd": "${workspaceFolder}",
+            "program": "vis.py",
+            "args": []
+        },
+
+        {
             "type": "bashdb",
             "request": "launch",
             "name": "Bash-Debug (hardcoded script name)",

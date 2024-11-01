@@ -158,7 +158,7 @@ def train_country(args, result_paths, meta_data, i_country):
         )
 
         # writer.close()
-        torch.save(trained_model, result_paths["model_latest"])
+        torch.save(trained_model.state_dict(), result_paths["model_latest"])
 
         logger.info("")
         logger.info(f"训练完毕，开始评估: {country_name}")
@@ -217,7 +217,6 @@ def train_country(args, result_paths, meta_data, i_country):
 
 def main():
     args = parse_args()
-    set_random_seed(args.seed)
     logger.info(f"运行结果将保存至 {args.result_dir}")
     try:
         if args.dataset == "dataforgood":

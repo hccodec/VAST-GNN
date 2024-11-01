@@ -8,6 +8,8 @@ from utils.logger import set_logger, logger
 
 import pandas as pd
 
+from utils.utils import set_random_seed
+
 models_list = ["lstm", "dynst", "mpnn_lstm"]
 graph_lambda_methods = ['exp', 'cos']
 
@@ -87,6 +89,7 @@ def process_args(args, record_log):
 
     args = EasyDict(cfg)
 
+
     # # 处理loss正则化项参数 graph_lambda
     # if 'graph_lambda' in args: args["graph_lambda_0"] = args["graph_lambda_n"] = args["graph_lambda"]
     args["lambda_graph_loss"] = pd.DataFrame(cfg["lambda_graph_loss"][f'arr_{int(cfg["node_observed_ratio"])}'], index=cfg["lambda_graph_loss"]['ydays_idx'], columns=cfg["lambda_graph_loss"]['country_idx'])
@@ -132,6 +135,7 @@ def process_args(args, record_log):
     args.val_ratio /= 100
 
     if args.dataset == 'dataforgood': args.case_normalize_ratio = 1
+    set_random_seed(args.seed) # 设置随机种子
 
     return args
 

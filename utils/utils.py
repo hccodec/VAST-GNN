@@ -2,7 +2,6 @@ import os, torch, numpy as np, random
 from utils.logger import logger
 import traceback, functools
 from tqdm.auto import tqdm
-from utils.args import graph_lambda_methods
 
 # 进度条
 # l_bar='{desc}...({n_fmt}/{total_fmt} {percentage:3.2f}%)'
@@ -126,6 +125,7 @@ def catch(msg="出现错误，中断训练"):
     return decorator
 
 def adjust_lambda(epoch, num_epochs, lambda_0, lambda_n, lambda_epoch_max, method='cos'):
+    from utils.args import graph_lambda_methods
     assert method in graph_lambda_methods
     assert epoch < num_epochs
 
