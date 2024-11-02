@@ -47,7 +47,7 @@ def test(model_dir = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241
 
     logger.info(font_green(f"完成测试 [{exp_desc}]"))
 
-    return res, meta_data
+    return res, meta_data, args
 
 if __name__ == '__main__':
     parser = ArgumentParser()
