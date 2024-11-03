@@ -224,6 +224,30 @@ def min_max_adj(adj: torch.Tensor, epsilon = 1e-8):
 
 def rm_self_loops(a): return a * (1 - torch.eye(a.size(-1)).to(a.device))
 
+def scale_adj(adj_target, adj_source):
+    '''
+    将 adj_target 缩放到 adj_source 所在尺度
+    '''
+    # 计算 μ 和 σ
+    mean_adj_target = adj_target.mean(axis=(-2, -1), keepdims=True)
+    std_adj_target = adj_target.std(axis=(-2, -1), keepdims=True)
+    mean_adj_source = adj_source.mean(axis=(-2, -1), keepdims=True)
+    std_adj_source = adj_source.std(axis=(-2, -1), keepdims=True)
+
+    # # # 按 μ 和 σ 缩放
+    # # adj_target = (adj_target - mean_adj_target) / std_adj_target * std_adj_source_no_diag + mean_adj_source_no_diag
+    # # adj_target = rm_self_loops(adj_target)
+
+    # 按 μ 缩放
+    adj_target = adj_target * mean_adj_source / mean_adj_target
+    
+    # # 均做拉普拉斯变换
+    # adj_target = getLaplaceMat(adj_target)
+    # adj_source_no_diag = getLaplaceMat(adj_source_no_diag)
+
+    #######################
+    return adj_target
+
 def getLaplaceMat(adj):
     shape = adj.shape
     adj = adj.flatten(0, -3)

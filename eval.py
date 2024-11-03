@@ -41,7 +41,7 @@ def compute_mae_rmse(y_hat, y):
     return mae, rmse
 
 
-def hits_at_k(A, A_hat, k, threshold_ratio):
+def hits_at_k(A, A_hat, k=10, threshold_ratio=0.5):
     assert A.shape == A_hat.shape, "A and A_hat must have the same shape"
 
     A, A_hat = A.clone(), A_hat.clone()
