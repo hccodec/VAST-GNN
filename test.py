@@ -8,12 +8,9 @@ import pandas as pd
 from argparse import ArgumentParser
 
 from utils.model_selector import select_model
-from utils.utils import font_green, get_exp_desc
+from utils.utils import font_green, get_country, get_exp_desc
 
-pth_name = 'best_model_jp.pth'
-log_name = "log.txt"
-
-def test(model_dir = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/', country_code = "EN"):
+def test(fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth', country = "EN"):
     args = parse_args(record_log=False)
     
     exp_desc = get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift, args.node_observed_ratio)
@@ -23,9 +20,9 @@ def test(model_dir = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241
     meta_data = load_data(args.dataset_cache_dir, args.data_dir, args.dataset, args.batch_size,
                           args.xdays, args.ydays, args.window, args.shift,
                           args.train_ratio, args.val_ratio, args.node_observed_ratio)
+    
+    country_code, country_name = get_country(country, meta_data)
 
-    i_country = meta_data["country_codes"].index(country_code)
-    country_name = meta_data["country_names"][i_country]
     # country_code = meta_data["country_codes"][i_country]
 
     train_loader, val_loader, test_loader = meta_data['data'][country_name][0]
@@ -37,7 +34,7 @@ def test(model_dir = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241
     
     # 假设你的模型类是 YourModelClass
     trained_model, model_args = select_model(args, train_loader)  # 实例化模型
-    trained_model.load_state_dict(torch.load(os.path.join(model_dir, f"model_{country_code}_best.pth"), map_location=args.device))
+    trained_model.load_state_dict(torch.load(fn_model, map_location=args.device))
     trained_model.to(args.device)  # 将模型移动到指定设备
 
     criterion = torch.nn.MSELoss()

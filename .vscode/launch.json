@@ -19,7 +19,8 @@
             "request": "launch",
             "name": "可视化",
             "cwd": "${workspaceFolder}",
-            "program": "vis.py",
+            // "program": "vis.py",
+            "module": "visualization.vis",
             "args": []
         },
 

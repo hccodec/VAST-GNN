@@ -279,3 +279,14 @@ def getLaplaceMat(adj):
     # laplace_mat = torch.bmm(laplace_mat, d_mat)
     laplace_mat = laplace_mat.reshape(shape)
     return laplace_mat
+
+def get_country(country, meta_data):
+    country_codes, country_names = meta_data["country_codes"], meta_data["country_names"]
+    country_code, country_name = "", ""
+    if country in country_codes:
+        country_code = country
+        country_name = country_names[country_codes.index(country_code)]
+    elif country in country_names:
+        country_name = country
+        country_code = country_codes[country_names.index(country_name)]
+    return country_code, country_name
