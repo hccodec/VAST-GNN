@@ -7,7 +7,7 @@ from eval import MAELoss, RMSELoss
 from eval import compute_err, hits_at_k
 
 from utils.logger import logger
-from utils.utils import get_country, progress_indicator, rm_self_loops
+from utils.utils import font_yellow, get_country, progress_indicator, rm_self_loops
 from visualization.utils.utils import get_region_relation, fetch_from_exported_txt
 
 
@@ -38,7 +38,7 @@ df_map_filenames = {
 #     # shapes[1:]["NAME_1"]
 #     return shape
 
-def generate_case_relations(regions, x_case, y_case, y_hat, dataset = "test"):
+def generate_case_relations(relations, regions, x_case, y_case, y_hat, dataset = "test"):
     '''
     将病例数据按天整理成 csv。每一列代表一天
     '''
@@ -64,55 +64,59 @@ def generate_case_relations(regions, x_case, y_case, y_hat, dataset = "test"):
         **{f"cases_hat": list(y_hat[batch_err, 0, :, 0])}
     })
 
+    cases_df = pd.merge(relations, cases_df, on='label', how='left')[["FID", *cases_df.columns]]
+
     return f"cases_{dataset}_{batch_err}.csv", cases_df
 
-def generate_mob_relations(locations, regions, x_mob, y_mob, adj_hat, dataset = "test"):
+
+
+def generate_mob_relations(locations, regions, x_mob, y_mob, hats, dataset = "test"):
     '''
     将流量数据按天整理成 csv。每个文件代表一天，每一天内是三元组（from,to,value），用于 ArcGIS 绘制
     
     方案：传入 locations 数据 (包含字段：FID, label, lat, lon) -> 使用 regions 筛选 label 并对筛选结果进行经纬度统计，使用字典处理同名
     '''
     assert dataset in ["train", "val", "test"]
+
+    locations = locations.T
     
     # 准备OD数数据 (只取 测试集 效果最好的 batch)
     mobs = torch.cat((x_mob, y_mob), 1)
 
     mobs = rm_self_loops(mobs)
     # 统计指标
-    hits = [[hits_at_k(mobs[i, j], adj_hat[i, j]) for j in range(mobs.shape[1])] for i in range(mobs.shape[0])]
+    hits = [[hits_at_k(mobs[i, j], hats[i, j]) for j in range(mobs.shape[1])] for i in range(mobs.shape[0])]
     hits = [sum(h) / len(h) for h in hits]
     batch_hits = hits.index(max(hits))
 
-    mobs = mobs.cpu().numpy()
-    adj_hat = adj_hat.cpu().numpy()
+    mobs = mobs[batch_hits].cpu().numpy()
+    hats = hats[batch_hits].cpu().numpy()
 
-    region_names = regions
 
     OD_data = []
-    for day in range(mobs.shape[1]):
-        mob = mobs[batch_hits][day]
-        data_mobs = []
+    for day in range(mobs.shape[0]):
+        mob = mobs[day]
+        hat = hats[day]
+
+        OD_data_day = []
         for i_O in range(mob.shape[0]):
             for i_D in range(mob.shape[1]):
-                if mob[i_O, i_D] == 0: continue
-                # data_mobs["from"].append(region_names[i])
-                # data_mobs["to"].append(region_names[j])
-                dic = dict(zip(
-                    ("O_x", "O_y", "D_x", "D_y", "v"),
-                    (*locations[region_names[i_O]], *locations[region_names[i_D]], mob[i_O, i_D])))
-                data_mobs.append(dic)
-        mobs_df = pd.DataFrame(data_mobs)
+                if mob[i_O, i_D] != 0:
+                    # data_mobs["from"].append(region_names[i])
+                    # data_mobs["to"].append(region_names[j])
+                    OD_data_day.append(dict(zip(
+                        ("O", "D", "x_O", "y_O", "x_D", "y_D", "value_real", "value_hat"),
+                        (regions[i_O], regions[i_D], *locations[regions[i_O]], *locations[regions[i_D]], mob[i_O, i_D], hat[i_O, i_D]))))
+        df_real = pd.DataFrame.from_records(OD_data_day)
         # path = os.path.join(output_dir, graph_dirname, f"mobs_{dataset}_{batch_hits}_{day}.csv")
         # mobs_df.to_csv(path)
-        OD_data.append((f"mobs_{dataset}_{batch_hits}_{day}.csv", mobs_df))
+        OD_data.append((f"adj_{dataset}_{batch_hits}_{day}.csv", df_real))
 
     return f"mobs_{dataset}_{batch_hits}", OD_data
 
 def vis(test_dir = "1022", exp = "7", country = "EN"):
     
-    logger.info("=" * 50)
-    logger.info(" " * ((50 - len(f"开始可视化 {country}")) // 2) + f"开始可视化 {country}")
-    logger.info("=" * 50)
+    logger.info(font_yellow(f"开始可视化 {country}"))
 
     # 提取对应模型
     models = [os.path.join(dirpath, filename) for dirpath, dirnames, filenames in os.walk(f"results/tests_{test_dir}")
@@ -160,16 +164,16 @@ def vis(test_dir = "1022", exp = "7", country = "EN"):
         relations, locations, unmatched_regions = get_region_relation(df_map, regions)
         
         regions_observed = [regions[i] for i in meta_data["selected_indices"][country_name]]
-        fn_case, case_relation = generate_case_relations(regions_observed, x_case_test, y_case_test, y_hat_test)
-        dir_mob, mob_relation = generate_mob_relations(locations, regions_observed, x_mob_test, y_mob_test, adj_hat_test)
+        fn_case, case_relation = generate_case_relations(relations, regions_observed, x_case_test, y_case_test, y_hat_test, "test")
+        dir_mob, mob_relation = generate_mob_relations(locations, regions_observed, x_mob_test, y_mob_test, adj_hat_test, "test")
 
         vis_resdir = os.path.join(f"visualization/results_visualization", "x{}_y{}_w{}_s{}".format(xdays, ydays, window, shift), country)
         logger.info(f"正在存储数据到目录 [{vis_resdir}] 中")
         os.makedirs(vis_resdir, exist_ok=True)
         # case
         case_relation.to_csv(os.path.join(vis_resdir, fn_case))
-        # location
-        locations.T.to_csv(os.path.join(vis_resdir, f"{country_name}_locations.csv"), index=False)
+        # relations 包括所有的、unobserved、observed的
+        relations.to_csv(os.path.join(vis_resdir, f"{country_name}_relations.csv"), index=False)
         # mob
         os.makedirs(os.path.join(vis_resdir, dir_mob), exist_ok=True)
         for fn, mob_data in mob_relation:
@@ -177,10 +181,7 @@ def vis(test_dir = "1022", exp = "7", country = "EN"):
 
         logger.info(f"数据已存储")
 
-    logger.info("=" * 50)
-    logger.info(" " * ((50 - len(f"结束可视化 {country}")) // 2) +
-                f"结束可视化 {country}")
-    logger.info("=" * 50)
+    logger.info(font_yellow(f"结束可视化 {country}"))
 
 
                                         

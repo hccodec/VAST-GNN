@@ -77,7 +77,8 @@ def get_region_relation(df_map, regions):
     # 将 name2 中不属于数据集的元素赋为空字符串，以此作为 label。
     # 空字符串表示 name2 未匹配到。label 表示地图上的区域对应于数据集上的区域名称
     # label 存储的是 df_map 中的地理名称，即 NAME_2 或 NAME_3
-    label = [(regions[converted_regions.index(converted_name2[i])] if converted_name2[i] in converted_regions else '') for i in range(len(name2))]
+    label = [(regions[converted_regions.index(converted_name2[i])]
+              if converted_name2[i] in converted_regions else np.nan) for i in range(len(name2))]
 
     # 使用 name3 进一步匹配 regions
     unmatch_regions = []
@@ -102,7 +103,7 @@ def get_region_relation(df_map, regions):
         "lon": df_map["lon"]
     })
 
-    locations = relation.groupby("label").agg({'lat': "mean", "lon": "mean"}).T
+    locations = relation.groupby("label").agg({'lat': "mean", "lon": "mean"})
 
     return relation, locations, unmatch_regions
 
