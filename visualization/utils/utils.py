@@ -171,3 +171,4 @@ def fetch_from_exported_txt(region_names):#
         locations[region_name] = list(csv_content.values[:, -2:].mean(0))
 
     return shp_regions, locations
+

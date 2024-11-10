@@ -52,7 +52,7 @@ def generate_case_relations(relations, regions, x_case, y_case, y_hat, dataset =
     y_hat = (y_hat + cases[:, [-1]])
 
     # 统计指标，并取得效果最好的 batch
-    errs = [compute_err(y_case[i], y_hat[i], False) for i in range(10)]
+    errs = [compute_err(y_case[i], y_hat[i], False) for i in range(y_case.shape[0])]
     batch_err = errs.index(min(errs))
 
     cases = cases.cpu().numpy()
