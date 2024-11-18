@@ -31,7 +31,7 @@ def get_parser(parent_parser=None):
     parser.add_argument("--model", default="dynst", choices=models_list, help="设置实验所用模型")
     parser.add_argument("--result-dir", default="results_test", help="")
     # # 实验设置：随机种子和设备号
-    # parser.add_argument("--seed", default=5, help="随机种子")
+    parser.add_argument("--seed", type=int, default=5, help="随机种子")
     parser.add_argument("--device", default=None, help="GPU号")
     # 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
     parser.add_argument("--xdays", type=int, default=7, help="预测所需历史天数")
@@ -62,7 +62,8 @@ def get_parser(parent_parser=None):
     # parser.add_argument("--graph-lambda-epoch-max", type=float, default=-1)
     # parser.add_argument("--graph-lambda-method", choices=graph_lambda_methods, default='cos')
     parser.add_argument("--maml", action="store_true", help="是否启用元学习")
-    parser.add_argument("--no_graph_gt", action="store_true", help="图学习器是否不融合历史真实图结构。默认不带该参即融合")
+    parser.add_argument("--graph-gt", action="store_true", help="是否不启用图学习。默认启用")
+    parser.add_argument("--no-virtual-node", action="store_true", help="是否启用虚拟结点，默认启用")
 
     parser.add_argument("--comp-last",action="store_true",help="在多天预测的情形下只比对最后一天的结果")
     parser.add_argument("--desc", help="该实验的说明")

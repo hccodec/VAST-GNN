@@ -61,7 +61,8 @@
                 "--device", "3",
                 "--model", "mpnn_lstm",
                 "--shift", "2", "--ydays", "1",
-                "--node-observed-ratio", "80"
+                "--node-observed-ratio", "50",
+                "--country", "England"
             ]
         },
         {
@@ -79,7 +80,9 @@
                 "--ydays", "1",
                 "--country", "England,Spain",
                 "--node-observed-ratio", "50",
-                "--graph-lambda", "0.1"
+                // "--graph-gt",
+                // "--no-virtual-node"
+                // "--graph-lambda", "0.1"
             ]
         },
         {

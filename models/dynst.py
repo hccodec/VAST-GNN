@@ -123,12 +123,13 @@ class GraphConvLayer(nn.Module):
             return self.act(output)
 
 class Decoder(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden, window_size, tcn_layers, graph_layers, dropout, device):
+    def __init__(self, in_dim, out_dim, hidden, window_size, tcn_layers, graph_layers, dropout, device, no_virtual_node = True):
         super().__init__()
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.hidden = hidden
         self.graph_layers = graph_layers
+        self.no_virtual_node = no_virtual_node
 
         self.tcn = TCN(1, hidden, hidden, tcn_layers, dropout).to(device)
         self.tcn_mlp = nn.Linear(window_size, hidden)
@@ -170,21 +171,29 @@ class Decoder(nn.Module):
         return x_tcn_out
 
     def GNN_Module(self, x_tcn_out, adj):
-        batch_size = x_tcn_out.shape[0]
-        # 添加缺失节点
-        x_tcn_with_missing = torch.cat([x_tcn_out, x_tcn_out.mean(dim=1, keepdim=True)], dim=1)
-        
-        missing_adj_row = adj.mean(dim=1, keepdim=True)
-        missing_adj_col = torch.cat([adj.mean(dim=2, keepdim=True), torch.zeros(batch_size, 1, 1).to(self.device)], dim=1)
 
-        adj_with_missing = torch.cat([adj, missing_adj_row], dim=1) 
-        adj_with_missing = torch.cat([adj_with_missing, missing_adj_col], dim=2)
+        if self.no_virtual_node:
+            x_tcn_new = x_tcn_out
+            adj_new = adj
+        else:
+            batch_size = x_tcn_out.shape[0]
+            # 添加缺失节点
+            x_tcn_new = torch.cat([x_tcn_out, x_tcn_out.mean(dim=1, keepdim=True)], dim=1)
+            
+            missing_adj_row = adj.mean(dim=1, keepdim=True)
+            missing_adj_col = torch.cat([adj.mean(dim=2, keepdim=True), torch.zeros(batch_size, 1, 1).to(self.device)], dim=1)
+
+            adj_new = torch.cat([adj, missing_adj_row], dim=1) 
+            adj_new = torch.cat([adj_new, missing_adj_col], dim=2)
+            
         # 图卷积
-        node_state = [x_tcn_with_missing]
-        for layer in self.GNNBlocks: node_state.append(layer(node_state[-1], adj_with_missing))
+        node_state = [x_tcn_new]
+        for layer in self.GNNBlocks: node_state.append(layer(node_state[-1], adj_new))
         node_state = torch.cat(node_state, dim=-1)
-        # 移除缺失节点
-        node_state = node_state[:, :-1]
+        
+        if not self.no_virtual_node:
+            # 移除缺失节点
+            node_state = node_state[:, :-1]
         return node_state
 
     def forward(self, x, gt, adj_t, use_predict = False):
@@ -239,7 +248,8 @@ class dynst_extra_info():
     #     return self.lambda_range[1] - (self.lambda_range[1] - self.lambda_range[0]) * (self.epoch / self.max_epochs)
 
 class dynst(nn.Module):
-    def __init__(self, in_dim, out_dim, hidden_enc, hidden_dec, window_size, num_heads, tcn_layers, lstm_layers, graph_layers, dropout = 0, device = torch.device('cpu'), no_graph_gt = False):
+    def __init__(self, in_dim, out_dim, hidden_enc, hidden_dec, window_size, num_heads, tcn_layers, lstm_layers, graph_layers, dropout = 0, device = torch.device('cpu'),
+                 graph_gt = False, no_virtual_node = False):
         super().__init__()
         # self.in_dim = in_dim
         # self.out_dim = out_dim
@@ -250,23 +260,23 @@ class dynst(nn.Module):
         # self.graph_layers = graph_layers
 
         self.device = device
-        self.no_graph_gt = no_graph_gt
+        self.graph_gt = graph_gt
+        self.no_virtual_node = no_virtual_node
 
         self.enc = DynGraphEncoder(in_dim, hidden_enc, num_heads, tcn_layers, lstm_layers, dropout, device).to(device)
-        self.dec = Decoder(in_dim, out_dim, hidden_dec, window_size, tcn_layers, graph_layers, dropout, device).to(device)
+        self.dec = Decoder(in_dim, out_dim, hidden_dec, window_size, tcn_layers, graph_layers, dropout, device, no_virtual_node).to(device)
 
     def forward(self, X, y, A, A_y, adj_lambda):
-        # # 处理真实矩阵
-        # adj_gt = torch.cat((A, A_y), dim=1)
-        # adj_gt = getLaplaceMat(adj_gt)
-        # adj_enc = adj_gt
-
-        adj_enc = self.enc(X, y) # enc 输出的图结构，不可更改，用于返回值
-        # adj_enc_laplaced = getLaplaceMat(adj_enc)
-
-        # # 求图结构 gt 和 enc_output 的线性结果
-        # if adj_lambda is not None and not self.no_graph_gt:
-        #     adj_enc = (1 - adj_lambda) * adj_enc + adj_lambda * adj_gt
+        
+        if self.graph_gt:
+            # # 处理真实矩阵
+            adj_gt = torch.cat((A, A_y), dim=1)
+            adj_gt = rm_self_loops(adj_gt)
+            # adj_gt = getLaplaceMat(adj_gt)
+            adj_enc = adj_gt
+        else:
+            adj_enc = self.enc(X, y) # enc 输出的图结构，不可更改，用于返回值
+            # adj_enc_laplaced = getLaplaceMat(adj_enc)
 
         y_hat = self.dec(X, y, adj_enc, not self.training)
         return y_hat, adj_enc

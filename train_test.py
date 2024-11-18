@@ -1,4 +1,4 @@
-import torch, time, os
+import torch, time, os, re
 from torch import nn
 import numpy as np
 from eval import compute_err, compute_mae_rmse, metrics_labels, compute_correlation, compute_hits_at_k
@@ -6,6 +6,7 @@ from eval import compute_err, compute_mae_rmse, metrics_labels, compute_correlat
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
+from utils.model_selector import select_model
 from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, min_max_adj, rm_self_loops, getLaplaceMat, scale_adj
 from models.dynst import dynst_extra_info
 
@@ -332,15 +333,16 @@ def validate_test_process(model: nn.Module, criterion, dataloader):
     return loss, y_real_res, y_hat_res, adj_real_res, adj_hat_res
 
 
-def eval_process(model, criterion, train_loader, val_loader, test_loader, comp_last):
+def eval_process(args, model, criterion, train_loader, val_loader, test_loader, comp_last):
     # 读取模型
-    # trained_model = None
-    # if isinstance(model, str):
-    #     assert os.path.exists(model)
-    #     trained_model = torch.load(model)
-    # else:
-    #     trained_model = model
-    trained_model = model
+    trained_model = None
+    if isinstance(model, str):
+        assert os.path.exists(model)
+        model_str = re.search(r"/([^/]*)_\d+_\d+_w\d+_s\d+", model).groups()[0]
+        trained_model, model_args = select_model(args, train_loader)
+        trained_model.load_state_dict(torch.load(model))
+    elif isinstance(model, nn.Module):
+        trained_model = model
 
     # 分别在 train/val/test 三个数据集上跑出结果
 

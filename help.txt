@@ -1,6 +1,43 @@
 
 #################################################################################################################
 
+# 1116
+python main.py --country England --shift 2  --result-dir tests_1116 --exp 1_EN --device 4
+python main.py --country France  --shift 2  --result-dir tests_1116 --exp 1_FR --device 4
+python main.py --country Italy   --shift 2  --result-dir tests_1116 --exp 1_IT --device 4
+python main.py --country Spain   --shift 2  --result-dir tests_1116 --exp 1_SP --device 4
+python main.py --country England --shift 6  --result-dir tests_1116 --exp 1_EN --device 5
+python main.py --country France  --shift 6  --result-dir tests_1116 --exp 1_FR --device 5
+python main.py --country Italy   --shift 6  --result-dir tests_1116 --exp 1_IT --device 5
+python main.py --country Spain   --shift 6  --result-dir tests_1116 --exp 1_SP --device 5
+python main.py --country England --shift 13 --result-dir tests_1116 --exp 1_EN --device 6
+python main.py --country France  --shift 13 --result-dir tests_1116 --exp 1_FR --device 6
+python main.py --country Italy   --shift 13 --result-dir tests_1116 --exp 1_IT --device 6
+python main.py --country Spain   --shift 13 --result-dir tests_1116 --exp 1_SP --device 6
+
+# 1115
+python main.py --country England,Spain --shift 2  --result-dir tests_1115 --graph-gt --exp 1_EN_ES --device 4
+python main.py --country England,Spain --shift 6  --result-dir tests_1115 --graph-gt --exp 1_EN_ES --device 5
+python main.py --country England,Spain --shift 13 --result-dir tests_1115 --graph-gt --exp 1_EN_ES --device 6
+python main.py --country France,Italy  --shift 2  --result-dir tests_1115 --graph-gt --exp 1_FR_IT --device 7
+python main.py --country France,Italy  --shift 6  --result-dir tests_1115 --graph-gt --exp 1_FR_IT --device 8
+python main.py --country France,Italy  --shift 13 --result-dir tests_1115 --graph-gt --exp 1_FR_IT --device 9
+
+python main.py --country England,Spain --shift 2  --result-dir tests_1115 --no-virtual-node --exp 2_EN_ES --device 4
+python main.py --country England,Spain --shift 6  --result-dir tests_1115 --no-virtual-node --exp 2_EN_ES --device 5
+python main.py --country England,Spain --shift 13 --result-dir tests_1115 --no-virtual-node --exp 2_EN_ES --device 6
+python main.py --country France,Italy  --shift 2  --result-dir tests_1115 --no-virtual-node --exp 2_FR_IT --device 7
+python main.py --country France,Italy  --shift 6  --result-dir tests_1115 --no-virtual-node --exp 2_FR_IT --device 8
+python main.py --country France,Italy  --shift 13 --result-dir tests_1115 --no-virtual-node --exp 2_FR_IT --device 9
+
+python main.py --country England,Spain --shift 2  --result-dir tests_1115 --no-virtual-node --graph-gt --exp 3_EN_ES --device 4
+python main.py --country England,Spain --shift 6  --result-dir tests_1115 --no-virtual-node --graph-gt --exp 3_EN_ES --device 5
+python main.py --country England,Spain --shift 13 --result-dir tests_1115 --no-virtual-node --graph-gt --exp 3_EN_ES --device 6
+python main.py --country France,Italy  --shift 2  --result-dir tests_1115 --no-virtual-node --graph-gt --exp 3_FR_IT --device 7
+python main.py --country France,Italy  --shift 6  --result-dir tests_1115 --no-virtual-node --graph-gt --exp 3_FR_IT --device 8
+python main.py --country France,Italy  --shift 13 --result-dir tests_1115 --no-virtual-node --graph-gt --exp 3_FR_IT --device 9
+
+
 # 1022
 python main.py --country England,Spain --result-dir tests_1022 --shift 2  --device 5 --exp 1_EN_ES --graph-lambda 0.2 
 python main.py --country England,Spain --result-dir tests_1022 --shift 6  --device 5 --exp 1_EN_ES --graph-lambda 0.2 

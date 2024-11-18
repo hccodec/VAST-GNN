@@ -166,6 +166,7 @@ def train_country(args, result_paths, meta_data, i_country):
         logger.info("-" * 20)
         logger.info(font_yellow(f"[最新 (epoch {len(losses['train']) - 1})]"))
         metrics_latest = eval_process(
+            args,
             result_paths["model_latest"],
             criterion,
             train_loader,
@@ -176,6 +177,7 @@ def train_country(args, result_paths, meta_data, i_country):
         logger.info("-" * 20)
         logger.info(font_yellow(f"[最小 val loss (epoch {epoch_best})]"))
         metrics_minvalloss = eval_process(
+            args,
             result_paths["model"],
             criterion,
             train_loader,
@@ -210,8 +212,12 @@ def train_country(args, result_paths, meta_data, i_country):
                 **{
                     f"{k}_minvalloss": float(v)
                     for k, v in metrics_minvalloss.items()
+                    if not k == 'outputs'
                 },
-                **{f"{k}_latest": float(v) for k, v in metrics_latest.items()},
+                **{f"{k}_latest": float(v)
+                   for k, v in metrics_latest.items()
+                    if not k == 'outputs'
+                },
             },
         )
 

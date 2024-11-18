@@ -105,7 +105,7 @@ def test(fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_202410
     criterion = torch.nn.MSELoss()
 
 
-    res = eval_process(trained_model, criterion, train_loader, val_loader, test_loader, comp_last = False)
+    res = eval_process(args, trained_model, criterion, train_loader, val_loader, test_loader, comp_last = False)
 
     logger.info(font_green(f"完成测试 [{exp_desc}]"))
 
