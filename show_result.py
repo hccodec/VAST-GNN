@@ -119,7 +119,7 @@ def process_log_segment(lines):
     # logger.info(lines)
     return {country: res}
 
-def print_err(results, _models, i, subdir = None):
+def print_err(results, _models, i, subdir = None, mode = 0):
     s = {'minvalloss': {}, 'latest': {}}
 
     for result in results:
@@ -175,8 +175,12 @@ def print_err(results, _models, i, subdir = None):
         if k != 'minvalloss': continue
         keys = sorted(s[k].keys(), key=sort_key)
         msg += ' | '.join(keys) + '\n'
-        msg += f'[{_models[i]:>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
-        msg += f'[{"epoch":>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['epoch'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
+        if mode == 0:
+            msg += f'[{_models[i]:>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
+            msg += f'[{"epoch":>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['epoch'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
+        elif mode == 1:
+            msg += '\t'.join(['\t'.join(map(lambda c: '\t'.join((c['err_test'], c['epoch'])), v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
+        else: raise NotImplementedError
         # logger.info('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
         # logger.info(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))
     
@@ -206,7 +210,7 @@ def merge_results(results):
     return merged_results
 
 
-def show_result(dir, subdir = ""):
+def show_result(dir, subdir = "", mode = 0):
 
     results = extract_results(dir)
     results = merge_results(results)
@@ -220,7 +224,7 @@ def show_result(dir, subdir = ""):
     msg = "\n"
     msg += "[err_test] {}\n".format(','.join(countries)) + '\n'
     for i in range(len(models)):
-        msg += print_err(results, models, i, subdir) + '\n'
+        msg += print_err(results, models, i, subdir, mode) + '\n'
     logger.info(msg)
 
 if __name__ == "__main__":
