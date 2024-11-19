@@ -218,7 +218,9 @@ def show_result(dir, subdir = "", mode = 0):
     # get models
     models = []
     for result in results: models.append(result['model'])
-    models = list(set(models))
+        
+    models = sorted(set(models), key=lambda x: {"mpnn_lstm": 0, "lstm": 1, "dynst": 2}.get(x, float('inf')))
+
     # assert set(models) == {'dynst', 'mpnn_lstm'}, models
     # models = ['mpnn_lstm', 'dynst']
     msg = "\n"
@@ -226,6 +228,7 @@ def show_result(dir, subdir = "", mode = 0):
     for i in range(len(models)):
         msg += print_err(results, models, i, subdir, mode) + '\n'
     logger.info(msg)
+    return msg
 
 if __name__ == "__main__":
     args = parse_args()

@@ -1,6 +1,49 @@
 
 # 1119
 
+# 5 seed=2
+
+python main.py --country England --shift 2  --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 3
+python main.py --country England --shift 6  --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 3
+python main.py --country England --shift 13 --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 3
+python main.py --country England --shift 2  --model lstm --result-dir tests_1119 --exp 6 --device 3
+python main.py --country England --shift 6  --model lstm --result-dir tests_1119 --exp 6 --device 3
+python main.py --country England --shift 13 --model lstm --result-dir tests_1119 --exp 6 --device 3
+
+python main.py --country France  --shift 2  --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 2
+python main.py --country France  --shift 6  --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 2
+python main.py --country France  --shift 13 --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 2
+python main.py --country France  --shift 2  --model lstm --result-dir tests_1119 --exp 6 --device 2
+python main.py --country France  --shift 6  --model lstm --result-dir tests_1119 --exp 6 --device 2
+python main.py --country France  --shift 13 --model lstm --result-dir tests_1119 --exp 6 --device 2
+
+python main.py --country Italy   --shift 2  --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 1
+python main.py --country Italy   --shift 6  --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 1
+python main.py --country Italy   --shift 13 --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 1
+python main.py --country Italy   --shift 2  --model lstm --result-dir tests_1119 --exp 6 --device 1
+python main.py --country Italy   --shift 6  --model lstm --result-dir tests_1119 --exp 6 --device 1
+python main.py --country Italy   --shift 13 --model lstm --result-dir tests_1119 --exp 6 --device 1
+
+python main.py --country Spain   --shift 2  --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 5
+python main.py --country Spain   --shift 6  --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 5
+python main.py --country Spain   --shift 13 --model mpnn_lstm --result-dir tests_1119 --exp 6 --device 5
+python main.py --country Spain   --shift 2  --model lstm --result-dir tests_1119 --exp 6 --device 5
+python main.py --country Spain   --shift 6  --model lstm --result-dir tests_1119 --exp 6 --device 5
+python main.py --country Spain   --shift 13 --model lstm --result-dir tests_1119 --exp 6 --device 5
+
+python main.py --country England --shift 2  --result-dir tests_1119 --exp 6 --device 3
+python main.py --country England --shift 6  --result-dir tests_1119 --exp 6 --device 2
+python main.py --country England --shift 13 --result-dir tests_1119 --exp 6 --device 1
+python main.py --country France  --shift 2  --result-dir tests_1119 --exp 6 --device 3
+python main.py --country France  --shift 6  --result-dir tests_1119 --exp 6 --device 2
+python main.py --country France  --shift 13 --result-dir tests_1119 --exp 6 --device 1
+python main.py --country Italy   --shift 2  --result-dir tests_1119 --exp 6 --device 3
+python main.py --country Italy   --shift 6  --result-dir tests_1119 --exp 6 --device 2
+python main.py --country Italy   --shift 13 --result-dir tests_1119 --exp 6 --device 1
+python main.py --country Spain   --shift 2  --result-dir tests_1119 --exp 6 --device 3
+python main.py --country Spain   --shift 6  --result-dir tests_1119 --exp 6 --device 2
+python main.py --country Spain   --shift 13 --result-dir tests_1119 --exp 6 --device 1
+
 # 4  seed=1 baselines
 python main.py --country England --shift 2  --model mpnn_lstm --result-dir tests_1119 --exp 4 --device 9
 python main.py --country England --shift 6  --model mpnn_lstm --result-dir tests_1119 --exp 4 --device 8

@@ -170,59 +170,22 @@ def train_country(args, result_paths, meta_data, i_country):
 
         logger.info("-" * 20)
         logger.info(font_yellow(f"[最新 (epoch {len(losses['train']) - 1})]"))
-        metrics_latest = eval_process(
-            args,
-            result_paths["model_latest"],
-            criterion,
-            train_loader,
-            val_loader,
-            test_loader,
-            comp_last
-        )
+        metrics_latest = eval_process(args, result_paths["model_latest"], criterion, train_loader, val_loader, test_loader, comp_last)
         logger.info("-" * 20)
         logger.info(font_yellow(f"[最小 val loss (epoch {epoch_best})]"))
-        metrics_minvalloss = eval_process(
-            args,
-            result_paths["model"],
-            criterion,
-            train_loader,
-            val_loader,
-            test_loader,
-            comp_last
-        )
+        metrics_minvalloss = eval_process(args, result_paths["model"], criterion, train_loader, val_loader, test_loader, comp_last)
 
         writer.add_hparams(
             {
                 **{
-                    k: (
-                        v
-                        if isinstance(v, (int, float, str, bool, torch.Tensor))
-                        else str(v)
-                    )
-                    for k, v in vars(args).items()
-                    if k
-                       in [
-                           "xdays",
-                           "ydays",
-                           "window",
-                           "batch_size",
-                           "lr",
-                           "lr_min",
-                           "seed",
-                       ]
+                    k: (v if isinstance(v, (int, float, str, bool, torch.Tensor)) else str(v))
+                    for k, v in vars(args).items() if k in ["xdays", "ydays", "window", "batch_size", "lr", "lr_min", "seed"]
                 },
                 **{"country_name": country_name, "country_code": country_code},
             },
             {
-                **{
-                    f"{k}_minvalloss": float(v)
-                    for k, v in metrics_minvalloss.items()
-                    if not k == 'outputs'
-                },
-                **{f"{k}_latest": float(v)
-                   for k, v in metrics_latest.items()
-                    if not k == 'outputs'
-                },
+                **{f"{k}_minvalloss": float(v) for k, v in metrics_minvalloss.items() if not k == 'outputs'},
+                **{f"{k}_latest": float(v) for k, v in metrics_latest.items() if not k == 'outputs'},
             },
         )
 
