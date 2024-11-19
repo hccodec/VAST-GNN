@@ -2,6 +2,8 @@ import argparse, os, re
 
 from utils.custom_datetime import str2date
 
+from utils.logger import logger
+
 pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
 countries = ["England", "France", "Italy", "Spain"]
 
@@ -33,10 +35,16 @@ def extract_results(dir):
             assert pattern_subdir.search(exp), exp
             model, xdays, ydays, window, shift, timestr = pattern_subdir.search(exp).groups()
 
-            log_path = os.path.join(dir, dataset, exp,  "log.txt")
-            if not os.path.exists(log_path): continue
-            res = extract_from_logfile(log_path)
-
+            log_path = os.path.join(dir, dataset, exp, "log.txt")
+            if os.path.exists(log_path): res = extract_from_logfile(log_path)
+            else:
+                log_country_paths = [os.path.join(dir, dataset, exp, country_path) for country_path in os.listdir(os.path.join(dir, dataset, exp)) if not country_path.startswith("tensorboard") and os.path.isdir(os.path.join(dir, dataset, exp, country_path))]
+                if all([os.path.exists(p) for p in log_country_paths]):
+                    res = {}
+                    for country_path in log_country_paths:
+                        country = country_path.split("/")[-1]
+                        log_path = os.path.join(country_path, "log.txt")
+                        res.update(extract_from_logfile(log_path))
             exp_result.append(dict(
                 model=model, xdays=xdays, ydays=ydays, window=window, shift=shift, timestr=timestr, res=res
             ))
@@ -108,14 +116,14 @@ def process_log_segment(lines):
             if pattern_hits10.search(line):
                 hits10_train, hits10_val, hits10_test = list(map(float, pattern_hits10.search(line).groups()))
                 res["latest" if i == 4 else "minvalloss"].update(dict(hits10_train=hits10_train, hits10_val=hits10_val, hits10_test=hits10_test))
-    # print(lines)
+    # logger.info(lines)
     return {country: res}
 
 def print_err(results, _models, i, subdir = None):
     s = {'minvalloss': {}, 'latest': {}}
 
     for result in results:
-        x, y, window, model, shift, timestr = result['xdays'], result['ydays'], result['window'], result['model'], result['shift'], result['timestr']
+        x, y, window, model, shift, timestr = result['xdays'], result['ydays'], result['window'], result['model'], result['shift'], result['timestr'] if 'timestr' in result else ''
         if model != _models[i]: continue
         r = result['res']
 
@@ -159,19 +167,49 @@ def print_err(results, _models, i, subdir = None):
                 epoch=f"{epoch_latest}"
             )
     _ = 1
-    if subdir: print(subdir)
+
+    msg = ""
+    
+    if subdir: msg += subdir + '\n'
     for k in s:
         if k != 'minvalloss': continue
         keys = sorted(s[k].keys(), key=sort_key)
-        print(' | '.join(keys))
-        print(f'[{_models[i]:>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]))
-        print(f'[{"epoch":>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['epoch'], v.values())) for v in [s[k][_k] for _k in keys]]))
-        # print('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
-        # print(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))
+        msg += ' | '.join(keys) + '\n'
+        msg += f'[{_models[i]:>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
+        msg += f'[{"epoch":>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['epoch'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
+        # logger.info('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
+        # logger.info(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))
+    
+    return msg
+
+def merge_results(results):
+    '''
+    合并 results 中的结果，返回一个列表，每个元素是一个字典，包含 model, xdays, ydays, window, shift, res
+    合并依据是 model, xdays, ydays, window, shift, 并且假定当前述 key 对应 value 都相同的情形下， res 的 key 都不相同。然后把 res 合并
+    所以合并后 model, xdays, ydays, window, shift 仅一套，配以合并后的 res
+    思路：
+    先定义一个 merged_results 列表存放最终结果
+    若 merged_results 中没有该 model, xdays, ydays, window, shift 组合的 res，则将整个 result 添加到 merged_results 中
+    若有该组合则更新 res，把新 res 字典与原来 res 合并（assert 新旧 res 键不重复）
+    '''
+    merged_results_dic = {}
+    for result in results:
+        model, xdays, ydays, window, shift, res = result['model'], result['xdays'], result['ydays'], result['window'], result['shift'], result['res']
+        k = (model, xdays, ydays, window, shift)
+        if k not in merged_results_dic: merged_results_dic.update({k: res})
+        else: merged_results_dic[k].update(res)
+
+    merged_results = []
+    for k, v in merged_results_dic.items():
+        merged_results.append(dict(zip(['model', 'xdays', 'ydays', 'window', 'shift', 'res'], k + (v,))))
+    
+    return merged_results
+
 
 def show_result(dir, subdir = ""):
 
     results = extract_results(dir)
+    results = merge_results(results)
 
     # get models
     models = []
@@ -179,13 +217,14 @@ def show_result(dir, subdir = ""):
     models = list(set(models))
     # assert set(models) == {'dynst', 'mpnn_lstm'}, models
     # models = ['mpnn_lstm', 'dynst']
-    print()
-    print("[err_test] {}\n".format(','.join(countries)))
+    msg = "\n"
+    msg += "[err_test] {}\n".format(','.join(countries)) + '\n'
     for i in range(len(models)):
-        print_err(results, models, i, subdir)
+        msg += print_err(results, models, i, subdir) + '\n'
+    logger.info(msg)
 
 if __name__ == "__main__":
     args = parse_args()
     subdir, dir = args.subdir, args.dir
     show_result(dir, subdir)
-    print()
+    logger.info("")

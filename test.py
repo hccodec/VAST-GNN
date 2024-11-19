@@ -117,4 +117,4 @@ if __name__ == '__main__':
     parser.add_argument("--country-code", default='EN')
     args = parser.parse_args()
     res = test(args.model_dir, args.country_code)
-    print(res)
+    logger.info(res)

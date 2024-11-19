@@ -33,10 +33,15 @@ def exp_main(args):
     val_ratio           = args.val_ratio
     node_observed_ratio = args.node_observed_ratio
 
-    result_paths = {
-        "log": os.path.join(result_dir, "log.txt"),
-        "args": os.path.join(result_dir, "args.txt"),
-    }
+    if ',' in args.country:
+        result_paths = {
+            "args": os.path.join(result_dir, "args.txt"),
+        }
+    else:
+        result_paths = {
+            "args": os.path.join(result_dir, args.country, "args.txt"),
+        }
+        os.makedirs(os.path.join(result_dir, args.country), exist_ok=True)
 
     with open(result_paths["args"], "w", encoding="utf-8") as f:
         f.write("[args]\n")

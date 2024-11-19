@@ -31,7 +31,7 @@ def get_parser(parent_parser=None):
     parser.add_argument("--model", default="dynst", choices=models_list, help="设置实验所用模型")
     parser.add_argument("--result-dir", default="results_test", help="")
     # # 实验设置：随机种子和设备号
-    parser.add_argument("--seed", type=int, default=5, help="随机种子")
+    parser.add_argument("--seed", type=int, default=42, help="随机种子")
     parser.add_argument("--device", default=None, help="GPU号")
     # 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
     parser.add_argument("--xdays", type=int, default=7, help="预测所需历史天数")
@@ -121,7 +121,7 @@ def process_args(args, record_log):
     if record_log:
         os.makedirs(args.result_dir, exist_ok=True)
         print("结果目录:", args.result_dir)
-        set_logger(args.result_dir)
+        set_logger(args.result_dir if ',' in args.country else os.path.join(args.result_dir, args.country))
 
     # 设置 GPU 设备
     args.device = set_device(args.device)

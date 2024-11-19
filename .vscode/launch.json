@@ -78,7 +78,7 @@
                 "--device", "2",
                 "--shift", "2",
                 "--ydays", "1",
-                "--country", "England,Spain",
+                "--country", "Spain",
                 "--node-observed-ratio", "50",
                 // "--graph-gt",
                 // "--no-virtual-node"
@@ -95,7 +95,7 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-               "-d", "results/tests_1014/exp_9_lstm_80_mask"
+               "-d", "results/tests_1118/exp_1"
             ]
         },
         {

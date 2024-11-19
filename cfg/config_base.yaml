@@ -7,7 +7,7 @@ model: "dynst"             # 设置实验所用模型
 # result_dir: "results_test" # 实验结果目录
 
 # 实验设置：随机种子和设备号
-seed: 5                    # 随机种子
+# seed: 5                    # 随机种子
 device: 0                  # GPU号
 
 ## 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
@@ -37,8 +37,8 @@ lambda_graph_loss: {
 # graph_lambda_epoch_max: 500 # 图正则化参数达到最大值的轮次
 # graph_lambda_method: "cos"  # 图正则化方法
 # 实验设置：学习率
-lr: 0.001                   # 初始学习率
-lr_min: 0.001               # 最小学习率
+lr: 0.001                  # 初始学习率
+lr_min: 0.001              # 最小学习率
 lr_weight_decay: 0.0005     # 权重衰减
 lr_scheduler_stepsize: 10   # 学习率调整步长
 lr_scheduler_gamma: 0.7     # 学习率调整系数
