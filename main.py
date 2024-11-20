@@ -105,6 +105,7 @@ def train_country(args, result_paths, meta_data, i_country):
     # graph_lambda_method = args.graph_lambda_method
 
     train_loader, val_loader, test_loader = meta_data['data'][country_name][0]
+    del meta_data['data'][country_name]
 
     logger.info(f"开始训练 {country_name} ...")
 

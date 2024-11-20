@@ -82,7 +82,7 @@ def vis(test_dir = "1022", exp = "7", country = "EN"):
     logger.info(font_yellow(f"开始可视化 {country}"))
 
     # 提取对应模型
-    models = [os.path.join(dirpath, filename) for dirpath, dirnames, filenames in os.walk(f"results/tests_{test_dir}")
+    models = [os.path.join(dirpath, filename) for dirpath, dirnames, filenames in os.walk('.') if '' in dirpath and f"tests_{test_dir}" in dirpath
      for filename in filenames if filename.endswith("best.pth") and country in filename and f"exp_{exp}" in dirpath]
     
     for model in models:
@@ -125,27 +125,27 @@ def vis(test_dir = "1022", exp = "7", country = "EN"):
         fn_case, case_relation = generate_case_relations(regions_observed, x_case_test, y_case_test, y_hat_test, "test")
         if not adj_hat_test == []: mob_relation = generate_mob_relations(regions_observed, x_mob_test, y_mob_test, adj_hat_test, "test")
 
-        vis_resdir = os.path.join(f"visualization/results_visualization/{test_dir}_{exp}", "x{}_y{}_w{}_s{}".format(xdays, ydays, window, shift), country)
+        vis_resdir = os.path.join(f"visualization/results_visualization/{test_dir}_{exp}", "x{}_y{}_w{}_s{}_{}".format(xdays, ydays, window, shift, model_str), country)
         logger.info(f"正在存储数据到目录 [{vis_resdir}] 中")
         os.makedirs(vis_resdir, exist_ok=True)
         # case
-        case_relation.to_csv(os.path.join(vis_resdir, fn_case))
+        case_relation.to_csv(os.path.join(vis_resdir, fn_case), index=False)
         # # relations 包括所有的、unobserved、observed的
         # relations.to_csv(os.path.join(vis_resdir, f"{country_name}_relations.csv"), index=False)
         # mob
         if not adj_hat_test == []:
             for fn, mob_data in mob_relation:
-                mob_data.to_csv(os.path.join(vis_resdir, fn))
+                mob_data.to_csv(os.path.join(vis_resdir, fn), index=False)
 
         logger.info(f"数据已存储")
     logger.info(font_yellow(f"结束可视化 {country}"))
 
 if __name__ == '__main__':
     test_dir = "1022"
-    exp = "7"
+    exp = '7'
     vis(test_dir, exp, "EN")
+    vis(test_dir, exp, "FR")
     vis(test_dir, exp, "IT")
     vis(test_dir, exp, "ES")
-    vis(test_dir, exp, "FR")
     # vis(test_dir, exp, "NZ")
 
