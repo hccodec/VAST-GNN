@@ -18,7 +18,7 @@ def select_model(args, train_loader):
         "graph_layers": 2,
         "dropout": 0.5,
         "device": args.device,
-        "graph_gt": args.graph_gt,
+        "no_graph": args.no_graph,
         "no_virtual_node": args.no_virtual_node
     }
     lstm_model_args = {

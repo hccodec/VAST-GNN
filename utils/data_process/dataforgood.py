@@ -1,6 +1,5 @@
 """
-dataforgood jieguo 
-"""
+dataforgood """
 
 import os, re
 import numpy as np

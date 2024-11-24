@@ -62,7 +62,7 @@ def get_parser(parent_parser=None):
     # parser.add_argument("--graph-lambda-epoch-max", type=float, default=-1)
     # parser.add_argument("--graph-lambda-method", choices=graph_lambda_methods, default='cos')
     parser.add_argument("--maml", action="store_true", help="是否启用元学习")
-    parser.add_argument("--graph-gt", action="store_true", help="是否不启用图学习。默认启用")
+    parser.add_argument("--no-graph", action="store_true", help="是否不启用图学习。默认启用")
     parser.add_argument("--no-virtual-node", action="store_true", help="是否启用虚拟结点，默认启用")
 
     parser.add_argument("--comp-last",action="store_true",help="在多天预测的情形下只比对最后一天的结果")

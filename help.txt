@@ -1,3 +1,28 @@
+
+# 1122
+
+python main.py --country England --shift 13 --graph_lambda 0.1 --device  6
+python main.py --country England --shift 13 --graph_lambda 0.2 --device  7
+python main.py --country England --shift 13 --graph_lambda 0.3 --device  8
+python main.py --country England --shift 13 --graph_lambda 0.4 --device  9
+python main.py --country England --shift 13 --graph_lambda 0.5 --device  6
+python main.py --country England --shift 13 --graph_lambda 0.6 --device  7
+python main.py --country England --shift 13 --graph_lambda 0.7 --device  8
+python main.py --country England --shift 13 --graph_lambda 0.8 --device  9
+python main.py --country England --shift 13 --graph_lambda 0.9 --device  6
+
+python main.py --country Italy --shift 13 --graph_lambda 0.1 --device  6
+python main.py --country Italy --shift 13 --graph_lambda 0.2 --device  7
+python main.py --country Italy --shift 13 --graph_lambda 0.3 --device  8
+python main.py --country Italy --shift 13 --graph_lambda 0.4 --device  9
+python main.py --country Italy --shift 13 --graph_lambda 0.5 --device  6
+python main.py --country Italy --shift 13 --graph_lambda 0.6 --device  7
+python main.py --country Italy --shift 13 --graph_lambda 0.7 --device  8
+python main.py --country Italy --shift 13 --graph_lambda 0.8 --device  9
+python main.py --country Italy --shift 13 --graph_lambda 0.9 --device  6
+
+
+
 # 1120
 
 # 3个尺度 4个国家 3个模型

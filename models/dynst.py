@@ -249,7 +249,7 @@ class dynst_extra_info():
 
 class dynst(nn.Module):
     def __init__(self, in_dim, out_dim, hidden_enc, hidden_dec, window_size, num_heads, tcn_layers, lstm_layers, graph_layers, dropout = 0, device = torch.device('cpu'),
-                 graph_gt = False, no_virtual_node = False):
+                 no_graph = False, no_virtual_node = False):
         super().__init__()
         # self.in_dim = in_dim
         # self.out_dim = out_dim
@@ -260,7 +260,7 @@ class dynst(nn.Module):
         # self.graph_layers = graph_layers
 
         self.device = device
-        self.graph_gt = graph_gt
+        self.no_graph = no_graph
         self.no_virtual_node = no_virtual_node
 
         self.enc = DynGraphEncoder(in_dim, hidden_enc, num_heads, tcn_layers, lstm_layers, dropout, device).to(device)
@@ -268,7 +268,7 @@ class dynst(nn.Module):
 
     def forward(self, X, y, A, A_y, adj_lambda):
         
-        if self.graph_gt:
+        if self.no_graph:
             # # 处理真实矩阵
             adj_gt = torch.cat((A, A_y), dim=1)
             adj_gt = rm_self_loops(adj_gt)
