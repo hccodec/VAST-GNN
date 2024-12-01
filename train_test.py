@@ -229,12 +229,12 @@ def train_process(
 
             # region tensorboard
 
-            # Graph
-            if e == 0:
-                writer.add_graph(model, (x_case, y_case, x_mob, y_mob, idx_dataset))
-            # Histogram
-            for name, param in model.named_parameters():
-                writer.add_histogram(name, param, e)
+            # # Graph
+            # if e == 0:
+            #     writer.add_graph(model, (x_case, y_case, x_mob, y_mob, idx_dataset))
+            # # Histogram
+            # for name, param in model.named_parameters():
+            #     writer.add_histogram(name, param, e)
             # # PR Curve
             # if e % 5 == 0:
             #     writer.add_pr_curve_raw(
@@ -268,7 +268,7 @@ def train_process(
                 writer.add_scalar("Metric/HITS@10_val", hits10_val, e)
                 writer.add_scalar("Metric/HITS@10_test", hits10_test, e)
             
-            writer.add_scalar("Others/Learning_Rate", lr, e)
+            # writer.add_scalar("Others/Learning_Rate", lr, e)
             writer.add_scalar("Others/Time(s)", time2 - time1, e)
             
             # endregion

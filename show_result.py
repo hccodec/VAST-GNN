@@ -227,7 +227,7 @@ def show_result(dir, subdir = "", mode = 0):
     msg += "[err_test] {}\n".format(','.join(countries)) + '\n'
     for i in range(len(models)):
         msg += print_err(results, models, i, subdir, mode) + '\n'
-    logger.info(msg)
+    if mode == 0: logger.info(msg)
     return msg
 
 if __name__ == "__main__":

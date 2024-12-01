@@ -127,7 +127,7 @@ def process_args(args, record_log):
     args.device = set_device(args.device)
 
     # 通过百分点将隐藏结点比例规范化至0-1
-    assert 0 <= args.node_observed_ratio <= 100
+    assert 0 < args.node_observed_ratio <= 100 and not args.node_observed_ratio < 1
     args.node_observed_ratio /= 100
 
     # 通过百分点将训练集划分比例规范化至0-1

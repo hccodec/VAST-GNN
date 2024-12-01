@@ -60,9 +60,6 @@ def exp_main(args):
 
     logger.info(f"")
     # 根据是否指定国家进行相应训练
-    # if args.maml is True:
-    #     maml_train(meta_data)
-    # el
     if "country" not in args:
         for i_country in range(len(meta_data["country_names"])):
             train_country(args, result_paths, meta_data, i_country)
@@ -70,10 +67,14 @@ def exp_main(args):
         # 处理 args.country 使之接受形如 "England,Spain" 的参数并整理成数组
         countries = [e.title() for e in country.split(',')]
         if set(countries).issubset(set(meta_data["country_names"])):
-            logger.info(f"将对国家 {country} 的数据进行训练")
             for country in countries:
                 i_country = meta_data["country_names"].index(country)
-                train_country(args, result_paths, meta_data, i_country)
+                if args.maml is True:
+                    logger.info(f"将对国家 {country} 进行元学习")
+                    maml_train(args, result_paths, meta_data, i_country)
+                else:
+                    logger.info(f"将对国家 {country} 进行训练")
+                    train_country(args, result_paths, meta_data, i_country)
         else:
             print(f"参数错误 args.country: {country}")
 
@@ -138,30 +139,16 @@ def train_country(args, result_paths, meta_data, i_country):
     # 初始化 tensorboard 记录器
     with SummaryWriter(result_paths["tensorboard"]) as writer:
         losses, trained_model, epoch_best, loss_best = train_process(
-            model,
-            criterion,
-            epochs,
-            lr,
-            lr_min,
-            lr_scheduler_stepsize,
-            lr_scheduler_gamma,
-            lr_weight_decay,
-            train_loader,
-            val_loader,
-            test_loader,
-            early_stop_patience,
-            node_observed_ratio,
-            case_normalize_ratio,
+            model, criterion, epochs,
+            lr, lr_min, lr_scheduler_stepsize, lr_scheduler_gamma, lr_weight_decay,
+            train_loader, val_loader, test_loader,
+            early_stop_patience, node_observed_ratio, case_normalize_ratio,
             graph_lambda,
             # graph_lambda_0,
             # graph_lambda_n,
             # graph_lambda_epoch_max,
             # graph_lambda_method,
-            device,
-            writer,
-            result_paths,
-            comp_last
-        )
+            device, writer, result_paths, comp_last)
 
         # writer.close()
         torch.save(trained_model.state_dict(), result_paths["model_latest"])
