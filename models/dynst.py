@@ -178,7 +178,8 @@ class Decoder(nn.Module):
         else:
             batch_size = x_tcn_out.shape[0]
             # 添加缺失节点
-            x_tcn_new = torch.cat([x_tcn_out, x_tcn_out.mean(dim=1, keepdim=True)], dim=1)
+            x_virtual = x_tcn_out.mean(dim=1, keepdim=True)
+            x_tcn_new = torch.cat([x_tcn_out, x_virtual], dim=1)
             
             missing_adj_row = adj.mean(dim=1, keepdim=True)
             missing_adj_col = torch.cat([adj.mean(dim=2, keepdim=True), torch.zeros(batch_size, 1, 1).to(self.device)], dim=1)

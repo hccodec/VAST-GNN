@@ -5,7 +5,7 @@ from utils.custom_datetime import str2date
 from utils.logger import logger
 
 pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
-countries = ["England", "France", "Italy", "Spain"]
+countries = ["England", "France", "Italy", "Spain", "NewZealand"]
 
 pattern_sort_key = re.compile(r"^(\d+)->(\d+) \(w(\d+)s(\d+)\)$")
 def sort_key(item):

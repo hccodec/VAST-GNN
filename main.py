@@ -52,11 +52,17 @@ def exp_main(args):
     starttime = datetime.now()
     logger.info(f"实验 [{exp_desc}] 开始于 {starttime.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    from utils.data_process.dataforgood import load_data
+    if args.dataset == 'dataforgood':
+        from utils.data_process.dataforgood import load_data
+        meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
+                            xdays, ydays, window, shift,
+                            train_ratio, val_ratio, node_observed_ratio)
+    elif args.dataset == 'sim':        
+        from utils.data_process.sim import load_data
+        meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
+                            xdays, ydays, window, shift,
+                            train_ratio, val_ratio, node_observed_ratio)
 
-    meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
-                          xdays, ydays, window, shift,
-                          train_ratio, val_ratio, node_observed_ratio)
 
     logger.info(f"")
     # 根据是否指定国家进行相应训练
@@ -65,7 +71,7 @@ def exp_main(args):
             train_country(args, result_paths, meta_data, i_country)
     else:
         # 处理 args.country 使之接受形如 "England,Spain" 的参数并整理成数组
-        countries = [e.title() for e in country.split(',')]
+        countries = [e for e in country.split(',')]
         if set(countries).issubset(set(meta_data["country_names"])):
             for country in countries:
                 i_country = meta_data["country_names"].index(country)
@@ -76,7 +82,7 @@ def exp_main(args):
                     logger.info(f"将对国家 {country} 进行训练")
                     train_country(args, result_paths, meta_data, i_country)
         else:
-            print(f"参数错误 args.country: {country}")
+            print(f'参数错误 args.country: {country} in {set(meta_data["country_names"])}')
 
     endtime = datetime.now()
     logger.info(f"实验 [{exp_desc}] 结束。\n总用时 {(datetime.min + (endtime - starttime)).strftime('%H:%M:%S')} （{starttime.strftime('%Y-%m-%d %H:%M:%S')} - {endtime.strftime('%Y-%m-%d %H:%M:%S')}）")
@@ -99,7 +105,7 @@ def train_country(args, result_paths, meta_data, i_country):
 
     comp_last = args.comp_last
 
-    graph_lambda = args.lambda_graph_loss[country_name][(1 + args.shift) if args.ydays == 1 else args.ydays]
+    graph_lambda = args.lambda_graph_loss[country_name][(1 + args.shift) if args.ydays == 1 else args.ydays] if country_name in args.lambda_graph_loss else 0
     # graph_lambda_0 = args.graph_lambda_0
     # graph_lambda_n = args.graph_lambda_n
     # graph_lambda_epoch_max = args.graph_lambda_epoch_max
@@ -181,7 +187,7 @@ def main():
     args = parse_args()
     logger.info(f"运行结果将保存至 {args.result_dir}")
     try:
-        if args.dataset == "dataforgood":
+        if args.dataset == "dataforgood" or args.dataset == 'sim':
             exp_main(args)
         else:
             raise ValueError(f"数据集 {args.dataset} 不存在")

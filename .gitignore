@@ -1,6 +1,6 @@
 __pycache__
 .idea/
-dataset_cache/
+dataset_cache*/
 results*/
 **/*bak
 epilearn/

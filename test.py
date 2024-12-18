@@ -3,7 +3,6 @@ from train_test import validate_test_process, eval_process
 from eval import compute_mae_rmse
 from utils.logger import logger
 from utils.args import get_parser, process_args
-from utils.data_process.dataforgood import split_dataset, load_data
 import pandas as pd
 from argparse import ArgumentParser, Namespace
 
@@ -71,9 +70,15 @@ def get_args(config_str):
 
     return args, model_args
 
-def test(fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth', country = "EN"):
-    
-    arg_path = os.path.join(os.path.dirname(fn_model), 'args.txt')
+country_names = {'EN': "England", 'FR': "France", 'IT': 'Italy', 'ES': 'Spain'}
+
+def test(fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth'):
+
+    country = re.search(r"model_(.*?)_", fn_model).groups()[0]
+
+    arg_path = os.path.join(os.path.dirname(fn_model),
+                            (country[0] + 'IM' + country[1]) if country[0] == 'S' and country[1].isdigit() else country_names[country],
+                            'args.txt')
     with open(arg_path, encoding='utf-8') as f: args = f.read()
     
     args, model_args = get_args(args)
@@ -81,6 +86,11 @@ def test(fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_202410
     exp_desc = get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift, args.node_observed_ratio)
 
     logger.info(font_green(f"执行测试 [{exp_desc}]"))
+
+    if args.dataset == 'dataforgood':
+        from utils.data_process.dataforgood import load_data
+    elif args.dataset == 'sim':
+        from utils.data_process.sim import load_data
 
     meta_data = load_data(args.dataset_cache_dir, args.data_dir, args.dataset, args.batch_size,
                           args.xdays, args.ydays, args.window, args.shift,
@@ -112,9 +122,11 @@ def test(fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_202410
     return res, meta_data, args
 
 if __name__ == '__main__':
-    parser = ArgumentParser()
-    parser.add_argument("--model-dir",default='results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/')
-    parser.add_argument("--country-code", default='EN')
-    args = parser.parse_args()
-    res = test(args.model_dir, args.country_code)
+    # parser = ArgumentParser()
+    # parser.add_argument("--model-dir",default='results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/')
+    # parser.add_argument("--country-code", default='EN')
+    # args = parser.parse_args()
+    model_dir = "results/tests_1209/exp_1_sim/sim/dynst_7_1_w7_s2_20241209101426/model_S1_best.pth"
+    res, meta_data, args = test(model_dir)
+
     logger.info(res)

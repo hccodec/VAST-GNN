@@ -23,7 +23,7 @@ def get_parser(parent_parser=None):
     parser.add_argument("--config", type=str, default="cfg/config_base.yaml", help="基础配置文件路径")
     parser.add_argument("--country", type=str, default=None, help="指定训练某个国家")
     # parser.add_argument("--data-dir", default="data", help="数据集目录")
-    # parser.add_argument("--dataset", default='dataforgood', help="选择的数据集")
+    parser.add_argument("--dataset", default=None, help="选择的数据集")
     # parser.add_argument("--databinfile", type=str, default="",
     #                     help="处理后的数据集文件名称。其实际文件名为 <databinfile>_xdays_ydays_window_shift.bin")
     # parser.add_argument("--dataset-cache", default="data_preprocessed",help="处理后的数据集目录")

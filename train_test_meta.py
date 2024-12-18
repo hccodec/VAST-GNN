@@ -65,7 +65,7 @@ def meta_train_process(
     for _i_country in range(len(meta_data["country_names"])):
         if _i_country == i_country: continue
         country_code, country_name = get_country(meta_data["country_names"][_i_country], meta_data)
-        if country_code == 'NZ': continue
+        # if country_code == 'NZ': continue
         logger.info(f"元训练 {country_name} ...")
         train_loader, val_loader, test_loader = meta_data['data'][country_name][0]
 
@@ -178,9 +178,6 @@ def meta_test_train_process(
                 f"[Epoch] {e}/{epochs}, [lr] {_lr}, "
             )
 
-            print(f", [graph_lambda] {graph_lambda:.5f}", end="")
-            msg_file_logger += f"[graph_lambda] {graph_lambda}, "
-
             model.train()
             loss_res, loss_y_res, loss_adj_res = [], [], []
             hits10_res = []
@@ -193,6 +190,9 @@ def meta_test_train_process(
 
                 if isinstance(y_hat, tuple):
                     y_hat, adj_hat = y_hat
+
+                    print(f", [graph_lambda] {graph_lambda:.5f}", end="")
+                    msg_file_logger += f"[graph_lambda] {graph_lambda}, "
 
                     # 此 with 块将 adj_hat 按 μ 缩放到 adj_gt 所在尺度
                     # with torch.no_grad():

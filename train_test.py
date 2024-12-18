@@ -92,9 +92,6 @@ def train_process(
                 f"[Epoch] {e}/{epochs}, [lr] {_lr}, "
             )
 
-            print(f", [graph_lambda] {graph_lambda:.5f}", end="")
-            msg_file_logger += f"[graph_lambda] {graph_lambda}, "
-
             model.train()
             loss_res, loss_y_res, loss_adj_res = [], [], []
             hits10_res = []
@@ -107,6 +104,10 @@ def train_process(
 
                 if isinstance(y_hat, tuple):
                     y_hat, adj_hat = y_hat
+                    
+                    print(f", [graph_lambda] {graph_lambda:.5f}", end="")
+                    msg_file_logger += f"[graph_lambda] {graph_lambda}, "
+
 
                     # 此 with 块将 adj_hat 按 μ 缩放到 adj_gt 所在尺度
                     # with torch.no_grad():

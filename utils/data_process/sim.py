@@ -11,6 +11,124 @@ from utils.utils import progress_indicator
 import networkx as nx
 import pandas as pd
 
+import numpy as np
+from typing import Tuple
+
+# def generate_sim_data(
+#     num_nodes: int,
+#     num_dates: int,
+#     a: float = 0.074,
+#     b: float = 7.130,
+#     c: float = 0.01,
+#     gamma: float = 0.05,
+#     delta_t: float = 1.0,
+#     max_cases: int = 1000,
+# ) -> Tuple[np.ndarray, np.ndarray]:
+#     """
+#     模拟传染病动力学数据。
+    
+#     参数:
+#         num_nodes (int): 节点数量。
+#         num_dates (int): 时间步数。
+#         a (float): 自增长参数。
+#         b (float): 传播系数。
+#         c (float): 增长抑制系数。
+#         gamma (float): 邻接矩阵调整系数。
+#         delta_t (float): 时间步长。
+#         max_cases (int): 病例数上限。
+
+#     返回:
+#         Tuple[np.ndarray, np.ndarray]: 累积病例数和邻接矩阵序列。
+#     """
+#     def sigmoid(x: np.ndarray) -> np.ndarray:
+#         return 1 / (1 + np.exp(-x))
+    
+#     # 动力学方程：增长量 = \( a \cdot x + b \cdot \text{传播项} - c \cdot x^2 \)，受病例数上限限制
+#     def compute_growth(x: np.ndarray, adj: np.ndarray) -> np.ndarray:
+#         propagation = np.sum(adj * sigmoid(x.T - x), axis=1, keepdims=True)
+#         growth_rate = a * x + b * propagation - c * x**2
+#         growth_rate = np.maximum(growth_rate, 0)  # 确保非负
+#         growth_limit_factor = 1 - sigmoid((x - max_cases) / 100)
+#         return growth_rate * growth_limit_factor
+
+#     # 更新邻接矩阵规则：基于病例数差异调整权重
+#     def update_adjacency(adj: np.ndarray, x: np.ndarray) -> np.ndarray:
+#         x_diff = x - x.T
+#         adj += gamma * np.exp(-x_diff**2 / 2)
+#         np.fill_diagonal(adj, 0)
+#         return np.clip(adj, 0, 1)
+
+#     # 初始化病例数和邻接矩阵
+#     growth = np.zeros((num_dates, num_nodes, 1))
+#     cases = np.zeros((num_dates, num_nodes, 1))
+#     adjs = np.random.rand(num_dates, num_nodes, num_nodes)
+#     np.fill_diagonal(adjs[0], 0)
+    
+#     # 设置初始值
+#     growth[0] = np.random.randint(1, 10, size=(num_nodes, 1))
+#     cases[0] = growth[0]
+
+#     # 动力学迭代
+#     for i_date in range(1, num_dates):
+#         x_t = cases[i_date - 1]
+#         adj_t = adjs[i_date - 1]
+        
+#         # 计算增长量和更新病例数
+#         growth_rate = compute_growth(x_t, adj_t)
+#         growth[i_date] = delta_t * growth_rate
+#         cases[i_date] = cases[i_date - 1] + growth[i_date]
+        
+#         # 更新邻接矩阵
+#         adjs[i_date] = update_adjacency(adj_t, x_t)
+
+#     return cases, adjs
+
+def generate_sim_data(num_nodes, num_dates, a=0.074, b=0.013, c=0.01, gamma=0.05, delta_t=1.0, max_cases=1000):
+    delta_t = 1.0  # 时间步长
+    # a, b = 0.074, 7.130  # 动力学参数
+    # a, b = 0.074, 0.013  # 动力学参数
+
+
+    # 初始化节点和时间
+    nodes = [f"R{i:03}" for i in range(num_nodes)]
+    dates = [f"D{i:03}" for i in range(num_dates)]
+
+    # 初始化病例数和邻接矩阵
+    cases = np.zeros((num_dates, num_nodes, 1))  # 病例数，形状为 (时间, 节点, 1)
+    adjs = np.tile(np.random.rand(num_nodes, num_nodes), (num_dates, 1, 1))  # 随机生成的邻接矩阵
+
+    # 设置初始病例数
+    cases[0] = np.random.randint(0, 100, size=(num_nodes, 1))
+
+    # 定义动力学公式 dx/dt
+    def compute_dx_dt(x, adj, a, b):
+        """
+        计算 dx/dt = a * x + b * sum(adj * sigmoid(x_j - x_i))
+        """
+        # 计算 sigmoid(x_j - x_i)
+        x_diff = x.T - x  # 广播减法
+        sigmoid = 1 / (1 + np.exp(-x_diff))
+        
+        # 计算加权求和部分
+        weighted_sum = np.sum(adj * sigmoid, axis=1, keepdims=True)
+        
+        # 返回 dx/dt
+        return a * x + b * weighted_sum
+
+    # 动力学迭代
+    for i_date in range(1, num_dates):
+        # 取前一天的病例数和邻接矩阵
+        x_t = cases[i_date - 1]
+        adj_t = adjs[i_date - 1]
+        
+        # 计算 dx/dt
+        dx = compute_dx_dt(x_t, adj_t, a, b)
+        
+        # 使用欧拉法更新病例数
+        cases[i_date] = x_t + delta_t * dx
+
+    return cases, adjs, nodes
+
 # meta_info = {"name": country_names, "code": country_codes}
 pattern_graph_file = re.compile("(.*)_(.*).csv")
 
@@ -33,22 +151,17 @@ def load_data(dataset_cache_dir, data_dir, dataset, batch_size,
     else:
         #从数据集里读取数据
 
-        country_names = [d for d in os.listdir(dataset_dir)
-                         if os.path.isdir(os.path.join(dataset_dir, d))]
-        country_codes = list(map(lambda x: x if x is None else x.groups()[0],
-                                 [pattern_graph_file.search([f for f in os.listdir(os.path.join(dataset_dir, d, "graphs")) if f.endswith(".csv")][0])
-                                  for d in os.listdir(dataset_dir)
-                                  if os.path.isdir(os.path.join(dataset_dir, d))]))
+        country_names = [f"SIM{i}" for i in range(5)]
+        country_codes = [f"S{i}" for i in range(5)]
         
-        meta_data = {"country_names": country_names, "country_codes": country_codes, "data": {}, "regions": {}, "selected_indices": {}, "dates": {}}
+        meta_data = {"country_names": country_names, "country_codes": country_codes, "data": {}, "regions": {}, "selected_indices": {}}
 
         for i in range(len(country_names)):
             logger.info(f"正在读取国家 {country_names[i]:{max([len(n) for n in country_names])}s} 的数据...")
-            data, (nodes, dates, selected_indices) = _load_data(window_size, dataset_dir, node_observed_ratio, country_names[i])
+            data, (nodes, selected_indices) = _load_data(window_size, dataset_dir, node_observed_ratio, country_names[i])
             dataloaders = split_dataset(xdays, ydays, shift, train_ratio, val_ratio, batch_size, *data)
             meta_data["data"][country_names[i]] = (dataloaders, data)
             meta_data["regions"][country_names[i]] = nodes
-            meta_data["dates"][country_names[i]] = dates
             meta_data["selected_indices"][country_names[i]] = selected_indices
 
         if enable_cache and not os.path.exists(databinfile):
@@ -68,44 +181,20 @@ def _load_data(window_size, data_dir, node_observed_ratio, country_name: str, po
     按国家从文件加载数据集
     """
     assert policy in ['clip', 'pad']
-    data_country_path = os.path.join(data_dir, country_name)
-
-    Gs, dates, nodes_graph = [], [], []
-
-    label_file = [i for i in os.listdir(data_country_path) if i.endswith("_labels.csv")]
-    assert len(label_file) == 1
-    label_file = label_file[0]
-    # 读标签，本实验为病例数
-    labels = pd.read_csv(os.path.join(data_country_path, label_file)).set_index("name")
-
-    nodes_label = list(labels.index)
-
-    # 读图，并提取图中包含的结点 nodes 和日期 dates
-    for i_date, graph_file in enumerate(os.listdir(os.path.join(data_country_path, "graphs"))):
-        if not graph_file.endswith(".csv"): continue
-        graph = pd.read_csv(os.path.join(data_country_path, "graphs", graph_file), header=None)
-
-        country_code, date = pattern_graph_file.search(graph_file).groups()
-        dates.append(date)
-
-        nodes = sorted(set(list(graph[0]) + list(graph[1])))
-        assert not len(nodes_graph) or nodes_graph == nodes  # 所有图的结点都应相同
-        if nodes_graph == []: nodes_graph = nodes
-
-        nodes = sorted(set(nodes_graph) & set(nodes_label))
-
-        G = nx.DiGraph()
-        G.add_nodes_from(nodes)
-        for row in graph.iterrows():
-            G.add_edge(row[1][0], row[1][1], weight=row[1][2])
-        Gs.append(G)
 
 
-    adjs = np.stack([nx.adjacency_matrix(G).toarray() for G in Gs])
+    # region 生成 cases 和 adjs 数据
+    #############################################################################################
+    import numpy as np
 
-    labels = labels.loc[nodes, dates]
+    # 参数设置
+    num_nodes = random.randint(30, 100)  # 节点数
+    num_dates = random.randint(60, 100)  # 时间步数
 
-    cases = np.expand_dims(labels.to_numpy().T, -1)
+    cases, adjs, nodes = generate_sim_data(num_nodes, num_dates)
+
+    #############################################################################################
+    # endregion
 
     # 根据 window_size 拼接特征，并根据策略对 adjs 和 cases 进行裁剪或补零
     if policy == "clip":
@@ -118,7 +207,7 @@ def _load_data(window_size, data_dir, node_observed_ratio, country_name: str, po
     features, cases, adjs = torch.tensor(features), torch.tensor(cases), torch.tensor(adjs)
 
     # random_mask
-    num_nodes = len(nodes)
+    # num_nodes = len(nodes)
     mask = torch.cat([torch.ones(int(num_nodes * node_observed_ratio)), torch.zeros(num_nodes - int(num_nodes * node_observed_ratio))])
     mask = mask[torch.randperm(num_nodes)]
     selected_indices = torch.nonzero(mask).squeeze().numpy()
@@ -128,7 +217,7 @@ def _load_data(window_size, data_dir, node_observed_ratio, country_name: str, po
     cases = cases[:, selected_indices]
     adjs = adjs[:, selected_indices][:, :, selected_indices]
 
-    return (features, cases, adjs), (nodes, dates, selected_indices)
+    return (features, cases, adjs), (nodes, selected_indices)
 
 
 # 分割数据集
