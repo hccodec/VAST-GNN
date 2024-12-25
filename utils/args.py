@@ -93,7 +93,7 @@ def process_args(args, record_log):
 
     # # 处理loss正则化项参数 graph_lambda
     # if 'graph_lambda' in args: args["graph_lambda_0"] = args["graph_lambda_n"] = args["graph_lambda"]
-    args["lambda_graph_loss"] = pd.DataFrame(cfg["lambda_graph_loss"][f'arr_{int(cfg["node_observed_ratio"])}'], index=cfg["lambda_graph_loss"]['ydays_idx'], columns=cfg["lambda_graph_loss"]['country_idx'])
+    args["lambda_graph_loss"] = pd.DataFrame(cfg["lambda_graph_loss"][args.dataset][f'arr_{int(cfg["node_observed_ratio"])}'], index=cfg["lambda_graph_loss"][args.dataset]['ydays_idx'], columns=cfg["lambda_graph_loss"][args.dataset]['country_idx'])
     if 'graph_lambda' in args: args["lambda_graph_loss"].loc[:, :] = args["graph_lambda"]
     
     now = date2str(datetime.now(), "%Y%m%d%H%M%S")

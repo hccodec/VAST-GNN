@@ -96,7 +96,7 @@ def train_process(
             loss_res, loss_y_res, loss_adj_res = [], [], []
             hits10_res = []
 
-            for data in train_loader:
+            for i, data in enumerate(train_loader):
                 opt.zero_grad()
 
                 data = tuple(d.to(device) for d in data)
@@ -105,8 +105,9 @@ def train_process(
                 if isinstance(y_hat, tuple):
                     y_hat, adj_hat = y_hat
                     
-                    print(f", [graph_lambda] {graph_lambda:.5f}", end="")
-                    msg_file_logger += f"[graph_lambda] {graph_lambda}, "
+                    if i == 0:
+                        print(f", [graph_lambda] {graph_lambda:.5f}", end="")
+                        msg_file_logger += f"[graph_lambda] {graph_lambda}, "
 
 
                     # 此 with 块将 adj_hat 按 μ 缩放到 adj_gt 所在尺度

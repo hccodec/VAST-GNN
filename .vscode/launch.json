@@ -29,7 +29,7 @@
             "request": "launch",
             "name": "Bash-Debug (hardcoded script name)",
             "cwd": "${workspaceFolder}",
-            "program": "run.sh",
+            "program": "python main.py --dataset japan --country Japan --shift  2 --result-dir tests_1225 --exp 1_baselines_mpnn_tl_50   --node-observed-ratio 50 --model mpnn_lstm --maml --device 1",
             "args": []
         },
 
@@ -75,7 +75,8 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--country", "NewZealand", "--shift", "2", "--result-dir", "tests_1210", "--exp", "1_baselines_mpnn_tl_50", "--node-observed-ratio", "50", "--model", "mpnn_lstm", "--maml", "--device", "5"
+                // "--country", "Japan", "--shift", "2", "--result-dir", "tests_1210", "--exp", "1_baselines_mpnn_tl_50", "--node-observed-ratio", "50", "--dataset", "japan", "--device", "5"
+                "--dataset", "japan", "--country", "Japan", "--shift", "2", "--result-dir", "tests_1225", "--exp", "1_baselines_mpnn_tl_50", "--node-observed-ratio", "50", "--model", "mpnn_lstm", "--maml", "--device", "1"
             ]
         },
         {

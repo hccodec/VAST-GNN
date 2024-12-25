@@ -54,14 +54,13 @@ def exp_main(args):
 
     if args.dataset == 'dataforgood':
         from utils.data_process.dataforgood import load_data
-        meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
-                            xdays, ydays, window, shift,
-                            train_ratio, val_ratio, node_observed_ratio)
     elif args.dataset == 'sim':        
         from utils.data_process.sim import load_data
-        meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
-                            xdays, ydays, window, shift,
-                            train_ratio, val_ratio, node_observed_ratio)
+    elif args.dataset == 'japan':        
+        from utils.data_process.japan import load_data
+    meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
+                        xdays, ydays, window, shift,
+                        train_ratio, val_ratio, node_observed_ratio)
 
 
     logger.info(f"")
@@ -187,7 +186,7 @@ def main():
     args = parse_args()
     logger.info(f"运行结果将保存至 {args.result_dir}")
     try:
-        if args.dataset == "dataforgood" or args.dataset == 'sim':
+        if args.dataset in ["dataforgood", 'sim', 'japan']:
             exp_main(args)
         else:
             raise ValueError(f"数据集 {args.dataset} 不存在")

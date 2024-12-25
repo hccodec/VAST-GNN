@@ -5,7 +5,7 @@ from utils.custom_datetime import str2date
 from utils.logger import logger
 
 pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
-countries = ["England", "France", "Italy", "Spain", "NewZealand"]
+countries = {"dataforgood": ["England", "France", "Italy", "Spain", "NewZealand"], "japan": ["Japan"]}
 
 pattern_sort_key = re.compile(r"^(\d+)->(\d+) \(w(\d+)s(\d+)\)$")
 def sort_key(item):
@@ -50,7 +50,7 @@ def extract_results(dir):
             ))
         results[dataset] = exp_result
 
-    if len(results) == 1: results = list(results.values())[0]
+    # if len(results) == 1: results = list(results.values())[0]
     return results
 
 def extract_from_logfile(logpath):
@@ -119,10 +119,10 @@ def process_log_segment(lines):
     # logger.info(lines)
     return {country: res}
 
-def print_err(results, _models, i, subdir = None, mode = 0):
+def print_err(results, dataset, _models, i, subdir = None, mode = 0):
     s = {'minvalloss': {}, 'latest': {}}
 
-    for result in results:
+    for result in results[dataset]:
         x, y, window, model, shift, timestr = result['xdays'], result['ydays'], result['window'], result['model'], result['shift'], result['timestr'] if 'timestr' in result else ''
         if model != _models[i]: continue
         r = result['res']
@@ -134,7 +134,7 @@ def print_err(results, _models, i, subdir = None, mode = 0):
         # key = f"{x}->{y} (w{window}s{shift}) {str(str2date(timestr, '%Y%m%d%H%M%S'))}"
         s['minvalloss'][key] = {}
         s['latest'][key] = {}
-        for country in countries:
+        for country in countries[dataset]:
             if not country in r:
                 s['minvalloss'][key][country] = dict(
                     err_val="-",
@@ -197,15 +197,19 @@ def merge_results(results):
     若有该组合则更新 res，把新 res 字典与原来 res 合并（assert 新旧 res 键不重复）
     '''
     merged_results_dic = {}
-    for result in results:
-        model, xdays, ydays, window, shift, res = result['model'], result['xdays'], result['ydays'], result['window'], result['shift'], result['res']
-        k = (model, xdays, ydays, window, shift)
-        if k not in merged_results_dic: merged_results_dic.update({k: res})
-        else: merged_results_dic[k].update(res)
+    
+    for dataset in results:
+        merged_results_dic.update({dataset: {}})
+        for result in results[dataset]:
+            model, xdays, ydays, window, shift, res = result['model'], result['xdays'], result['ydays'], result['window'], result['shift'], result['res']
+            k = (model, xdays, ydays, window, shift)
+            if k not in merged_results_dic: merged_results_dic[dataset].update({k: res})
+            else: merged_results_dic[dataset][k].update(res)
 
-    merged_results = []
-    for k, v in merged_results_dic.items():
-        merged_results.append(dict(zip(['model', 'xdays', 'ydays', 'window', 'shift', 'res'], k + (v,))))
+    merged_results = merged_results_dic.copy()
+    for dataset in merged_results:
+        for k, v in merged_results_dic[dataset].items():
+            merged_results[dataset] = [dict(zip(['model', 'xdays', 'ydays', 'window', 'shift', 'res'], k + (v,))) for k, v in merged_results_dic[dataset].items()]
     
     return merged_results
 
@@ -215,19 +219,22 @@ def show_result(dir, subdir = "", mode = 0):
     results = extract_results(dir)
     results = merge_results(results)
 
-    # get models
-    models = []
-    for result in results: models.append(result['model'])
-        
-    models = sorted(set(models), key=lambda x: {"mpnn_lstm": 0, "lstm": 1, "dynst": 2}.get(x, float('inf')))
-
-    # assert set(models) == {'dynst', 'mpnn_lstm'}, models
-    # models = ['mpnn_lstm', 'dynst']
     msg = "\n"
-    msg += "[err_test] {}\n".format(','.join(countries)) + '\n'
-    for i in range(len(models)):
-        msg += print_err(results, models, i, subdir, mode) + '\n'
-    if mode == 0: logger.info(msg)
+    for dataset in results:
+        msg += dataset + '\n'
+        # get models
+        models = []
+        for result in results[dataset]: models.append(result['model'])
+            
+        models = sorted(set(models), key=lambda x: {"mpnn_lstm": 0, "lstm": 1, "dynst": 2}.get(x, float('inf')))
+
+        # assert set(models) == {'dynst', 'mpnn_lstm'}, models
+        # models = ['mpnn_lstm', 'dynst']
+        msg += "[err_test] {}\n".format(','.join(countries[dataset])) + '\n'
+        for i in range(len(models)):
+            msg += print_err(results, dataset, models, i, subdir, mode) + '\n'
+        if mode == 0: logger.info(msg)
+        msg += '\n'
     return msg
 
 if __name__ == "__main__":
