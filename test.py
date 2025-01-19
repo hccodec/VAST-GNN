@@ -39,6 +39,12 @@ def get_args(config_str):
         
     # 将配置字符串分割成不同的部分
     config_blocks = [e.split("]\n") for e in config_str.split("[")[1:]]
+    # 修复分割 bug：只保留开头是 "[args]" 和 "[model_args" 的，对于其他，都和前一个合并。提示：从后往前
+    for i in range(len(config_blocks) - 1, 0, -1):
+        if len(config_blocks[i]) == 1:
+            config_blocks[i - 1][1] += config_blocks[i][0]
+            config_blocks.pop(i)
+
     config_blocks = {e[0]: e[1].strip() for e in config_blocks if len(e) == 2}
 
     assert [k == 'args' or k.startswith("model_args") for k in config_blocks]
@@ -70,7 +76,7 @@ def get_args(config_str):
 
     return args, model_args
 
-country_names = {'EN': "England", 'FR': "France", 'IT': 'Italy', 'ES': 'Spain'}
+country_names = {'EN': "England", 'FR': "France", 'IT': 'Italy', 'ES': 'Spain', 'NZ': 'NewZealand', 'JP': 'Japan'}
 
 def test(fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth'):
 
@@ -89,6 +95,8 @@ def test(fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_202410
 
     if args.dataset == 'dataforgood':
         from utils.data_process.dataforgood import load_data
+    elif args.dataset == 'japan':
+        from utils.data_process.japan import load_data
     elif args.dataset == 'sim':
         from utils.data_process.sim import load_data
 

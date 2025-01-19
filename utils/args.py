@@ -68,6 +68,7 @@ def get_parser(parent_parser=None):
     parser.add_argument("--comp-last",action="store_true",help="在多天预测的情形下只比对最后一天的结果")
     parser.add_argument("--desc", help="该实验的说明")
     parser.add_argument("--f", help="兼容 jupyter")
+    parser.add_argument("--gendata", action="store_true", help="仅生成数据集") # 仅生成数据集
     return parser
 
 def parse_args(record_log = True, parent_parser = None):

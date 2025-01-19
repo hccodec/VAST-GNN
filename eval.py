@@ -20,8 +20,8 @@ def compute_correlation(hat_data, real_data):
         return [-1]
 
 def compute_err(output, y_test, comp_last: bool):
-    o = output.cpu().detach().numpy()
-    l = y_test.cpu().numpy()
+    o = output.cpu().detach().numpy() if hasattr(output, 'cpu') else output
+    l = y_test.cpu().numpy() if hasattr(y_test, 'cpu') else y_test
 
     if comp_last: o, l = o[:, -1], l[:, -1]
     #--------------- Average error per region

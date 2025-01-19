@@ -29,7 +29,7 @@ def load_data(dataset_cache_dir, data_dir, dataset, batch_size,
     if enable_cache and os.path.exists(databinfile):
         with open(databinfile, 'rb') as f:
             meta_data = pickle.load(f)
-        logger.info(f'已从数据文件 [{databinfile}] 读取 dataforgood 数据集')
+        logger.info(f'已从数据文件 [{databinfile}] 读取 japan 数据集')
     else:
         #从数据集里读取数据
 
@@ -71,8 +71,8 @@ def _load_data(window_size, data_dir, node_observed_ratio, country_name: str, po
     cases = pd.read_csv("data/Others/japan.txt")
     num_dates, num_nodes = cases.shape
     cases = cases.to_numpy().reshape(num_dates, num_nodes, 1)
-    # 取前 56 天
-    num_dates = 56
+    # 取前 100 天
+    num_dates = 100
     cases = cases[:num_dates]
     adjs = pd.read_csv("data/Others/japan-adj.txt", header=None)
     adjs = np.stack([adjs.to_numpy()] * num_dates, axis=0)

@@ -147,7 +147,7 @@ def load_data(dataset_cache_dir, data_dir, dataset, batch_size,
     if enable_cache and os.path.exists(databinfile):
         with open(databinfile, 'rb') as f:
             meta_data = pickle.load(f)
-        logger.info(f'已从数据文件 [{databinfile}] 读取 dataforgood 数据集')
+        logger.info(f'已从数据文件 [{databinfile}] 读取 sim 数据集')
     else:
         #从数据集里读取数据
 

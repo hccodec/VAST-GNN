@@ -61,6 +61,11 @@ def exp_main(args):
     meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
                         xdays, ydays, window, shift,
                         train_ratio, val_ratio, node_observed_ratio)
+    
+    # DEBUG 若仅生成数据集则打印信息并退出整个程序
+    if args.gendata:
+        logger.info(f"仅生成数据集，不进行训练")
+        return
 
 
     logger.info(f"")

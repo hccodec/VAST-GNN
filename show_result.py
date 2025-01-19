@@ -151,19 +151,23 @@ def print_err(results, dataset, _models, i, subdir = None, mode = 0):
             epoch_minvalloss = int(r[country]['minvalloss']['epoch'])
             err_val_minvalloss = r[country]['minvalloss']['err_val']
             err_test_minvalloss = r[country]['minvalloss']['err_test']
+            hits10_test_minvalloss = r[country]['minvalloss']['hits10_test']
 
             epoch_latest = int(r[country]['latest']['epoch'])
             err_val_latest = r[country]['latest']['err_val']
             err_test_latest = r[country]['latest']['err_test']
+            hits10_test_latest = r[country]['minvalloss']['hits10_test']
 
             s['minvalloss'][key][country] = dict(
                 err_val=f"{err_val_minvalloss}",
                 err_test=f"{err_test_minvalloss}",
+                hits10_test = f"{hits10_test_minvalloss}",
                 epoch=f"{epoch_minvalloss}"
             )
             s['latest'][key][country] = dict(
                 err_val=f"{err_val_latest}",
                 err_test=f"{err_test_latest}",
+                hits10_test = f"{hits10_test_latest}",
                 epoch=f"{epoch_latest}"
             )
     _ = 1
@@ -180,6 +184,12 @@ def print_err(results, dataset, _models, i, subdir = None, mode = 0):
             msg += f'[{"epoch":>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['epoch'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
         elif mode == 1:
             msg += '\t'.join(['\t'.join(map(lambda c: '\t'.join((c['err_test'], c['epoch'])), v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
+        if mode == 2:
+            msg += f'[{_models[i]:>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['hits10_test'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
+            msg += f'[{_models[i]:>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
+            msg += f'[{"epoch":>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['epoch'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
+        elif mode == 3:
+            msg += '\t'.join(['\t'.join(map(lambda c: '\t'.join((c['hits10_test'], c['err_test'], c['epoch'])), v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
         else: raise NotImplementedError
         # logger.info('[err_val ]', ' | '.join([' '.join(map(lambda c: c['err_val'], v.values())) for v in s[k].values()]))
         # logger.info(' | '.join([' '.join(map(lambda c: c['epoch'], v.values())) for v in s[k].values()]))
