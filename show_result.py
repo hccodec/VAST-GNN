@@ -170,7 +170,6 @@ def print_err(results, dataset, _models, i, subdir = None, mode = 0):
                 hits10_test = f"{hits10_test_latest}",
                 epoch=f"{epoch_latest}"
             )
-    _ = 1
 
     msg = ""
     
