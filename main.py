@@ -33,15 +33,15 @@ def exp_main(args):
     val_ratio           = args.val_ratio
     node_observed_ratio = args.node_observed_ratio
 
-    if ',' in args.country:
+    if ',' in country:
         result_paths = {
             "args": os.path.join(result_dir, "args.txt"),
         }
     else:
         result_paths = {
-            "args": os.path.join(result_dir, args.country, "args.txt"),
+            "args": os.path.join(result_dir, country, "args.txt"),
         }
-        os.makedirs(os.path.join(result_dir, args.country), exist_ok=True)
+        os.makedirs(os.path.join(result_dir, country), exist_ok=True)
 
     with open(result_paths["args"], "w", encoding="utf-8") as f:
         f.write("[args]\n")
@@ -52,15 +52,20 @@ def exp_main(args):
     starttime = datetime.now()
     logger.info(f"实验 [{exp_desc}] 开始于 {starttime.strftime('%Y-%m-%d %H:%M:%S')}")
 
-    if args.dataset == 'dataforgood':
-        from utils.data_process.dataforgood import load_data
-    elif args.dataset == 'sim':        
-        from utils.data_process.sim import load_data
-    elif args.dataset == 'japan':        
-        from utils.data_process.japan import load_data
-    meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
+    # if args.dataset == 'dataforgood':
+    # #     from utils.data_process.dataforgood import load_data
+    # elif args.dataset == 'sim':
+    #     from utils.data_process.sim import load_data
+    # elif args.dataset == 'japan':
+    #     from utils.data_process.japan import load_data
+    # meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
+    #                     xdays, ydays, window, shift,
+    #                     train_ratio, val_ratio, node_observed_ratio)
+    from utils.data_process.datasets import Datasets
+    meta_data = Datasets(dataset_cache_dir, data_dir, dataset, batch_size,
                         xdays, ydays, window, shift,
                         train_ratio, val_ratio, node_observed_ratio)
+    meta_data = meta_data.load_data()
     
     # DEBUG 若仅生成数据集则打印信息并退出整个程序
     if args.gendata:

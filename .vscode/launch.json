@@ -75,7 +75,8 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--country", "Japan", "--shift", "2", "--result-dir", "tests_1210", "--exp", "1_baselines_mpnn_tl_50", "--node-observed-ratio", "50", "--dataset", "japan", "--device", "5"
+                "--country", "England", "--shift", "2", "--node-observed-ratio", "50", "--dataset", "dataforgood", "--device", "5"
+                // "--country", "Japan", "--shift", "2", "--result-dir", "tests_1210", "--exp", "1_baselines_mpnn_tl_50", "--node-observed-ratio", "50", "--dataset", "japan", "--device", "5"
                 // "--dataset", "japan", "--country", "Japan", "--shift", "2", "--result-dir", "tests_1225", "--exp", "1_baselines_mpnn_tl_50", "--node-observed-ratio", "50", "--model", "mpnn_lstm", "--maml", "--device", "1"
             ]
         },
