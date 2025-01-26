@@ -90,7 +90,7 @@ def vis(test_dir = "1022", exp = "7", country = "EN"):
         model_str, xdays, ydays, window, shift = re.search('([^/]+)_(\d+)_(\d+)_w(\d+)_s(\d+)', model).groups()
 
         # 准备模型推理结果
-        from test import test
+        from utils.test import test
         res, meta_data, args = test(fn_model=model, country=country)
         
         country_code, country_name = get_country(country, meta_data)

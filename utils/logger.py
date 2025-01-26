@@ -57,7 +57,7 @@ class SingletonLogger:
         if log_file_path is None:
             return
         # 处理文件日志
-        file_handler = logging.FileHandler(log_file_path)
+        file_handler = logging.FileHandler(log_file_path, encoding='utf-8')
         file_handler.setLevel(logging.DEBUG)
         file_format = ExpFormatter(fmt_str_file)
         file_handler.setFormatter(file_format)

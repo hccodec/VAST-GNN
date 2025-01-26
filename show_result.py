@@ -184,7 +184,7 @@ def print_err(results, dataset, _models, i, subdir = None, mode = 0):
             msg += f'[{"epoch":>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['epoch'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
         elif mode == 1:
             msg += '\t'.join(['\t'.join(map(lambda c: '\t'.join((c['err_test'], c['epoch'])), v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
-        if mode == 2:
+        elif mode == 2:
             msg += f'[{_models[i]:>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['hits10_test'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
             msg += f'[{_models[i]:>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['err_test'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'
             msg += f'[{"epoch":>{9}s}]\t' + '\t'.join(['\t'.join(map(lambda c: c['epoch'], v.values())) for v in [s[k][_k] for _k in keys]]) + '\n'

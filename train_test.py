@@ -342,6 +342,7 @@ def eval_process(args, model, criterion, train_loader, val_loader, test_loader, 
     trained_model = None
     if isinstance(model, str):
         assert os.path.exists(model)
+        model = model.replace("\\", "/")
         model_str = re.search(r"/([^/]*)_\d+_\d+_w\d+_s\d+", model).groups()[0]
         trained_model, model_args = select_model(args, train_loader)
         trained_model.load_state_dict(torch.load(model))
