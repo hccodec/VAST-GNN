@@ -2,5 +2,8 @@
     "workbench.editorAssociations": {
         "{git,gitlens}:/**/*.{md,csv,svg}": "default",
         "file:/**/*.csv": "jupyter-data-wrangler"
+    },
+    "[csv]": {
+        "editor.inlayHints.maximumLength": 0
     }
 }

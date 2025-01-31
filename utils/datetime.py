@@ -22,6 +22,26 @@ class timedelta(timedelta):
         return NotImplemented
 
 class datetime(datetime):
+    """
+    自定义的 datetime 类，继承自内置的 datetime 类，并重载了一些运算符方法。
+
+    方法:
+        __add__(self, other):
+            重载加法运算符。如果 other 是整数，则返回当前日期加上 other 天数后的日期。
+            否则，调用父类的 __add__ 方法。
+
+        __sub__(self, other):
+            重载减法运算符。如果 other 是整数，则返回当前日期减去 other 天数后的日期。
+            否则，调用父类的 __sub__ 方法。
+
+        __mul__(self, other):
+            重载乘法运算符。如果 other 是整数，则返回从1970年1月1日开始，当前日期与1970年1月1日的时间差乘以 other 后的日期。
+            否则，返回 NotImplemented。
+
+        __truediv__(self, other):
+            重载除法运算符。如果 other 是整数，则返回从1970年1月1日开始，当前日期与1970年1月1日的时间差除以 other 后的日期。
+            否则，返回 NotImplemented。
+    """
     def __add__(self, other):
         if isinstance(other, int):
             return self + timedelta(days=other)
@@ -44,8 +64,28 @@ class datetime(datetime):
             return datetime(1970, 1, 1) + timedelta(seconds=delta.total_seconds() / other)
         return NotImplemented
 
-def str2date(s:str, fmt = '%Y%m%d'):
-    return datetime.strptime(s, fmt)
+def str2date(s: str, fmt: str = None) -> datetime:
+    if fmt:
+        return datetime.strptime(s, fmt)
+    
+    # 支持的日期格式列表
+    supported_formats = [
+        '%Y/%m/%d',  # 2023/10/05
+        '%Y-%m-%d',  # 2023-10-05
+        '%d/%m/%Y',  # 05/10/2023
+        '%d-%m-%Y',  # 05-10-2023
+        '%Y%m%d',    # 20231005 (无分隔符)
+    ]
+    
+    # 尝试每种格式
+    for fmt in supported_formats:
+        try:
+            return datetime.strptime(s, fmt)
+        except ValueError:
+            continue
+    
+    # 如果所有格式都失败，抛出异常
+    raise ValueError(f"无法解析日期字符串: {s}")
 
 def date2str(d: datetime, fmt = '%Y%m%d'):
     return datetime.strftime(d, fmt)

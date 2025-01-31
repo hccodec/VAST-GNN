@@ -1,6 +1,6 @@
 import argparse, os, re
 
-from utils.custom_datetime import str2date
+from utils.datetime import str2date
 
 from utils.logger import logger
 
