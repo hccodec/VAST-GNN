@@ -6,6 +6,7 @@ import numpy as np
 import torch, random
 from torch.utils.data import DataLoader, TensorDataset, Dataset
 import pickle
+from utils.datetime import datetime, str2date
 from utils.logger import logger
 from utils.utils import progress_indicator
 import networkx as nx
@@ -95,21 +96,13 @@ class Datasets:
         elif self.dataset == "sim":
             country_names = [f"SIM{i}" for i in range(5)]
             country_codes = [f"S{i}" for i in range(5)]
-        elif self.dataset == "flunet":
-            country_names = ["global"]
-            country_codes = ["GL"]
+        elif self.dataset.startswith("flunet"):
+            country_names = ["h1n1", "h3n2", "BV", "BY"]
+            country_codes = ["h1n1", "h3n2", "BV", "BY"]
         else:
             raise NotImplementedError("")
         self.country_names = country_names
         self.country_codes = country_codes
-
-        # self.dataset_dir = f"{self.data_dir}/{self.dataset}"
-        # country_names = [d for d in os.listdir(dataset_dir)
-        #                 if os.path.isdir(os.path.join(dataset_dir, d))]
-        # country_codes = list(map(lambda x: x if x is None else x.groups()[0],
-        #                         [self.pattern_graph_file.search([f for f in os.listdir(os.path.join(dataset_dir, d, "graphs")) if f.endswith(".csv")][0])
-        #                         for d in os.listdir(dataset_dir)
-        #                         if os.path.isdir(os.path.join(dataset_dir, d))]))
 
         if self.enable_cache and os.path.exists(databinfile):
             with open(databinfile, "rb") as f:
@@ -162,44 +155,6 @@ class Datasets:
         assert policy in ["clip", "pad"]
 
         cases, adjs, nodes, dates = self.read_data(country_name)
-
-        # data_country_path = os.path.join(data_dir, country_name)
-
-        # Gs, dates, nodes_graph = [], [], []
-
-        # label_file = [i for i in os.listdir(data_country_path) if i.endswith("_labels.csv")]
-        # assert len(label_file) == 1
-        # label_file = label_file[0]
-        # # 读标签，本实验为病例数
-        # labels = pd.read_csv(os.path.join(data_country_path, label_file)).set_index("name")
-
-        # nodes_label = list(labels.index)
-
-        # # 读图，并提取图中包含的结点 nodes 和日期 dates
-        # for i_date, graph_file in enumerate(os.listdir(os.path.join(data_country_path, "graphs"))):
-        #     if not graph_file.endswith(".csv"): continue
-        #     graph = pd.read_csv(os.path.join(data_country_path, "graphs", graph_file), header=None)
-
-        #     country_code, date = self.pattern_graph_file.search(graph_file).groups()
-        #     dates.append(date)
-
-        #     nodes = sorted(set(list(graph[0]) + list(graph[1])))
-        #     assert not len(nodes_graph) or nodes_graph == nodes  # 所有图的结点都应相同
-        #     if nodes_graph == []: nodes_graph = nodes
-
-        #     nodes = sorted(set(nodes_graph) & set(nodes_label))
-
-        #     G = nx.DiGraph()
-        #     G.add_nodes_from(nodes)
-        #     for row in graph.iterrows():
-        #         G.add_edge(row[1][0], row[1][1], weight=row[1][2])
-        #     Gs.append(G)
-
-        # adjs = np.stack([nx.adjacency_matrix(G).toarray() for G in Gs])
-
-        # labels = labels.loc[nodes, dates]
-
-        # cases = np.expand_dims(labels.to_numpy().T, -1)
 
         # 根据 window_size 拼接特征，并根据策略对 adjs 和 cases 进行裁剪或补零
         if policy == "clip":
@@ -344,7 +299,7 @@ class Datasets:
         if self.dataset == "dataforgood":
 
             # region read_data dataforgood
-            data_country_path = os.path.join(self.data_dir, country_name)
+            data_country_path = os.path.join(self.data_dir, self.dataset, country_name)
 
             Gs, dates, nodes_graph = [], [], []
 
@@ -418,8 +373,6 @@ class Datasets:
 
             # region read_data sim
 
-            import numpy as np
-
             # 参数设置
             num_nodes = random.randint(30, 100)  # 节点数
             num_dates = random.randint(60, 100)  # 时间步数
@@ -429,13 +382,81 @@ class Datasets:
             # endregion
 
         elif self.dataset == 'flunet':
+            
+            disease = country_name
 
             # region read_data flunet
+            data_path = os.path.join(self.data_dir, self.dataset)
 
-            
-            pass
+            air = {
 
-            #endregion
+                "period": pd.read_csv(os.path.join(data_path, "air_traffic_data/air_data_between_region_by_period.csv")),
+                "year":   pd.read_csv(os.path.join(data_path, "air_traffic_data/air_data_between_region_by_year.csv")),
+                "month":  pd.read_csv(os.path.join(data_path, "air_traffic_data/air_data_within_region_by_month.csv"))
+            }
+
+            epi = {
+                "r1": pd.read_csv(os.path.join(data_path, "epi_data/epi_glo_flu_region1_no_roll.csv")),
+                "a1b1": pd.merge(
+                    pd.read_csv(os.path.join(data_path, "epi_data/epi_glo_flua1_no_roll.csv")),
+                    pd.read_csv(os.path.join(data_path, "epi_data/epi_glo_flub1_no_roll.csv"))),
+            }
+
+            diseases = [i for i in epi['r1'].columns if i.endswith('_num')]
+            assert disease in [d.split('_num')[0] for d in diseases], \
+            f"无效的疾病: {disease}。可用的疾病有: {diseases}"
+
+            # 整理 nodes
+            nodes = sorted(set(list(air.values())[0]['region_final_dep']), key=lambda x: x.split()[::-1])
+            assert all((set(nodes) == set([e for e in list(air.values())[i]['region_final_dep'].tolist()])) for i in range(len(air)))
+            assert set(nodes) == set([e for e in epi['r1']['region_final'].tolist()])
+
+            # data = {
+            #     'north': epi['r1'].query('region_final.str.contains("North China")', engine='python'),
+            #     'south': epi['r1'].query('region_final.str.contains("South China")', engine='python'),
+            # }
+            # 经整理发现，可用 epi["r1"] 作为 cases 数据，选用 air['year'] 作为 mobility
+
+            # epi['r1'].query('region_final == "{c}"')
+
+            min_line_num, = min([epi['r1'].query(f'region_final == "{c}"')['date'].shape for c in nodes])
+
+            cases_by_regions = [epi['r1'].query(f'region_final == "{c}"').iloc[:min_line_num] for c in nodes]
+
+            dates = cases_by_regions[0]['date'].tolist()
+            assert all(set(dates) == set(cases_by_regions[i]['date']) for i in range(len(cases_by_regions)))
+
+            diseases = [i for i in epi['r1'].columns if i.endswith('_num')]
+            cases_diseases = np.stack([df[diseases].to_numpy() for df in cases_by_regions])
+
+            cases_diseases = cases_diseases.transpose(2, 1, 0)
+
+
+            cases_diseases_dic = dict(zip(diseases, [np.expand_dims(cases_diseases[i], -1) for i in range(5)]))
+
+            years = sorted(set(air['year']['period']), key=lambda x: x[-11:])
+            adjs_by_year = [air["year"].query(f'period == "{y}"') for y in years]
+            adjs_by_year = [
+                adj_by_year.pivot(index="region_final_dep", columns="region_final_arr", values="Num_per_month").fillna(0).to_numpy()
+                for adj_by_year in adjs_by_year
+            ]
+
+            # pre-pandemic  : 2017/01-2020/03
+            # pandemic      : 2020/04-2021/03 2021/04-2023/04
+            # post-pandemic : 2023/05-2024/03
+            lower_bounds = list(map(str2date, "2018/07/01 2019/07/01 2020/04/01 2021/07/01 2022/07/01 2023/05/01".split(" ")))                
+            i_dates = [len(lower_bounds) - sum([str2date(datestr) < i for i in lower_bounds]) for datestr in dates]
+            # adjs_by_dates = np.stack([adj_date for i_year, adj in enumerate(adjs_by_year) for adj_date in [adj] * i_dates.count(i_year)])
+            adjs = np.repeat(
+                np.array(adjs_by_year),
+                [i_dates.count(i) for i in range(len(adjs_by_year))],
+                axis=0
+            )
+
+            #h1n1
+            cases = cases_diseases_dic[f'{disease}_num']
+
+            # endregion
 
         return cases, adjs, nodes, dates
 

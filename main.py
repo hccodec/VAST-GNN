@@ -13,7 +13,8 @@ from utils.model_selector import select_model
 from utils.utils import font_green, font_yellow, set_random_seed, get_exp_desc
 from utils.args import parse_args
 
-from utils.custom_datetime import datetime
+from utils.datasets import Datasets
+from utils.datetime import datetime
 
 from show_result import show_result
 
@@ -61,7 +62,6 @@ def exp_main(args):
     # meta_data = load_data(dataset_cache_dir, data_dir, dataset, batch_size,
     #                     xdays, ydays, window, shift,
     #                     train_ratio, val_ratio, node_observed_ratio)
-    from utils.data_process.datasets import Datasets
     meta_data = Datasets(dataset_cache_dir, data_dir, dataset, batch_size,
                         xdays, ydays, window, shift,
                         train_ratio, val_ratio, node_observed_ratio)
@@ -196,10 +196,7 @@ def main():
     args = parse_args()
     logger.info(f"运行结果将保存至 {args.result_dir}")
     try:
-        if args.dataset in ["dataforgood", 'sim', 'japan']:
-            exp_main(args)
-        else:
-            raise ValueError(f"数据集 {args.dataset} 不存在")
+        exp_main(args)
     finally:
         logger.info(f"实验结果已保存至 {args.result_dir}")
 

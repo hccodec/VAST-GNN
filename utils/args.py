@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 
 from easydict import EasyDict
 
-from utils.custom_datetime import date2str, datetime
+from utils.datetime import date2str, datetime
 from utils.logger import set_logger, logger
 
 import pandas as pd

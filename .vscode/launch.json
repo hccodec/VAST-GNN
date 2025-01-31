@@ -81,7 +81,7 @@
             ]
         },
         {
-            "name": "MAIN(dynst_sim)",
+            "name": "MAIN(dynst_flunet)",
             "type": "debugpy",
             "request": "launch",
             "program": "main.py",
@@ -90,11 +90,11 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--dataset", "sim",
+                "--dataset", "flunet",
+                "--country", "h1n1",
                 "--device", "9",
                 "--shift", "2",
                 "--ydays", "1",
-                "--country", "SIM1",
                 // "--node-observed-ratio", "50",
                 // "--graph-gt",
                 // "--no-virtual-node"
