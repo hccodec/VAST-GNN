@@ -100,7 +100,6 @@
         },
         {
             "name": "MAIN(dynst_flunet)",
-            "name": "MAIN(dynst_flunet)",
             "type": "debugpy",
             "request": "launch",
             "program": "main.py",
