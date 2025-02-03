@@ -36,7 +36,6 @@ def exp_main(args):
     seed_dataset        = args.seed_dataset
     node_observed_ratio = args.node_observed_ratio
 
-    set_random_seed(seed)  # 设置随机种子
 
     if ',' in country:
         result_paths = {
@@ -116,6 +115,9 @@ def train_country(args, result_paths, meta_data, i_country):
     node_observed_ratio = args.node_observed_ratio
     case_normalize_ratio = args.case_normalize_ratio
 
+    seed = args.seed
+    
+
     comp_last = args.comp_last
 
     # graph_lambda = args.lambda_graph_loss[country_name][(1 + args.shift) if args.ydays == 1 else args.ydays] if country_name in args.lambda_graph_loss else 0
@@ -124,6 +126,7 @@ def train_country(args, result_paths, meta_data, i_country):
     # graph_lambda_n = args.graph_lambda_n
     # graph_lambda_epoch_max = args.graph_lambda_epoch_max
     # graph_lambda_method = args.graph_lambda_method
+    set_random_seed(seed)  # 设置随机种子
 
     train_loader, val_loader, test_loader = meta_data['data'][country_name][0]
     del meta_data['data'][country_name]

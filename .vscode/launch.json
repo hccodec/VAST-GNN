@@ -114,7 +114,8 @@
                 "--shift", " 2",
                 "--node-observed-ratio", "50",
                 "--model", "mpnn_lstm",
-                "--device", "3"
+                "--device", "3",
+                "--seed-dataset", "9",
                 // ""--dataset""",", "flunet",
                 // "--country", "h1n1",
                 // "--device", "9",

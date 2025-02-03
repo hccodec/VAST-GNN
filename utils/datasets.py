@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, TensorDataset, Dataset
 import pickle
 from utils.datetime import datetime, str2date
 from utils.logger import logger
-from utils.utils import progress_indicator
+from utils.utils import progress_indicator, set_random_seed
 import networkx as nx
 import pandas as pd
 
@@ -47,6 +47,9 @@ class Datasets:
         self.seed_dataset = seed_dataset
         self.enable_cache = enable_cache
 
+        set_random_seed(seed_dataset)  # 设置随机种子
+
+
     def load_data(self):
         #   , dataset_cache_dir, data_dir, dataset, batch_size,
         # xdays, ydays, window_size, shift,
@@ -56,9 +59,12 @@ class Datasets:
         为了缓存，此阶段将读取全部国家并缓存
         """
         # 通过 args.dataset 锁定数据集目录
+        self.dataset_cache_dir = os.path.join(
+            self.dataset_cache_dir,
+            (f"seed{self.seed_dataset}" if self.seed_dataset else "")
+        )
         databinfile = os.path.join(
             self.dataset_cache_dir,
-            (f"seed{self.seed_dataset}" if self.seed_dataset else ""),
             f"{self.dataset}_x{self.xdays}_y{self.ydays}_w{self.window_size}_s{self.shift}"
             + (
                 ""
