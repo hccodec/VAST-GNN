@@ -5,7 +5,11 @@ from utils.datetime import str2date
 from utils.logger import logger
 
 pattern_subdir = re.compile(r"^(.*)_(\d+)_(\d+)_w(\d+)_s(\d+)_(\d+)$")
-countries = {"dataforgood": ["England", "France", "Italy", "Spain", "NewZealand"], "japan": ["Japan"]}
+countries = {
+    "dataforgood": ["England", "France", "Italy", "Spain", "NewZealand"],
+    "japan": ["Japan"],
+    "flunet": ["h1n1", 'h3n2', 'BV', 'BY']
+}
 
 pattern_sort_key = re.compile(r"^(\d+)->(\d+) \(w(\d+)s(\d+)\)$")
 def sort_key(item):
@@ -151,12 +155,12 @@ def print_err(results, dataset, _models, i, subdir = None, mode = 0):
             epoch_minvalloss = int(r[country]['minvalloss']['epoch'])
             err_val_minvalloss = r[country]['minvalloss']['err_val']
             err_test_minvalloss = r[country]['minvalloss']['err_test']
-            hits10_test_minvalloss = r[country]['minvalloss']['hits10_test']
+            hits10_test_minvalloss = r[country]['minvalloss']['hits10_test'] if 'hits10_test' in r[country]['minvalloss'] else ''
 
             epoch_latest = int(r[country]['latest']['epoch'])
             err_val_latest = r[country]['latest']['err_val']
             err_test_latest = r[country]['latest']['err_test']
-            hits10_test_latest = r[country]['minvalloss']['hits10_test']
+            hits10_test_latest = r[country]['latest']['hits10_test'] if 'hits10_test' in r[country]['latest'] else ''
 
             s['minvalloss'][key][country] = dict(
                 err_val=f"{err_val_minvalloss}",
@@ -212,7 +216,7 @@ def merge_results(results):
         for result in results[dataset]:
             model, xdays, ydays, window, shift, res = result['model'], result['xdays'], result['ydays'], result['window'], result['shift'], result['res']
             k = (model, xdays, ydays, window, shift)
-            if k not in merged_results_dic: merged_results_dic[dataset].update({k: res})
+            if k not in merged_results_dic[dataset]: merged_results_dic[dataset].update({k: res})
             else: merged_results_dic[dataset][k].update(res)
 
     merged_results = merged_results_dic.copy()

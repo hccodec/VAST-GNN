@@ -13,7 +13,6 @@
         // }
     ],
     "configurations": [
-
         {
             "type": "debugpy",
             "request": "launch",
@@ -23,7 +22,6 @@
             "module": "visualization.vis",
             "args": []
         },
-
         {
             "type": "bashdb",
             "request": "launch",
@@ -32,7 +30,6 @@
             "program": "python main.py --dataset japan --country Japan --shift  2 --result-dir tests_1225 --exp 1_baselines_mpnn_tl_50   --node-observed-ratio 50 --model mpnn_lstm --maml --device 1",
             "args": []
         },
-
         {
             "name": "MAIN(lstm)",
             "type": "debugpy",
@@ -43,9 +40,14 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--device", "7",
-                "--model", "lstm",
-                "--shift", "2", "--ydays", "1"
+                "--device",
+                "7",
+                "--model",
+                "lstm",
+                "--shift",
+                "2",
+                "--ydays",
+                "1"
             ]
         },
         {
@@ -58,11 +60,18 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--device", "3",
-                "--model", "mpnn_lstm",
-                "--shift", "2", "--ydays", "1",
-                "--node-observed-ratio", "50",
-                "--country", "England"
+                "--device",
+                "3",
+                "--model",
+                "mpnn_lstm",
+                "--shift",
+                "2",
+                "--ydays",
+                "1",
+                "--node-observed-ratio",
+                "50",
+                "--country",
+                "England"
             ]
         },
         {
@@ -75,7 +84,16 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--country", "England", "--shift", "2", "--node-observed-ratio", "50", "--dataset", "dataforgood", "--device", "5"
+                "--country",
+                "England",
+                "--shift",
+                "2",
+                "--node-observed-ratio",
+                "50",
+                "--dataset",
+                "dataforgood",
+                "--device",
+                "5"
                 // "--country", "Japan", "--shift", "2", "--result-dir", "tests_1210", "--exp", "1_baselines_mpnn_tl_50", "--node-observed-ratio", "50", "--dataset", "japan", "--device", "5"
                 // "--dataset", "japan", "--country", "Japan", "--shift", "2", "--result-dir", "tests_1225", "--exp", "1_baselines_mpnn_tl_50", "--node-observed-ratio", "50", "--model", "mpnn_lstm", "--maml", "--device", "1"
             ]
@@ -91,13 +109,20 @@
             },
             "args": [
                 "--dataset", "flunet",
+                "--seed-dataset", "0",
                 "--country", "h1n1",
-                "--device", "9",
-                "--shift", "2",
-                "--ydays", "1",
-                // "--node-observed-ratio", "50",
-                // "--graph-gt",
-                // "--no-virtual-node"
+                "--shift", " 2",
+                "--node-observed-ratio", "50",
+                "--model", "mpnn_lstm",
+                "--device", "3"
+                // ""--dataset""",", "flunet",
+                // "--country", "h1n1",
+                // "--device", "9",
+                // "--shift", "2",
+                // "--ydays", "1",
+                // // "--node-observed-ratio", "50",
+                // // "--graph-gt",
+                // // "--no-virtual-node"
                 // "--graph-lambda", "0.1"
             ]
         },
@@ -112,38 +137,42 @@
             },
             "args": [
                 // "--device", "2",
-                "--shift", "2",
-                "--ydays", "1",
-                "--country", "Spain",
-                "--node-observed-ratio", "50",
+                "--shift",
+                "2",
+                "--ydays",
+                "1",
+                "--country",
+                "Spain",
+                "--node-observed-ratio",
+                "50",
                 "--maml",
                 // "--graph-gt",
                 // "--no-virtual-node"
                 // "--graph-lambda", "0.1"
             ]
         },
-        {
-            "name": "Transfer learning(mpnn_lstm)",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "main copy.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                // "--device", "2",
-                "--model", "mpnn_lstm",
-                "--shift", "2",
-                "--ydays", "1",
-                "--country", "Spain",
-                "--node-observed-ratio", "50",
-                "--maml",
-                // "--graph-gt",
-                // "--no-virtual-node"
-                // "--graph-lambda", "0.1"
-            ]
-        },
+        // {
+        //     "name": "Transfer learning(mpnn_lstm)",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "main copy.py",
+        //     "console": "integratedTerminal",
+        //     "env": {
+        //         "DEBUG_MODE": "true"
+        //     },
+        //     "args": [
+        //         // "--device", "2",
+        //         "--model", "mpnn_lstm",
+        //         "--shift", "2",
+        //         "--ydays", "1",
+        //         "--country", "Spain",
+        //         "--node-observed-ratio", "50",
+        //         "--maml",
+        //         // "--graph-gt",
+        //         // "--no-virtual-node"
+        //         // "--graph-lambda", "0.1"
+        //     ]
+        // },
         {
             "name": "Transfer learning(dynst)",
             "type": "debugpy",
@@ -155,10 +184,14 @@
             },
             "args": [
                 // "--device", "2",
-                "--shift", "2",
-                "--ydays", "1",
-                "--country", "Spain",
-                "--node-observed-ratio", "50",
+                "--shift",
+                "2",
+                "--ydays",
+                "1",
+                "--country",
+                "Spain",
+                "--node-observed-ratio",
+                "50",
                 "--maml",
                 // "--graph-gt",
                 // "--no-virtual-node"
@@ -169,18 +202,25 @@
             "name": "Transfer learning(mpnn_lstm)",
             "type": "debugpy",
             "request": "launch",
-            "program": "main copy.py",
+            "program": "main.py",
             "console": "integratedTerminal",
             "env": {
                 "DEBUG_MODE": "true"
             },
             "args": [
                 // "--device", "2",
-                "--model", "mpnn_lstm",
-                "--shift", "2",
-                "--ydays", "1",
-                "--country", "Spain",
-                "--node-observed-ratio", "50",
+                "--model",
+                "mpnn_lstm",
+                "--shift",
+                "2",
+                "--ydays",
+                "1",
+                "--dataset",
+                "flunet",
+                "--country",
+                "h1n1",
+                "--node-observed-ratio",
+                "50",
                 "--maml",
                 // "--graph-gt",
                 // "--no-virtual-node"
@@ -197,7 +237,8 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-               "-d", "results/tests_1118/exp_1"
+                "-d",
+                "results/tests_0201_all/exp_1_baselines_lstm_50"
             ]
         },
         {
@@ -211,9 +252,9 @@
             },
             "args": [
                 // "--dataset", "sim",
-            //    "--model", "dynst",
-            //    "--model-dir", "results/tests_1209/exp_1_sim/sim/dynst_7_1_w7_s2_20241209101426/SIM1",
-            //    "--country-code", "SIM1"
+                //    "--model", "dynst",
+                //    "--model-dir", "results/tests_1209/exp_1_sim/sim/dynst_7_1_w7_s2_20241209101426/SIM1",
+                //    "--country-code", "SIM1"
             ]
         },
     ]

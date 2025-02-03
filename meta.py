@@ -29,8 +29,8 @@ def maml_train(args, result_paths, meta_data, i_country):
 
     comp_last = args.comp_last
 
-    graph_lambda = args.lambda_graph_loss[country_name][
-        (1 + args.shift) if args.ydays == 1 else args.ydays]
+    # graph_lambda = args.lambda_graph_loss[country_name][(1 + args.shift) if args.ydays == 1 else args.ydays] if country_name in args.lambda_graph_loss else 0
+    graph_lambda = args.graph_lambda
 
     logger.info(f"开始针对国家 {country_name} 进行元训练...")
 

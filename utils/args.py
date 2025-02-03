@@ -28,7 +28,7 @@ def get_parser(parent_parser=None):
     # parser.add_argument("--data-dir", default="data", help="数据集目录")
     parser.add_argument("--dataset", default=None, help="选择的数据集")
     # parser.add_argument("--databinfile", type=str, default="",
-    #                     help="处理后的数据集文件名称。其实际文件名为 <databinfile>_xdays_ydays_window_shift.bin")
+    #                     help="处理后的数据集文件名称。其实际文件名为 <databinfile>_xdays_ydays_window_shift_nodeobservationratio_seed.bin")
     # parser.add_argument("--dataset-cache", default="data_preprocessed",help="处理后的数据集目录")
     parser.add_argument("--exp", default="-1", help="实验编号.-1 表示不编号")
     parser.add_argument(
@@ -37,6 +37,7 @@ def get_parser(parent_parser=None):
     parser.add_argument("--result-dir", default="results_test", help="")
     # # 实验设置：随机种子和设备号
     parser.add_argument("--seed", type=int, default=3407, help="随机种子")
+    parser.add_argument("--seed-dataset", type=int, default=5, help="数据集随机种子")
     parser.add_argument("--device", default=None, help="GPU号")
     # 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
     parser.add_argument("--xdays", type=int, default=7, help="预测所需历史天数")
@@ -134,6 +135,7 @@ def process_args(args, record_log):
             index=cfg["lambda_graph_loss"][args.dataset]["ydays_idx"],
             columns=cfg["lambda_graph_loss"][args.dataset]["country_idx"],
         )
+        args['graph_lambda'] = args["lambda_graph_loss"].loc[args.ydays + args.shift, args.country]
     else:
         args["graph_lambda_0"] = args["graph_lambda_n"] = 0
         
@@ -186,7 +188,6 @@ def process_args(args, record_log):
 
     if args.dataset == "dataforgood":
         args.case_normalize_ratio = 1
-    set_random_seed(args.seed)  # 设置随机种子
 
     return args
 

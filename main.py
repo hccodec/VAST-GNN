@@ -32,7 +32,11 @@ def exp_main(args):
     shift               = args.shift
     train_ratio         = args.train_ratio
     val_ratio           = args.val_ratio
+    seed                = args.seed
+    seed_dataset        = args.seed_dataset
     node_observed_ratio = args.node_observed_ratio
+
+    set_random_seed(seed)  # 设置随机种子
 
     if ',' in country:
         result_paths = {
@@ -63,8 +67,8 @@ def exp_main(args):
     #                     xdays, ydays, window, shift,
     #                     train_ratio, val_ratio, node_observed_ratio)
     meta_data = Datasets(dataset_cache_dir, data_dir, dataset, batch_size,
-                        xdays, ydays, window, shift,
-                        train_ratio, val_ratio, node_observed_ratio)
+                        xdays, ydays, window, shift, train_ratio, val_ratio,
+                        node_observed_ratio, seed_dataset)
     meta_data = meta_data.load_data()
     
     # DEBUG 若仅生成数据集则打印信息并退出整个程序
@@ -114,7 +118,8 @@ def train_country(args, result_paths, meta_data, i_country):
 
     comp_last = args.comp_last
 
-    graph_lambda = args.lambda_graph_loss[country_name][(1 + args.shift) if args.ydays == 1 else args.ydays] if country_name in args.lambda_graph_loss else 0
+    # graph_lambda = args.lambda_graph_loss[country_name][(1 + args.shift) if args.ydays == 1 else args.ydays] if country_name in args.lambda_graph_loss else 0
+    graph_lambda = args.graph_lambda
     # graph_lambda_0 = args.graph_lambda_0
     # graph_lambda_n = args.graph_lambda_n
     # graph_lambda_epoch_max = args.graph_lambda_epoch_max

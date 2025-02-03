@@ -28,6 +28,7 @@ class Datasets:
         train_ratio,
         val_ratio,
         node_observed_ratio,
+        seed_dataset = None,
         enable_cache=True,
     ):
 
@@ -43,6 +44,7 @@ class Datasets:
         self.train_ratio = train_ratio
         self.val_ratio = val_ratio
         self.node_observed_ratio = node_observed_ratio
+        self.seed_dataset = seed_dataset
         self.enable_cache = enable_cache
 
     def load_data(self):
@@ -56,6 +58,7 @@ class Datasets:
         # 通过 args.dataset 锁定数据集目录
         databinfile = os.path.join(
             self.dataset_cache_dir,
+            (f"seed{self.seed_dataset}" if self.seed_dataset else ""),
             f"{self.dataset}_x{self.xdays}_y{self.ydays}_w{self.window_size}_s{self.shift}"
             + (
                 ""
@@ -64,6 +67,7 @@ class Datasets:
             )
             + ".bin",
         )
+        
 
         if self.dataset == "dataforgood":
             dataset_dir = f"{self.data_dir}/{self.dataset}"
