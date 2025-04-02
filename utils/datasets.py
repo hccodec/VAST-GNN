@@ -59,10 +59,7 @@ class Datasets:
         为了缓存，此阶段将读取全部国家并缓存
         """
         # 通过 args.dataset 锁定数据集目录
-        self.dataset_cache_dir = os.path.join(
-            self.dataset_cache_dir,
-            (f"seed{self.seed_dataset}" if self.seed_dataset else "")
-        )
+        self.dataset_cache_dir = os.path.join(self.dataset_cache_dir, f"seed{self.seed_dataset}")
         databinfile = os.path.join(
             self.dataset_cache_dir,
             f"{self.dataset}_x{self.xdays}_y{self.ydays}_w{self.window_size}_s{self.shift}"
@@ -154,7 +151,7 @@ class Datasets:
         meta_info = pd.DataFrame(
             meta_info, columns=["Days", "Regions"], index=meta_data["country_names"]
         )
-        print(meta_info)
+        logger.info(meta_info)
 
         return meta_data
 
@@ -400,16 +397,16 @@ class Datasets:
 
             air = {
 
-                "period": pd.read_csv(os.path.join(data_path, "air_traffic_data/air_data_between_region_by_period.csv")),
+                # "period": pd.read_csv(os.path.join(data_path, "air_traffic_data/air_data_between_region_by_period.csv")),
                 "year":   pd.read_csv(os.path.join(data_path, "air_traffic_data/air_data_between_region_by_year.csv")),
-                "month":  pd.read_csv(os.path.join(data_path, "air_traffic_data/air_data_within_region_by_month.csv"))
+                # "month":  pd.read_csv(os.path.join(data_path, "air_traffic_data/air_data_within_region_by_month.csv"))
             }
 
             epi = {
                 "r1": pd.read_csv(os.path.join(data_path, "epi_data/epi_glo_flu_region1_no_roll.csv")),
-                "a1b1": pd.merge(
-                    pd.read_csv(os.path.join(data_path, "epi_data/epi_glo_flua1_no_roll.csv")),
-                    pd.read_csv(os.path.join(data_path, "epi_data/epi_glo_flub1_no_roll.csv"))),
+                # "a1b1": pd.merge(
+                #     pd.read_csv(os.path.join(data_path, "epi_data/epi_glo_flua1_no_roll.csv")),
+                #     pd.read_csv(os.path.join(data_path, "epi_data/epi_glo_flub1_no_roll.csv"))),
             }
 
             diseases = [i for i in epi['r1'].columns if i.endswith('_num')]

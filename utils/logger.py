@@ -5,7 +5,7 @@ class RemoveANSIColorFilter(logging.Filter):
     ansi_escape = re.compile(f"\x1B\[[0-?]*[ -/]*[@-~]")
 
     def filter(self, record):
-        record.msg = self.ansi_escape.sub("", record.msg)
+        record.msg = self.ansi_escape.sub("", str(record.msg))
         return True
 
 
