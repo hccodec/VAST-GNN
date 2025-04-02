@@ -1,6 +1,7 @@
 import torch, os, re, io, types
 from train_test import validate_test_process, eval_process
 from eval import compute_mae_rmse
+from utils.datasets import Datasets
 from utils.logger import logger
 from utils.args import get_parser, process_args
 import pandas as pd
@@ -9,7 +10,7 @@ from argparse import ArgumentParser, Namespace
 from utils.model_selector import select_model
 from utils.utils import font_green, get_country, get_exp_desc
 
-def get_args(config_str):
+def get_args(config_str, **kwargs):
     '''
     使用安全的方式处理读入的 args.txt 文件，
     '''
@@ -65,6 +66,9 @@ def get_args(config_str):
             setattr(args_old, k, getattr(args, k))
     # 手动矫正一些值
     args_old.node_observed_ratio = args.node_observed_ratio * 100
+
+    # 使用 kwargs 进行覆盖 （比如传入新的 device 号等）
+    for k, v in kwargs.items(): setattr(args_old, k, v)
     
 
     args = process_args(args_old, record_log=False)
@@ -78,7 +82,12 @@ def get_args(config_str):
 
 country_names = {'EN': "England", 'FR': "France", 'IT': 'Italy', 'ES': 'Spain', 'NZ': 'NewZealand', 'JP': 'Japan'}
 
-def test(fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth'):
+def test(
+        fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth',
+        logger_disable = None,
+        device=7):
+
+    if logger_disable is True: logger.info = lambda x: None
 
     country = re.search(r"model_(.*?)_", fn_model).groups()[0]
 
@@ -87,22 +96,19 @@ def test(fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_202410
                             'args.txt')
     with open(arg_path, encoding='utf-8') as f: args = f.read()
     
-    args, model_args = get_args(args)
+    args, model_args = get_args(args, device=device)
 
     exp_desc = get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift, args.node_observed_ratio)
 
     logger.info(font_green(f"执行测试 [{exp_desc}]"))
 
-    if args.dataset == 'dataforgood':
-        from utils.data_process.dataforgood import load_data
-    elif args.dataset == 'japan':
-        from utils.data_process.japan import load_data
-    elif args.dataset == 'sim':
-        from utils.data_process.sim import load_data
-
-    meta_data = load_data(args.dataset_cache_dir, args.data_dir, args.dataset, args.batch_size,
-                          args.xdays, args.ydays, args.window, args.shift,
-                          args.train_ratio, args.val_ratio, args.node_observed_ratio)
+    # meta_data = load_data(args.dataset_cache_dir, args.data_dir, args.dataset, args.batch_size,
+    #                       args.xdays, args.ydays, args.window, args.shift,
+    #                       args.train_ratio, args.val_ratio, args.node_observed_ratio)
+    
+    meta_data = Datasets(args.dataset_cache_dir, args.data_dir, args.dataset, args.batch_size,
+                    args.xdays, args.ydays, args.window, args.shift, args.train_ratio, args.val_ratio,
+                    args.node_observed_ratio, args.seed_dataset).load_data()
     
     country_code, country_name = get_country(country, meta_data)
 
