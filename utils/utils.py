@@ -181,32 +181,41 @@ def adjust_lambda(epoch, num_epochs, lambda_0, lambda_n, lambda_epoch_max, metho
 
 #     return x_case, y_case, x_mob, y_mob, idx_dataset
 
-def get_exp_desc(modelstr, xdays, ydays, window, shift, node_observed_ratio) -> str:
+def get_exp_desc(modelstr, xdays, ydays, window, shift, node_observed_ratio, language='cn') -> str:
     '''
-
     Args:
-        modelstr:   模型字符串
-        xdays:      历史窗口
-        ydays:      预测窗口
-        window:     历史数据特征窗口
-        shift:      预测窗口偏移
+        modelstr: 模型字符串
+        xdays: 历史窗口
+        ydays: 预测窗口
+        window: 历史数据特征窗口
+        shift: 预测窗口偏移
+        node_observed_ratio: 节点保留比例
+        language: 语言 ('cn' 或 'en')
 
     Returns:
-
+        描述字符串
     '''
-
+    
     # 描述预测天数信息
     y_desc = ""
-    if shift == 0: y_desc += f" {ydays}"
-    elif ydays == 1: y_desc += f"第 {shift + 1}"
-    else: y_desc += f"第 {shift + 1}-{shift + ydays}"
+    if shift == 0:
+        y_desc += f" {ydays}" if language == 'cn' else f" {ydays}"
+    elif ydays == 1:
+        y_desc += f"第 {shift + 1}" if language == 'cn' else f" {shift + 1}"
+    else:
+        y_desc += f"第 {shift + 1}-{shift + ydays}" if language == 'cn' else f" {shift + 1}-{shift + ydays}"
 
-    node_observed_ratio_desc = ""
     # 描述 mask 结点信息
+    node_observed_ratio_desc = ""
     if node_observed_ratio < 1:
-        node_observed_ratio_desc = f" (图节点保留 {node_observed_ratio * 100:.2f}%)"
+        node_observed_ratio_desc = f" (图节点保留 {node_observed_ratio * 100:.2f}%)" if language == 'cn' else f" (Graph nodes kept {node_observed_ratio * 100:.2f}%)"
     
-    desc = f"历史 {xdays} 天预测未来{y_desc} 天 ({modelstr}_w{window}){node_observed_ratio_desc}"
+    # 生成描述
+    if language == 'cn':
+        desc = f"历史 {xdays} 天预测未来{y_desc} 天 ({modelstr}_w{window}){node_observed_ratio_desc}"
+    else:
+        desc = f"Predict {y_desc} days using past {xdays} days ({modelstr}_w{window}){node_observed_ratio_desc}"
+    
     return desc
 
 @torch.no_grad()
@@ -290,3 +299,18 @@ def get_country(country, meta_data):
         country_name = country
         country_code = country_codes[country_names.index(country_name)]
     return country_code, country_name
+
+def matplotlib_chinese():
+
+    import matplotlib.pyplot as plt
+    import matplotlib.font_manager as fm
+    import matplotlib as mpl
+
+    font_path = "/home/hbj/HYWenHei-85W.ttf"
+    font_prop = fm.FontProperties(fname=font_path)
+    font_name = font_prop.get_name()
+
+    mpl.rcParams['font.family'] = font_name
+    mpl.rcParams['font.sans-serif'] = [font_name]
+    mpl.rcParams['axes.unicode_minus'] = False
+
