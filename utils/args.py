@@ -139,6 +139,7 @@ def process_args(args, record_log):
             args['graph_lambda'] = args["lambda_graph_loss"].loc[args.ydays + args.shift, args.country]
         else:
             args["graph_lambda_0"] = 0
+    args.seed_dataset = cfg["lambda_graph_loss"][args.dataset]['seed_dataset']
 
     now = date2str(datetime.now(), "%Y%m%d%H%M%S")
 
