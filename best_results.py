@@ -4,6 +4,22 @@ import pandas as pd
 import numpy as np
 import os
 
+# 使用 key0, key1, key2 为 data 转变成 pandas DataFrame 使其能同时通过索引和 key 访问
+convert_mae_table = lambda s: np.array(
+    [
+        [_i.strip() for _i in i.split("\t") if _i != ""]
+        for i in s.replace(" ", "\t").split("\n")
+        if i != ""
+    ]
+).T
+
+pack_data = lambda maes, data, keys: pd.DataFrame(
+    {"mae": maes.reshape(-1), "path": data.reshape(-1)},
+    index=pd.MultiIndex.from_product(
+        keys,
+        names=["y", "country", "model"],
+    ),
+)
 
 def get_paths():
 
@@ -260,27 +276,59 @@ def get_paths():
         ]
     )
 
-    # 使用 key0, key1, key2 为 data 转变成 pandas DataFrame 使其能同时通过索引和 key 访问
-    convert_mae_table = lambda s: np.array(
-        [
-            [_i.strip() for _i in i.split("\t") if _i != ""]
-            for i in s.replace(" ", "\t").split("\n")
-            if i != ""
-        ]
-    ).T
-    pack_data = lambda maes, data: pd.DataFrame(
-        {"mae": maes.reshape(-1), "path": data.reshape(-1)},
-        index=pd.MultiIndex.from_product(
-            keys,
-            names=["y", "country", "model"],
-        ),
-    )
 
-    data_50 = pack_data(convert_mae_table(maes_50), data_50)
-    data_80 = pack_data(convert_mae_table(maes_80), data_80)
+    data_50 = pack_data(convert_mae_table(maes_50), data_50, keys)
+    data_80 = pack_data(convert_mae_table(maes_80), data_80, keys)
 
     return easydict.EasyDict({"o50": data_50, "o80": data_80})
 
+def get_paths_flunet():
+
+    keys = [
+        [3],
+        ["h1n1", "h3n2", "BV", "BY"],
+        ["lstm", "mpnn_lstm", "mpnn_tl", "dynst"],
+    ]
+
+    maes_50 = """
+729.042 340.026  105.985    43.628
+640.373 342.864 75.818  27.742
+714.620 357.428 85.832  25.51
+519.879 262.144 70.672  16.589"""
+    data_50 = np.array(
+        [
+            [
+                [
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_lstm_50/flunet/lstm_7_1_w7_s2_20250212023714/model_h1n1_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_mpnn_lstm_50/flunet/mpnn_lstm_7_1_w7_s2_20250212031259/model_h1n1_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_mpnn_tl_50/flunet/mpnn_lstm_7_1_w7_s2_20250212024635/model_h1n1_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_2_50_graph_lambda_7/flunet/dynst_7_1_w7_s2_20250212041727/model_h1n1_best.pth"
+                ], [
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_lstm_50/flunet/lstm_7_1_w7_s2_20250212174618/model_h3n2_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_mpnn_lstm_50/flunet/mpnn_lstm_7_1_w7_s2_20250212172732/model_h3n2_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_mpnn_tl_50/flunet/mpnn_lstm_7_1_w7_s2_20250212180613/model_h3n2_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_2_50_graph_lambda_6/flunet/dynst_7_1_w7_s2_20250212185733/model_h3n2_best.pth"
+                ], [
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_lstm_50/flunet/lstm_7_1_w7_s2_20250213091421/model_BV_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_mpnn_lstm_50/flunet/mpnn_lstm_7_1_w7_s2_20250213081547/model_BV_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_mpnn_tl_50/flunet/mpnn_lstm_7_1_w7_s2_20250213082714/model_BV_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_2_50_graph_lambda_0/flunet/dynst_7_1_w7_s2_20250213082524/model_BV_best.pth"
+                ], [
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_lstm_50/flunet/lstm_7_1_w7_s2_20250210010249/model_BY_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_mpnn_lstm_50/flunet/mpnn_lstm_7_1_w7_s2_20250210003643/model_BY_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_1_baselines_mpnn_tl_50/flunet/mpnn_lstm_7_1_w7_s2_20250210004508/model_BY_best.pth",
+                    "results_2025_1/tests_0209_seed7/exp_2_50_graph_lambda_2/flunet/dynst_7_1_w7_s2_20250210011646/model_BY_best.pth",
+                ],
+            ],
+        ]
+    )
+
+
+    data_50 = pack_data(convert_mae_table(maes_50), data_50, keys)
+
+    return easydict.EasyDict({"o50": data_50})
+
 
 paths = get_paths()
+paths_flunet = get_paths_flunet()
 # paths
