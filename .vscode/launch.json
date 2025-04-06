@@ -108,7 +108,7 @@
                 "DEBUG_MODE": "true"
             },
             "args": [
-                "--dataset", "flunet", "--seed-dataset", "3", "--country", "BY", "--shift", "2", "--node-observed-ratio", "50", "--graph-lambda", "0.6", "--no-graph", "--device", " 7"
+                "--dataset", "flunet", "--country", "BY", "--shift", "2", "--node-observed-ratio", "50", "--graph-lambda", "0.6", "--no-graph", "--device", " 7"
                 // ""--dataset""",", "flunet",
                 // "--country", "h1n1",
                 // "--device", "9",

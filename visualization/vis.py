@@ -77,21 +77,48 @@ def generate_mob_relations(regions, x_mob, y_mob, hats, dataset = "test"):
 
     return OD_data
 
-def vis(test_dir = "1022", exp = "7", country = "EN"):
-    
+def vis(test_dir = "1022", exp = "7", country = "EN", save_dir = ''):
+    '''
+    可视化模型的预测结果
+    :param test_dir: 测试目录
+    :param exp: 实验编号
+    :param country: 国家代码
+    :param save_dir: 保存目录
+    :return:
+    '''
+    # 读取配置文件
     logger.info(font_yellow(f"开始可视化 {country}"))
 
     # 提取对应模型
-    models = [os.path.join(dirpath, filename) for dirpath, dirnames, filenames in os.walk('.') if '' in dirpath and f"tests_{test_dir}" in dirpath
-     for filename in filenames if filename.endswith("best.pth") and country in filename and f"exp_{exp}" in dirpath]
-    
+    # models = [os.path.join(dirpath, filename) for dirpath, dirnames, filenames in os.walk('.') if '' in dirpath and f"tests_{test_dir}" in dirpath
+    #  for filename in filenames if filename.endswith("best.pth") and country in filename and f"exp_{exp}" in dirpath]
+    save_dir = f"{test_dir}_{exp}" if save_dir == '' else save_dir
+    models = []
+    for dirpath, _, filenames in os.walk('.'):
+        # 检查目录路径条件
+        if (f"tests_{test_dir}" in dirpath or f"test_{test_dir}" in dirpath) and f"exp_{exp}" in dirpath and f"s2" in dirpath:
+            for filename in filenames:
+                # 检查文件名条件
+                if filename.endswith("best.pth") and country in filename:
+                    full_path = os.path.join(dirpath, filename)
+                    models.append(full_path)
+    return vis1(models, country, save_dir)
+
+def vis1(models, country = "EN", save_dir = ''):
+    '''
+    可视化模型的预测结果
+    :param models: 模型路径
+    :param country: 国家代码
+    :param save_dir: 保存目录
+    :return:
+    '''
     for model in models:
         logger.info(f"开始加载模型 {model}")
         model_str, xdays, ydays, window, shift = re.search('([^/]+)_(\d+)_(\d+)_w(\d+)_s(\d+)', model).groups()
 
         # 准备模型推理结果
         from utils.test import test
-        res, meta_data, args = test(fn_model=model, country=country)
+        res, meta_data, args = test(fn_model=model)
         
         country_code, country_name = get_country(country, meta_data)
 
@@ -125,7 +152,8 @@ def vis(test_dir = "1022", exp = "7", country = "EN"):
         fn_case, case_relation = generate_case_relations(regions_observed, x_case_test, y_case_test, y_hat_test, "test")
         if not adj_hat_test == []: mob_relation = generate_mob_relations(regions_observed, x_mob_test, y_mob_test, adj_hat_test, "test")
 
-        vis_resdir = os.path.join(f"visualization/results_visualization/{test_dir}_{exp}", "x{}_y{}_w{}_s{}_{}".format(xdays, ydays, window, shift, model_str), country)
+        vis_resdir = os.path.join(f"visualization/results_visualization", save_dir,
+                                  "x{}_y{}_w{}_s{}_{}".format(xdays, ydays, window, shift, model_str), country)
         logger.info(f"正在存储数据到目录 [{vis_resdir}] 中")
         os.makedirs(vis_resdir, exist_ok=True)
         # case
@@ -141,11 +169,40 @@ def vis(test_dir = "1022", exp = "7", country = "EN"):
     logger.info(font_yellow(f"结束可视化 {country}"))
 
 if __name__ == '__main__':
-    test_dir = "1022"
-    exp = '7'
-    vis(test_dir, exp, "EN")
-    vis(test_dir, exp, "FR")
-    vis(test_dir, exp, "IT")
-    vis(test_dir, exp, "ES")
+    test_dir = "0209_seed7"
+    shifts = '2'
+
+    vis(test_dir, '1_baselines_lstm_50/', "h1n1", "0209_seed7_lstm")
+    vis(test_dir, '1_baselines_lstm_50/', "h3n2", "0209_seed7_lstm")
+    vis(test_dir, '1_baselines_lstm_50/', "BV", "0209_seed7_lstm")
+    vis(test_dir, '1_baselines_lstm_50/', "BY", "0209_seed7_lstm")
+
+    vis(test_dir, '1_baselines_mpnn_lstm_50/', "h1n1", "0209_seed7_mpnn_lstm")
+    vis(test_dir, '1_baselines_mpnn_lstm_50/', "h3n2", "0209_seed7_mpnn_lstm")
+    vis(test_dir, '1_baselines_mpnn_lstm_50/', "BV", "0209_seed7_mpnn_lstm")
+    vis(test_dir, '1_baselines_mpnn_lstm_50/', "BY", "0209_seed7_mpnn_lstm")
+
+    vis(test_dir, '1_baselines_mpnn_tl_50/', "h1n1", "0209_seed7_mpnn_tl")
+    vis(test_dir, '1_baselines_mpnn_tl_50/', "h3n2", "0209_seed7_mpnn_tl")
+    vis(test_dir, '1_baselines_mpnn_tl_50/', "BV", "0209_seed7_mpnn_tl")
+    vis(test_dir, '1_baselines_mpnn_tl_50/', "BY", "0209_seed7_mpnn_tl")
+
+
+    # vis(test_dir, '2_50_graph_lambda_7/', "h1n1", "0209_seed7_dynst")
+    # vis(test_dir, '2_50_graph_lambda_6/', "h3n2", "0209_seed7_dynst")
+    # vis(test_dir, '2_50_graph_lambda_0/', "BV",   "0209_seed7_dynst")
+    # vis(test_dir, '2_50_graph_lambda_2/', "BY",   "0209_seed7_dynst")
+    # from best_results import paths
+    
+    # paths[f'o{node_observation_ratio}'].sort_index().loc[(ydays, country_code)].iterrows()
+
+# if __name__ == '__main__':
+#     test_dir = "0106_all"
+#     exp = '2'
+#     vis(test_dir, exp, "EN")
+#     vis(test_dir, exp, "FR")
+#     vis(test_dir, exp, "IT")
+#     vis(test_dir, exp, "ES")
+
     # vis(test_dir, exp, "NZ")
 
