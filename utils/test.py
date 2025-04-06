@@ -38,15 +38,21 @@ def get_args(config_str, **kwargs):
         # return {e.split(": ")[0]: convert(e.split(": ")[1]) for e in v.split("\n") if ": " in e}
         return {e.split("':")[0]: convert(e.split("':")[1]) for e in v[2:-1].split(", '")}
         
-    # 将配置字符串分割成不同的部分
-    config_blocks = [e.split("]\n") for e in config_str.split("[")[1:]]
-    # 修复分割 bug：只保留开头是 "[args]" 和 "[model_args" 的，对于其他，都和前一个合并。提示：从后往前
-    for i in range(len(config_blocks) - 1, 0, -1):
-        if len(config_blocks[i]) == 1:
-            config_blocks[i - 1][1] += config_blocks[i][0]
-            config_blocks.pop(i)
+    # 用正则提取 [args] 和 [model_args 开头的块
+    pattern = r"(\[(?:args|model_args:[^\]]+)\])(.*?)(?=\[(?:args|model_args:[^\]]+)\]|$)"
+    config_blocks = re.findall(pattern, config_str, re.DOTALL)
+    
+    # 转换为字典
+    config_blocks = {block[0][1:-1]: block[1].strip() for block in config_blocks}
+    # # 将配置字符串分割成不同的部分
+    # config_blocks = [e.split("]\n") for e in config_str.split("[")[1:]]
+    # # 修复分割 bug：只保留开头是 "[args]" 和 "[model_args" 的，对于其他，都和前一个合并。提示：从后往前
+    # for i in range(len(config_blocks) - 1, 0, -1):
+    #     if len(config_blocks[i]) == 1:
+    #         config_blocks[i - 1][1] += config_blocks[i][0]
+    #         config_blocks.pop(i)
 
-    config_blocks = {e[0]: e[1].strip() for e in config_blocks if len(e) == 2}
+    # config_blocks = {e[0]: e[1].strip() for e in config_blocks if len(e) == 2}
 
     assert [k == 'args' or k.startswith("model_args") for k in config_blocks]
     device = torch.device
@@ -92,8 +98,12 @@ def test(
     country = re.search(r"model_(.*?)_", fn_model).groups()[0]
 
     arg_path = os.path.join(os.path.dirname(fn_model),
-                            (country[0] + 'IM' + country[1]) if country[0] == 'S' and country[1].isdigit() else country_names[country],
+                            (country[0] + 'IM' + country[1]) if country[0] == 'S' and country[1].isdigit() else country_names[country] if country in country_names else country,
                             'args.txt')
+    
+    if not os.path.exists(arg_path):
+        arg_path = os.path.join(os.path.dirname(fn_model), 'args.txt')
+
     with open(arg_path, encoding='utf-8') as f: args = f.read()
     
     args, model_args = get_args(args, device=device)
