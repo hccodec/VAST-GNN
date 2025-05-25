@@ -16,7 +16,7 @@ pip install -r  requirements.txt
 Continuous forecasting is designed to predict the next y days based on historical data from the past x days, such as forecasting days 7 to 9 using data from days 0 to 6. The corresponding command-line command is as follows.
 ```bash
 # Running this command will use the dynst model to predict the next 3 days of cases from the past 7 days on GPU 8, and save the results to the results/results_test/test/dataforge/ext_test1 directory
-python main.py --xdays 7 --ydays 3 --model dynst --dataset dataforgood --result-dir test --exp test1 --device 8
+python main.py --xdays 7 --ydays 3 --model dynst --dataset dataforgood --device 8
 ```
 
 ### Alternate-Day Forecasting

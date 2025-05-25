@@ -8,8 +8,6 @@ from utils.logger import set_logger, logger
 
 import pandas as pd
 
-from utils.utils import set_random_seed
-
 models_list = ["lstm", "dynst", "mpnn_lstm"]
 graph_lambda_methods = ["exp", "cos"]
 
@@ -128,7 +126,7 @@ def process_args(args, record_log):
     # # 处理loss正则化项参数 graph_lambda        
     if 'graph_lambda' in args: args["graph_lambda_0"] = args["graph_lambda_n"] = args["graph_lambda"]
     else:
-        if args.dataset in cfg["lambda_graph_loss"]:
+        if args.dataset in cfg["lambda_graph_loss"] and f'arr_{int(cfg["node_observed_ratio"])}' in cfg["lambda_graph_loss"][args.dataset]:
             args["lambda_graph_loss"] = pd.DataFrame(
                 cfg["lambda_graph_loss"][args.dataset][
                     f'arr_{int(cfg["node_observed_ratio"])}'
