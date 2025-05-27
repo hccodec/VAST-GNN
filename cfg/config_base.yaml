@@ -1,7 +1,7 @@
 # 配置文件以及各种目录
 data_dir: "data"           # 数据集目录
 dataset: "dataforgood"      # 选择的数据集
-dataset_cache_dir: "dataset_cache"  # 处理后的数据集目录
+dataset_cache_dir: "dataset"  # 处理后的数据集目录
 # exp: -1                    # 实验编号 -1 表示不编号
 model: "dynst"             # 设置实验所用模型
 # result_dir: "results_test" # 实验结果目录

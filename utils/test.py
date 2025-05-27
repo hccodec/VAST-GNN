@@ -176,22 +176,24 @@ if __name__ == '__main__':
     # parser.add_argument("--country-code", default='EN')
     # args = parser.parse_args()
     
-    k, key = 'o50', (14, 'ES', 'dynst')
-    # k, key = None, None
+    # k, key = 'o50', (14, 'ES', 'dynst')
+    k, key = None, None
 
     # 统计 for k in paths.keys(): for key in paths[k].index: 的和
+    qbar_enabled = True
 
     if key is None:
-        # qbar = tqdm(total=len(paths) * len(paths['o50'].index), desc="Testing models", unit="model")
+        if qbar_enabled: qbar = tqdm(total=len(paths) * len(paths['o50'].index), desc="Testing models", unit="model")
         i = 1
         for k in paths.keys():
             for key in paths[k].index:
-                # if not (k == 'o50' and key[:2] == (3, 'ES')): continue
+                # if not (k == 'o50' and key[:2] == (7, 'ES')): continue
                 msg, model_dir = test_main(paths, k, key, True)
-                if 'FAILED' in msg: 
-                    print(f"{i:3} {msg} {font_underlined(font_hide(model_dir))}")
-                # qbar.write(f"{i} {msg} {model_dir}")
+                msg_print = f"{i:3} {msg} {font_underlined(font_hide(model_dir))}"
+                if 'FAILED' in msg:
+                    if qbar_enabled: qbar.write(msg_print)
+                    else: print(msg_print)
                 i += 1
-                # qbar.update()
+                if qbar_enabled: qbar.update()
     else:
         msg, model_dir = test_main(paths, k, key)

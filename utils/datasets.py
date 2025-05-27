@@ -59,7 +59,8 @@ class Datasets:
         为了缓存，此阶段将读取全部国家并缓存
         """
         # 通过 args.dataset 锁定数据集目录
-        self.dataset_cache_dir = os.path.join(self.dataset_cache_dir, f"seed{self.seed_dataset}")
+        self.dataset_cache_dir = os.path.join(self.dataset_cache_dir)
+        # self.dataset_cache_dir = os.path.join(self.dataset_cache_dir, f"seed{self.seed_dataset}")
         databinfile = os.path.join(
             self.dataset_cache_dir,
             f"{self.dataset}_x{self.xdays}_y{self.ydays}_w{self.window_size}_s{self.shift}"
