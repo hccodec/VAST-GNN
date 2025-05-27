@@ -1,0 +1,27 @@
+FROM continuumio/anaconda3:latest
+
+COPY lp_env /opt/conda/envs
+
+# 1. 安装必要的依赖
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wget bzip2 sudo && \
+    rm -rf /var/lib/apt/lists/*
+
+# 2. 创建一个普通用户
+ARG USERNAME=user
+ARG my_env=lp
+
+RUN groupadd --gid 1000 $USERNAME \
+    && useradd --uid 1000 --gid 1000 -m $USERNAME \
+    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# 切换到新创建的用户
+USER $USERNAME
+WORKDIR /home/$USERNAME
+
+RUN echo "conda activate $my_env" >> ~/.bashrc
+
+# 6. 设置默认的 Shell 和 CMD
+# 使用 -l 参数，确保 bash 作为登录 shell 启动，从而执行 .bashrc
+CMD ["bash", "-l"]

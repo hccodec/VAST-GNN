@@ -10,9 +10,10 @@ metrics_labels = ["MAE_val", "RMSE_val", "MAE_test", "RMSE_test"]
 
 @catch("出现错误，无法计算相关性")
 def compute_correlation(hat_data, real_data):
+    real_sum = [float(torch.sum(real_data[i][-1])) for i in range(len(real_data))]
+    if np.std(real_sum) == 0: return [-1]
     try:
         hat_sum = [float(torch.sum(hat_data[i][-1])) for i in range(len(hat_data))]
-        real_sum = [float(torch.sum(real_data[i][-1])) for i in range(len(real_data))]
         correlation = stats.pearsonr(hat_sum, real_sum)
         return correlation
     except Exception as e:

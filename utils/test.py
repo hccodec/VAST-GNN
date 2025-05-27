@@ -8,7 +8,7 @@ import pandas as pd
 from argparse import ArgumentParser, Namespace
 
 from utils.model_selector import select_model
-from utils.utils import font_green, get_country, get_exp_desc
+from utils.utils import font_green, font_red, get_country, get_exp_desc
 
 def get_args(config_str, **kwargs):
     '''
@@ -91,7 +91,9 @@ country_names = {'EN': "England", 'FR': "France", 'IT': 'Italy', 'ES': 'Spain', 
 def test(
         fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth',
         logger_disable = None,
-        device=7):
+        device=7,
+        extra_args = None
+):
 
     if logger_disable is True: logger.info = lambda x: None
 
@@ -107,6 +109,10 @@ def test(
     with open(arg_path, encoding='utf-8') as f: args = f.read()
     
     args, model_args = get_args(args, device=device)
+
+    if extra_args is not None:
+        for k, v in extra_args.items():
+            setattr(args, k, v)
 
     exp_desc = get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift, args.node_observed_ratio)
 
@@ -145,12 +151,34 @@ def test(
 
     return res, meta_data, args
 
+def test_main(paths, k, key, i):
+    model_dir = paths[k].loc[key].path
+    res, meta_data, args = test(model_dir, True)
+
+    expected_value, actual_value = float(paths[k].loc[key].mae), float(res['mae_test'])
+
+    if str(actual_value) == str(expected_value):
+        msg = f'[{font_green("PASSED")}] {key}'
+    else:
+        err_percentage = abs(expected_value - actual_value) / expected_value
+        msg = f'[{font_red("FAILED")}] {k, key} {actual_value} ({expected_value}) {err_percentage * 100:.2f}%'
+        print(i, msg)
+
 if __name__ == '__main__':
     # parser = ArgumentParser()
     # parser.add_argument("--model-dir",default='results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/')
     # parser.add_argument("--country-code", default='EN')
     # args = parser.parse_args()
-    model_dir = "results/tests_1209/exp_1_sim/sim/dynst_7_1_w7_s2_20241209101426/model_S1_best.pth"
-    res, meta_data, args = test(model_dir)
+    from best_results import paths
+    
+    k, key = 'o50', (3, 'ES', 'dynst')
+    # key = None
 
-    logger.info(res)
+    i = 1
+    if key is None:
+        for k in paths.keys():
+            for key in paths[k].index:
+                test_main(paths, k, key, i)
+                i += 1
+    else:
+        test_main(paths, k, key, 1)

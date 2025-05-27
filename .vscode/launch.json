@@ -236,20 +236,13 @@
             ]
         },
         {
-            "name": "test",
             "type": "debugpy",
             "request": "launch",
-            "program": "test.py",
-            "console": "integratedTerminal",
-            "env": {
-                "DEBUG_MODE": "true"
-            },
-            "args": [
-                // "--dataset", "sim",
-                //    "--model", "dynst",
-                //    "--model-dir", "results/tests_1209/exp_1_sim/sim/dynst_7_1_w7_s2_20241209101426/SIM1",
-                //    "--country-code", "SIM1"
-            ]
+            "name": "测试",
+            "cwd": "${workspaceFolder}",
+            // "program": "vis.py",
+            "module": "utils.test",
+            "args": []
         },
     ]
 }
