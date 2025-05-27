@@ -74,11 +74,12 @@ class Datasets:
 
         if self.dataset == "dataforgood":
             dataset_dir = f"{self.data_dir}/{self.dataset}"
-            country_names = [
-                d
-                for d in os.listdir(dataset_dir)
-                if os.path.isdir(os.path.join(dataset_dir, d))
-            ]
+            # country_names = [
+            #     d
+            #     for d in os.listdir(dataset_dir)
+            #     if os.path.isdir(os.path.join(dataset_dir, d))
+            # ]
+            country_names = ['England', 'France', 'Italy', 'Spain', 'NewZealand']
             country_codes = list(
                 map(
                     lambda x: x if x is None else x.groups()[0],
@@ -92,8 +93,7 @@ class Datasets:
                                 if f.endswith(".csv")
                             ][0]
                         )
-                        for d in os.listdir(dataset_dir)
-                        if os.path.isdir(os.path.join(dataset_dir, d))
+                        for d in country_names
                     ],
                 )
             )

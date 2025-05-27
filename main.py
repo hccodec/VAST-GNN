@@ -67,8 +67,7 @@ def exp_main(args):
     #                     train_ratio, val_ratio, node_observed_ratio)
     meta_data = Datasets(dataset_cache_dir, data_dir, dataset, batch_size,
                         xdays, ydays, window, shift, train_ratio, val_ratio,
-                        node_observed_ratio, seed_dataset)
-    meta_data = meta_data.load_data()
+                        node_observed_ratio, seed_dataset).load_data()
     
     # DEBUG 若仅生成数据集则打印信息并退出整个程序
     if args.gendata:

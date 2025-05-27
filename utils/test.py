@@ -7,8 +7,11 @@ from utils.args import get_parser, process_args
 import pandas as pd
 from argparse import ArgumentParser, Namespace
 
+from tqdm.auto import tqdm
+from best_results import paths
+
 from utils.model_selector import select_model
-from utils.utils import font_green, font_red, get_country, get_exp_desc
+from utils.utils import font_green, font_hide, font_underlined, font_red, get_country, get_exp_desc
 
 def get_args(config_str, **kwargs):
     '''
@@ -113,6 +116,8 @@ def test(
     if extra_args is not None:
         for k, v in extra_args.items():
             setattr(args, k, v)
+    
+    logger.info("参数处理完毕：" + str(args))
 
     exp_desc = get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift, args.node_observed_ratio)
 
@@ -151,34 +156,42 @@ def test(
 
     return res, meta_data, args
 
-def test_main(paths, k, key, i):
+def test_main(paths, k, key, silent=False):
     model_dir = paths[k].loc[key].path
-    res, meta_data, args = test(model_dir, True)
+    res, meta_data, args = test(model_dir, silent)
 
     expected_value, actual_value = float(paths[k].loc[key].mae), float(res['mae_test'])
+    
+    err_percentage = (actual_value - expected_value) / expected_value
 
-    if str(actual_value) == str(expected_value):
-        msg = f'[{font_green("PASSED")}] {key}'
+    if abs(err_percentage) < 0.01:
+        msg = f'[{font_green("PASSED")}] {k} {str(key):23}'
     else:
-        err_percentage = abs(expected_value - actual_value) / expected_value
-        msg = f'[{font_red("FAILED")}] {k, key} {actual_value} ({expected_value}) {err_percentage * 100:.2f}%'
-        print(i, msg)
+        msg = f'[{font_green("FAILED") if err_percentage < 0 else font_red("FAILED")}] {k} {str(key):23} {actual_value:7} ({expected_value:7}) {err_percentage * 100:7.2f}%'
+    return msg, model_dir
 
 if __name__ == '__main__':
     # parser = ArgumentParser()
     # parser.add_argument("--model-dir",default='results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/')
     # parser.add_argument("--country-code", default='EN')
     # args = parser.parse_args()
-    from best_results import paths
     
-    k, key = 'o50', (3, 'ES', 'dynst')
-    # key = None
+    k, key = 'o50', (14, 'ES', 'dynst')
+    # k, key = None, None
 
-    i = 1
+    # 统计 for k in paths.keys(): for key in paths[k].index: 的和
+
     if key is None:
+        # qbar = tqdm(total=len(paths) * len(paths['o50'].index), desc="Testing models", unit="model")
+        i = 1
         for k in paths.keys():
             for key in paths[k].index:
-                test_main(paths, k, key, i)
+                # if not (k == 'o50' and key[:2] == (3, 'ES')): continue
+                msg, model_dir = test_main(paths, k, key, True)
+                if 'FAILED' in msg: 
+                    print(f"{i:3} {msg} {font_underlined(font_hide(model_dir))}")
+                # qbar.write(f"{i} {msg} {model_dir}")
                 i += 1
+                # qbar.update()
     else:
-        test_main(paths, k, key, 1)
+        msg, model_dir = test_main(paths, k, key)

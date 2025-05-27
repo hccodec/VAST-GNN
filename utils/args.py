@@ -35,7 +35,7 @@ def get_parser(parent_parser=None):
     parser.add_argument("--result-dir", default="results_test", help="")
     # # 实验设置：随机种子和设备号
     parser.add_argument("--seed", type=int, default=3407, help="随机种子")
-    parser.add_argument("--seed-dataset", type=int, default=5, help="数据集随机种子")
+    parser.add_argument("--seed-dataset", type=int, default=None, help="数据集随机种子")
     parser.add_argument("--device", default=None, help="GPU号")
     # 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
     parser.add_argument("--xdays", type=int, default=7, help="预测所需历史天数")
@@ -137,7 +137,7 @@ def process_args(args, record_log):
             args['graph_lambda'] = args["lambda_graph_loss"].loc[args.ydays + args.shift, args.country]
         else:
             args["graph_lambda_0"] = 0
-    args.seed_dataset = cfg["lambda_graph_loss"][args.dataset]['seed_dataset']
+    args["seed_dataset"] = cfg["lambda_graph_loss"][args.dataset]['seed_dataset'] if 'seed_dataset' not in args else args.seed_dataset
 
     now = date2str(datetime.now(), "%Y%m%d%H%M%S")
 

@@ -22,7 +22,7 @@ color_code = ["red", "green", "yellow", "blue", "purple", "cyan"]
 
 def _style(style, content):
     assert style in font_style
-    _color = f"\033[1;{font_style.index(style) + 31}m"
+    _color = f"\033[{font_style.index(style)}m"
     if isinstance(content, float):
         return f"{_color}{content:.3f}\033[0m"
     else:
