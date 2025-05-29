@@ -9,6 +9,7 @@ from argparse import ArgumentParser, Namespace
 
 from tqdm.auto import tqdm
 from best_results import paths
+# from best_results import paths_flunet as paths
 
 from utils.model_selector import select_model
 from utils.utils import font_green, font_hide, font_underlined, font_red, get_country, get_exp_desc
@@ -190,7 +191,7 @@ if __name__ == '__main__':
                 # if not (k == 'o50' and key[:2] == (7, 'ES')): continue
                 msg, model_dir = test_main(paths, k, key, True)
                 msg_print = f"{i:3} {msg} {font_underlined(font_hide(model_dir))}"
-                if 'FAILED' in msg:
+                if True or 'FAILED' in msg:
                     if qbar_enabled: qbar.write(msg_print)
                     else: print(msg_print)
                 i += 1
