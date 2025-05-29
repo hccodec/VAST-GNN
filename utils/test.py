@@ -1,3 +1,4 @@
+import zipfile
 import torch, os, re, io, types
 from train_test import validate_test_process, eval_process
 from eval import compute_mae_rmse
@@ -8,8 +9,7 @@ import pandas as pd
 from argparse import ArgumentParser, Namespace
 
 from tqdm.auto import tqdm
-from best_results import paths
-# from best_results import paths_flunet as paths
+from best_results import paths, paths_flunet
 
 from utils.model_selector import select_model
 from utils.utils import font_green, font_hide, font_underlined, font_red, get_country, get_exp_desc
@@ -90,7 +90,10 @@ def get_args(config_str, **kwargs):
 
     return args, model_args
 
-country_names = {'EN': "England", 'FR': "France", 'IT': 'Italy', 'ES': 'Spain', 'NZ': 'NewZealand', 'JP': 'Japan'}
+country_names = {
+    'EN': "England", 'FR': "France", 'IT': 'Italy', 'ES': 'Spain', 'NZ': 'NewZealand', 'JP': 'Japan',
+    'h1n1': 'h1n1', 'h3n2': 'h3n2', 'BY': 'BY', 'BV': 'BV'
+    }
 
 def test(
         model_path = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth',
@@ -106,10 +109,10 @@ def test(
     if re.search(r"model_(.*?)_", model_path) is not None:
         country = re.search(r"model_(.*?)_", model_path).groups()[0]
     else:
-        dataset, observed_ratio, y, country, model_name = re.search(r"(.*?)_(.*?)_y(.*?)_(.*?)_(.*?)").groups()
+        dataset, observed_ratio, y, country, model_name = re.search(r"(.*?)_(.*?)_y(.*?)_(.*?)_(.*?)", model_path).groups()
 
     # region 处理 args
-    if not os.path.exists(args_path): args_path = os.path.join(os.path.dirname(model_path), 'args.txt')
+    if not os.path.exists(args_path): args_path = os.path.join(os.path.dirname(model_path), country_names[country], 'args.txt')
 
     with open(args_path, encoding='utf-8') as f: args = f.read()
     args, model_args = get_args(args, device=device)
@@ -150,39 +153,85 @@ def test(
 
     return res, meta_data, args
 
-def test_main(paths, k, key, silent=False):
-    model_dir = paths[k].loc[key].path
-    res, meta_data, args = test(model_dir, logger_disable=silent)
+def test_main(model_path, args_path, expected_mae_value, observed_ratio, y, country_code, model_name, silent=False):
 
-    expected_value, actual_value = float(paths[k].loc[key].mae), float(res['mae_test'])
+    res, meta_data, args = test(model_path, args_path, logger_disable=silent)
+
+    expected_mae_value, actual_mae_value = float(expected_mae_value), float(res['mae_test'])
     
-    err_percentage = (actual_value - expected_value) / expected_value
+    err_percentage = (actual_mae_value - expected_mae_value) / expected_mae_value
 
     if abs(err_percentage) < 0.01:
-        msg = f'[{font_green("PASSED")}] {k} {str(key):23}'
+        msg = f'[{font_green("PASSED")}] {observed_ratio} {"{:2} {:4} {:9}".format(y, country_code, model_name)}'
     else:
-        msg = f'[{font_green("FAILED") if err_percentage < 0 else font_red("FAILED")}] {k} {str(key):23} {actual_value:7} ({expected_value:7}) {err_percentage * 100:7.2f}%'
-    return msg, model_dir
+        msg = f'''[{
+            font_green("FAILED") if err_percentage < 0 else font_red("FAILED")
+            }] {observed_ratio} {"{:2} {:4} {:9}".format(y, country_code, model_name)} {actual_mae_value:7} ({expected_mae_value:7}) {err_percentage * 100:7.2f}%'''
+    return msg, model_path
 
 if __name__ == '__main__':
-    # k, key = 'o50', (14, 'ES', 'dynst')
-    k, key = None, None
+    dataset, observed_ratio, y, country_code, model_name = 'dataforgood', 'o50', 14, 'ES', 'dynst'
+    dataset, observed_ratio, y, country_code, model_name = None, None, None, None, None
 
-    # 统计 for k in paths.keys(): for key in paths[k].index: 的和
     qbar_enabled = True
+    use_results = True
 
-    if key is None:
-        if qbar_enabled: qbar = tqdm(total=len(paths) * len(paths['o50'].index), desc="Testing models", unit="model")
-        i = 1
-        for k in paths.keys():
-            for key in paths[k].index:
+    if dataset is None:
+        pth_zip_filename = "checkpoints.zip"
+        pth_zip_dirname = "checkpoints"
+        if use_results and os.path.exists(pth_zip_filename):
+            if not os.path.exists(pth_zip_dirname): zipfile.ZipFile(pth_zip_filename).extractall(pth_zip_dirname)
+            
+            if qbar_enabled: qbar = tqdm(
+                total=len(os.listdir(pth_zip_dirname)) // 2,
+                desc="Testing models", unit="model")
+            i = 1
+
+            total = len(os.listdir(pth_zip_dirname)) / 2
+            keys = [re.search(r"(.*?)_(.*?)_y(.*?)_(.*?)_(.*).pth", fn).groups() for fn in os.listdir(pth_zip_dirname) if fn.endswith('.pth')]
+            i = 1
+            for dataset, observed_ratio, y, country_code, model_name in keys:
+                paths_dataset = paths if dataset == 'dataforgood' else paths_flunet
+                model_path = os.path.join(pth_zip_dirname, "{}_{}_y{}_{}_{}.pth".format(dataset, observed_ratio, y, country_code, model_name))
+                args_path = os.path.join(pth_zip_dirname, "{}_{}_y{}_{}_{}_args.txt".format(dataset, observed_ratio, y, country_code, model_name))
                 # if not (k == 'o50' and key[:2] == (7, 'ES')): continue
-                msg, model_dir = test_main(paths, k, key, True)
-                msg_print = f"{i:3} {msg} {font_underlined(font_hide(model_dir))}"
+                msg, model_path = test_main(
+                    model_path,
+                    args_path,
+                    paths_dataset[observed_ratio].loc[int(y), country_code, model_name].mae,
+                    observed_ratio, y, country_code, model_name, True)
+                msg_print = f"{i:3} {msg} {font_underlined(font_hide(model_path))}"
                 if True or 'FAILED' in msg:
                     if qbar_enabled: qbar.write(msg_print)
                     else: print(msg_print)
                 i += 1
                 if qbar_enabled: qbar.update()
+            print()
+        else:
+            if qbar_enabled: qbar = tqdm(
+                total=len(paths) * len(paths['o50'].index) + len(paths_flunet) * len(paths_flunet['o50'].index),
+                desc="Testing models", unit="model")
+            i = 1
+            for dataset in ['dataforgood', 'flunet']:
+                paths_dataset = paths if dataset == 'dataforgood' else paths_flunet
+                for observed_ratio in paths_dataset.keys():
+                    for key in paths_dataset[observed_ratio].index:
+                        y, country_code, model_name = key
+                        # if not (k == 'o50' and key[:2] == (7, 'ES')): continue
+                        msg, model_path = test_main(
+                            paths_dataset[observed_ratio].loc[y, country_code, model_name].path,
+                            '',
+                            paths_dataset[observed_ratio].loc[y, country_code, model_name].mae,
+                            observed_ratio, y, country_code, model_name, True)
+                        msg_print = f"{i:3} {msg} {font_underlined(font_hide(model_path))}"
+                        if True or 'FAILED' in msg:
+                            if qbar_enabled: qbar.write(msg_print)
+                            else: print(msg_print)
+                        i += 1
+                        if qbar_enabled: qbar.update()
     else:
-        msg, model_dir = test_main(paths, k, key)
+        paths_dataset = paths if dataset == 'dataforgood' else paths_flunet
+        msg, model_path = test_main(paths[observed_ratio].loc[y, country_code, model_name].path,
+                                    '',
+                                    paths[observed_ratio].loc[y, country_code, model_name].mae,
+                                    observed_ratio, y, country_code, model_name)
