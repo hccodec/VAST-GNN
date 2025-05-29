@@ -93,7 +93,8 @@ def get_args(config_str, **kwargs):
 country_names = {'EN': "England", 'FR': "France", 'IT': 'Italy', 'ES': 'Spain', 'NZ': 'NewZealand', 'JP': 'Japan'}
 
 def test(
-        fn_model = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth',
+        model_path = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth',
+        args_path = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/England/args.txt',
         logger_disable = None,
         device=7,
         extra_args = None
@@ -101,40 +102,33 @@ def test(
 
     if logger_disable is True: logger.info = lambda x: None
 
-    country = re.search(r"model_(.*?)_", fn_model).groups()[0]
+    # 从模型文件提取原信息
+    if re.search(r"model_(.*?)_", model_path) is not None:
+        country = re.search(r"model_(.*?)_", model_path).groups()[0]
+    else:
+        dataset, observed_ratio, y, country, model_name = re.search(r"(.*?)_(.*?)_y(.*?)_(.*?)_(.*?)").groups()
 
-    arg_path = os.path.join(os.path.dirname(fn_model),
-                            (country[0] + 'IM' + country[1]) if country[0] == 'S' and country[1].isdigit() else country_names[country] if country in country_names else country,
-                            'args.txt')
-    
-    if not os.path.exists(arg_path):
-        arg_path = os.path.join(os.path.dirname(fn_model), 'args.txt')
+    # region 处理 args
+    if not os.path.exists(args_path): args_path = os.path.join(os.path.dirname(model_path), 'args.txt')
 
-    with open(arg_path, encoding='utf-8') as f: args = f.read()
-    
+    with open(args_path, encoding='utf-8') as f: args = f.read()
     args, model_args = get_args(args, device=device)
-
     if extra_args is not None:
         for k, v in extra_args.items():
             setattr(args, k, v)
     
     logger.info("参数处理完毕：" + str(args))
+    # endregion
 
     exp_desc = get_exp_desc(args.model, args.xdays, args.ydays, args.window, args.shift, args.node_observed_ratio)
 
     logger.info(font_green(f"执行测试 [{exp_desc}]"))
 
-    # meta_data = load_data(args.dataset_cache_dir, args.data_dir, args.dataset, args.batch_size,
-    #                       args.xdays, args.ydays, args.window, args.shift,
-    #                       args.train_ratio, args.val_ratio, args.node_observed_ratio)
-    
     meta_data = Datasets(args.dataset_cache_dir, args.data_dir, args.dataset, args.batch_size,
                     args.xdays, args.ydays, args.window, args.shift, args.train_ratio, args.val_ratio,
                     args.node_observed_ratio, args.seed_dataset).load_data()
     
     country_code, country_name = get_country(country, meta_data)
-
-    # country_code = meta_data["country_codes"][i_country]
 
     train_loader, val_loader, test_loader = meta_data['data'][country_name][0]
     # loss_val, y_real_val, y_hat_val, adj_real_val, adj_hat_val = validate_test_process(trained_model, criterion, val_loader)
@@ -143,9 +137,8 @@ def test(
     # metrics_val = compute_mae_rmse(y_hat_val.float(), y_real_val.float())
     # metrics_test = compute_mae_rmse(y_hat_test.float(), y_real_test.float())
     
-    # 假设你的模型类是 YourModelClass
     trained_model, model_args = select_model(args, train_loader)  # 实例化模型
-    trained_model.load_state_dict(torch.load(fn_model, map_location=args.device))
+    trained_model.load_state_dict(torch.load(model_path, map_location=args.device))
     trained_model.to(args.device)  # 将模型移动到指定设备
 
     criterion = torch.nn.MSELoss()
@@ -159,7 +152,7 @@ def test(
 
 def test_main(paths, k, key, silent=False):
     model_dir = paths[k].loc[key].path
-    res, meta_data, args = test(model_dir, silent)
+    res, meta_data, args = test(model_dir, logger_disable=silent)
 
     expected_value, actual_value = float(paths[k].loc[key].mae), float(res['mae_test'])
     
@@ -172,11 +165,6 @@ def test_main(paths, k, key, silent=False):
     return msg, model_dir
 
 if __name__ == '__main__':
-    # parser = ArgumentParser()
-    # parser.add_argument("--model-dir",default='results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/')
-    # parser.add_argument("--country-code", default='EN')
-    # args = parser.parse_args()
-    
     # k, key = 'o50', (14, 'ES', 'dynst')
     k, key = None, None
 

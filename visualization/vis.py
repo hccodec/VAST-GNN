@@ -118,7 +118,7 @@ def vis1(models, country = "EN", save_dir = ''):
 
         # 准备模型推理结果
         from utils.test import test
-        res, meta_data, args = test(fn_model=model)
+        res, meta_data, args = test(model_path=model)
         
         country_code, country_name = get_country(country, meta_data)
 
