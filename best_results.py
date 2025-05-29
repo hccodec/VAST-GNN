@@ -21,7 +21,7 @@ pack_data = lambda maes, keys: pd.DataFrame(
     ),
 )
 
-def get_paths():
+def get_expexted_maes():
 
     keys = [
         [3, 7, 14],
@@ -45,7 +45,7 @@ def get_paths():
 
     return easydict.EasyDict({"o50": data_50, "o80": data_80})
 
-def get_paths_flunet():
+def get_expexted_maes_flunet():
 
     keys = [
         [3],
@@ -64,6 +64,6 @@ def get_paths_flunet():
     return easydict.EasyDict({"o50": data_50})
 
 
-paths = get_paths()
-paths_flunet = get_paths_flunet()
+expexted_maes = get_expexted_maes()
+expexted_maes_flunet = get_expexted_maes_flunet()
 # paths

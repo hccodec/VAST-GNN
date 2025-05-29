@@ -9,7 +9,7 @@ import pandas as pd
 from argparse import ArgumentParser, Namespace
 
 from tqdm.auto import tqdm
-from best_results import paths, paths_flunet
+from best_results import expexted_maes, expexted_maes_flunet
 
 from utils.model_selector import select_model
 from utils.utils import font_green, font_hide, font_underlined, font_red, get_country, get_exp_desc
@@ -174,12 +174,11 @@ if __name__ == '__main__':
     dataset, observed_ratio, y, country_code, model_name = None, None, None, None, None
 
     qbar_enabled = True
-    use_results = True
 
     if dataset is None:
         pth_zip_filename = "checkpoints.zip"
         pth_zip_dirname = "checkpoints"
-        if use_results and os.path.exists(pth_zip_filename):
+        if os.path.exists(pth_zip_filename):
             if not os.path.exists(pth_zip_dirname): zipfile.ZipFile(pth_zip_filename).extractall(pth_zip_dirname)
             
             if qbar_enabled: qbar = tqdm(
@@ -191,7 +190,7 @@ if __name__ == '__main__':
             keys = [re.search(r"(.*?)_(.*?)_y(.*?)_(.*?)_(.*).pth", fn).groups() for fn in os.listdir(pth_zip_dirname) if fn.endswith('.pth')]
             i = 1
             for dataset, observed_ratio, y, country_code, model_name in keys:
-                paths_dataset = paths if dataset == 'dataforgood' else paths_flunet
+                paths_dataset = expexted_maes if dataset == 'dataforgood' else expexted_maes_flunet
                 model_path = os.path.join(pth_zip_dirname, "{}_{}_y{}_{}_{}.pth".format(dataset, observed_ratio, y, country_code, model_name))
                 args_path = os.path.join(pth_zip_dirname, "{}_{}_y{}_{}_{}_args.txt".format(dataset, observed_ratio, y, country_code, model_name))
                 # if not (k == 'o50' and key[:2] == (7, 'ES')): continue
@@ -208,30 +207,10 @@ if __name__ == '__main__':
                 if qbar_enabled: qbar.update()
             print()
         else:
-            if qbar_enabled: qbar = tqdm(
-                total=len(paths) * len(paths['o50'].index) + len(paths_flunet) * len(paths_flunet['o50'].index),
-                desc="Testing models", unit="model")
-            i = 1
-            for dataset in ['dataforgood', 'flunet']:
-                paths_dataset = paths if dataset == 'dataforgood' else paths_flunet
-                for observed_ratio in paths_dataset.keys():
-                    for key in paths_dataset[observed_ratio].index:
-                        y, country_code, model_name = key
-                        # if not (k == 'o50' and key[:2] == (7, 'ES')): continue
-                        msg, model_path = test_main(
-                            paths_dataset[observed_ratio].loc[y, country_code, model_name].path,
-                            '',
-                            paths_dataset[observed_ratio].loc[y, country_code, model_name].mae,
-                            observed_ratio, y, country_code, model_name, True)
-                        msg_print = f"{i:3} {msg} {font_underlined(font_hide(model_path))}"
-                        if True or 'FAILED' in msg:
-                            if qbar_enabled: qbar.write(msg_print)
-                            else: print(msg_print)
-                        i += 1
-                        if qbar_enabled: qbar.update()
+            print(f"Please check if checkpoint zip file {pth_zip_filename} exists.")
     else:
-        paths_dataset = paths if dataset == 'dataforgood' else paths_flunet
-        msg, model_path = test_main(paths[observed_ratio].loc[y, country_code, model_name].path,
+        paths_dataset = expexted_maes if dataset == 'dataforgood' else expexted_maes_flunet
+        msg, model_path = test_main(expexted_maes[observed_ratio].loc[y, country_code, model_name].path,
                                     '',
-                                    paths[observed_ratio].loc[y, country_code, model_name].mae,
+                                    expexted_maes[observed_ratio].loc[y, country_code, model_name].mae,
                                     observed_ratio, y, country_code, model_name)
