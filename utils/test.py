@@ -179,7 +179,7 @@ if __name__ == '__main__':
         pth_zip_filename = "checkpoints.zip"
         pth_zip_dirname = "checkpoints"
         if os.path.exists(pth_zip_filename):
-            if not os.path.exists(pth_zip_dirname): zipfile.ZipFile(pth_zip_filename).extractall(pth_zip_dirname)
+            if not os.path.exists(pth_zip_dirname): zipfile.ZipFile(pth_zip_filename).extractall()
             
             if qbar_enabled: qbar = tqdm(
                 total=len(os.listdir(pth_zip_dirname)) // 2,

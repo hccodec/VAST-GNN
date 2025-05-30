@@ -1,5 +1,4 @@
 import os, torch, numpy as np, random
-from utils.logger import logger
 import traceback, functools
 from tqdm.auto import tqdm
 
@@ -103,26 +102,6 @@ def set_random_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     torch.use_deterministic_algorithms(True, warn_only=True)
-
-def catch(msg="出现错误，中断训练"):
-    def decorator(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            if os.getenv("DEBUG_MODE") == "true" or os.getenv("DEBUG_MODE") == "1":
-                return f(*args, **kwargs)
-            try:
-                return f(*args, **kwargs)
-            except Exception as e:
-                logger.info(msg)
-                logger.info(str(e))
-                _traceback = traceback.format_exc()
-                for line in _traceback.split("\n"):
-                    logger.info(str(line))
-                return None
-
-        return wrapper
-
-    return decorator
 
 def adjust_lambda(epoch, num_epochs, lambda_0, lambda_n, lambda_epoch_max, method='cos'):
     from utils.args import graph_lambda_methods

@@ -3,12 +3,13 @@ from torch import nn
 import numpy as np
 from eval import compute_err, compute_mae_rmse, metrics_labels, compute_correlation, compute_hits_at_k
 
+from utils.decorators import catch
 from utils.logger import file_logger, logger
 
 # from utils.tensorboard import writer
 from utils.model_selector import select_model
-from utils.utils import adjust_lambda, font_underlined, catch, font_green, font_yellow, min_max_adj, rm_self_loops, getLaplaceMat, scale_adj
-from models.dynst import dynst_extra_info
+from utils.utils import adjust_lambda, font_underlined, font_green, font_yellow, min_max_adj, rm_self_loops, getLaplaceMat, scale_adj
+from models.VAST_GNN import vast_gnn_extra_info
 
 
 # logger = logger.getLogger()

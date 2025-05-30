@@ -3,8 +3,8 @@ from scipy import stats
 import numpy as np
 from tensorboard.plugins.debugger_v2.debug_data_provider import ALERTS_BLOB_TAG_PREFIX
 
-from utils.logger import logger
-from utils.utils import catch, font_green, min_max_adj
+from utils.decorators import catch
+from utils.utils import font_green, min_max_adj
 
 metrics_labels = ["MAE_val", "RMSE_val", "MAE_test", "RMSE_test"]
 

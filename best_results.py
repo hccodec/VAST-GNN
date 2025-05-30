@@ -26,7 +26,7 @@ def get_expexted_maes():
     keys = [
         [3, 7, 14],
         ["EN", "FR", "IT", "ES", "NZ", "JP"],
-        ["lstm", "mpnn_lstm", "mpnn_tl", "dynst"],
+        ["lstm", "mpnn_lstm", "mpnn_tl", "vast_gnn"],
     ]
 
     maes_80 = """
@@ -50,7 +50,7 @@ def get_expexted_maes_flunet():
     keys = [
         [3],
         ["h1n1", "h3n2", "BV", "BY"],
-        ["lstm", "mpnn_lstm", "mpnn_tl", "dynst"],
+        ["lstm", "mpnn_lstm", "mpnn_tl", "vast_gnn"],
     ]
 
     maes_50 = """

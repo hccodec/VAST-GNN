@@ -5,7 +5,7 @@ def select_model(args, train_loader):
 
     shape = [tuple(i.shape) for i in train_loader.dataset[0]]
 
-    dynst_model_args = {
+    vast_gnn_model_args = {
         "in_dim": args.window,
         "out_dim": 1,
         # "hidden": 32,
@@ -40,9 +40,9 @@ def select_model(args, train_loader):
         model_args = lstm_model_args
         model = LSTM_MODEL(args, model_args).to(args.device)
     elif index == 1:
-        from models.dynst import dynst_extra_info, dynst
-        model_args = dynst_model_args
-        model = dynst(*model_args.values()).to(args.device)
+        from models.VAST_GNN import vast_gnn_extra_info, VAST_GNN
+        model_args = vast_gnn_model_args
+        model = VAST_GNN(*model_args.values()).to(args.device)
     elif index == 2:
         from models.MPNN_LSTM import MPNN_LSTM
         model_args = mpnn_lstm_model_args

@@ -75,7 +75,7 @@
             ]
         },
         {
-            "name": "MAIN(dynst)",
+            "name": "MAIN(VAST_GNN)",
             "type": "debugpy",
             "request": "launch",
             "program": "main.py",
@@ -93,7 +93,7 @@
             ]
         },
         {
-            "name": "MAIN(dynst_flunet)",
+            "name": "MAIN(VAST_GNN_flunet)",
             "type": "debugpy",
             "request": "launch",
             "program": "main.py",
@@ -115,7 +115,7 @@
             ]
         },
         {
-            "name": "Transfer learning(dynst)",
+            "name": "Transfer learning(VAST_GNN)",
             "type": "debugpy",
             "request": "launch",
             "program": "main copy.py",
@@ -162,7 +162,7 @@
         //     ]
         // },
         {
-            "name": "Transfer learning(dynst)",
+            "name": "Transfer learning(VAST_GNN)",
             "type": "debugpy",
             "request": "launch",
             "program": "main copy.py",
