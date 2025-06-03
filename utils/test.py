@@ -1,12 +1,11 @@
+from argparse import ArgumentParser
 import zipfile
 import torch, os, re, io, types
-from train_test import validate_test_process, eval_process
-from eval import compute_mae_rmse
+from train_test import eval_process
 from utils.datasets import Datasets
 from utils.logger import logger
 from utils.args import get_parser, process_args
 import pandas as pd
-from argparse import ArgumentParser, Namespace
 
 from tqdm.auto import tqdm
 from best_results import expexted_maes, expexted_maes_flunet
@@ -97,7 +96,6 @@ country_names = {
 
 def test(
         model_path = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth',
-        args_path = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/England/args.txt',
         logger_disable = None,
         device=7,
         extra_args = None
@@ -109,13 +107,20 @@ def test(
     if re.search(r"model_(.*?)_", model_path) is not None:
         country = re.search(r"model_(.*?)_", model_path).groups()[0]
     else:
-        dataset, observed_ratio, y, country, model_name = re.search(r"(.*?)_(.*?)_y(.*?)_(.*?)_(.*?)", model_path).groups()
+        dataset, observed_ratio, y, country, model_name = re.search(r"(.*?)_o(.*?)_y(.*?)_(.*?)_(.*).pth", os.path.basename(model_path)).groups()
 
     # region 处理 args
-    if not os.path.exists(args_path): args_path = os.path.join(os.path.dirname(model_path), country_names[country], 'args.txt')
 
-    with open(args_path, encoding='utf-8') as f: args = f.read()
-    args, model_args = get_args(args, device=device)
+    args = get_parser().parse_args()
+    args.model = model_name
+    if model_name == 'mpnn_tl': args.model, args.maml = 'mpnn_lstm', True
+    args.dataset = dataset
+    args.country = country_names[country]
+    args.shift = int(y) - 1
+    args.node_observed_ratio = int(observed_ratio)
+    args.device = device
+    args = process_args(args, record_log=False)
+
     if extra_args is not None:
         for k, v in extra_args.items():
             setattr(args, k, v)
@@ -153,9 +158,9 @@ def test(
 
     return res, meta_data, args
 
-def test_main(model_path, args_path, expected_mae_value, observed_ratio, y, country_code, model_name, silent=False):
+def test_main(model_path, expected_mae_value, observed_ratio, y, country_code, model_name, silent=False, device='cpu'):
 
-    res, meta_data, args = test(model_path, args_path, logger_disable=silent)
+    res, meta_data, args = test(model_path, logger_disable=silent, device=device)
 
     expected_mae_value, actual_mae_value = float(expected_mae_value), float(res['mae_test'])
     
@@ -170,6 +175,9 @@ def test_main(model_path, args_path, expected_mae_value, observed_ratio, y, coun
     return msg, model_path
 
 if __name__ == '__main__':
+
+    device = 9
+
     dataset, observed_ratio, y, country_code, model_name = 'dataforgood', 'o50', 14, 'ES', 'dynst'
     dataset, observed_ratio, y, country_code, model_name = None, None, None, None, None
 
@@ -182,23 +190,20 @@ if __name__ == '__main__':
             if not os.path.exists(pth_zip_dirname): zipfile.ZipFile(pth_zip_filename).extractall()
             
             if qbar_enabled: qbar = tqdm(
-                total=len(os.listdir(pth_zip_dirname)) // 2,
+                total=len(os.listdir(pth_zip_dirname)),
                 desc="Testing models", unit="model")
             i = 1
 
-            total = len(os.listdir(pth_zip_dirname)) / 2
             keys = [re.search(r"(.*?)_(.*?)_y(.*?)_(.*?)_(.*).pth", fn).groups() for fn in os.listdir(pth_zip_dirname) if fn.endswith('.pth')]
             i = 1
             for dataset, observed_ratio, y, country_code, model_name in keys:
-                paths_dataset = expexted_maes if dataset == 'dataforgood' else expexted_maes_flunet
+                paths_dataset = expexted_maes_flunet if dataset == 'flunet' else expexted_maes
                 model_path = os.path.join(pth_zip_dirname, "{}_{}_y{}_{}_{}.pth".format(dataset, observed_ratio, y, country_code, model_name))
                 args_path = os.path.join(pth_zip_dirname, "{}_{}_y{}_{}_{}_args.txt".format(dataset, observed_ratio, y, country_code, model_name))
-                # if not (k == 'o50' and key[:2] == (7, 'ES')): continue
                 msg, model_path = test_main(
                     model_path,
-                    args_path,
                     paths_dataset[observed_ratio].loc[int(y), country_code, model_name].mae,
-                    observed_ratio, y, country_code, model_name, True)
+                    observed_ratio, y, country_code, model_name, True, device)
                 msg_print = f"{i:3} {msg} {font_underlined(font_hide(model_path))}"
                 if True or 'FAILED' in msg:
                     if qbar_enabled: qbar.write(msg_print)
@@ -209,8 +214,7 @@ if __name__ == '__main__':
         else:
             print(f"Please check if checkpoint zip file {pth_zip_filename} exists.")
     else:
-        paths_dataset = expexted_maes if dataset == 'dataforgood' else expexted_maes_flunet
+        paths_dataset = expexted_maes_flunet if dataset == 'flunet' else expexted_maes
         msg, model_path = test_main(expexted_maes[observed_ratio].loc[y, country_code, model_name].path,
-                                    '',
                                     expexted_maes[observed_ratio].loc[y, country_code, model_name].mae,
-                                    observed_ratio, y, country_code, model_name)
+                                    observed_ratio, y, country_code, model_name, False, device)
