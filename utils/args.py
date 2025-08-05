@@ -8,7 +8,7 @@ from utils.logger import set_logger, logger
 
 import pandas as pd
 
-models_list = ["lstm", "dynst", "mpnn_lstm"]
+models_list = ["lstm", "vast_gnn", "mpnn_lstm"]
 graph_lambda_methods = ["exp", "cos"]
 
 
@@ -30,7 +30,7 @@ def get_parser(parent_parser=None):
     # parser.add_argument("--dataset-cache", default="data_preprocessed",help="处理后的数据集目录")
     parser.add_argument("--exp", default="-1", help="实验编号.-1 表示不编号")
     parser.add_argument(
-        "--model", default="dynst", choices=models_list, help="设置实验所用模型"
+        "--model", default="vast_gnn", choices=models_list, help="设置实验所用模型"
     )
     parser.add_argument("--result-dir", default="results_test", help="")
     # # 实验设置：随机种子和设备号

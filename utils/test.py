@@ -1,15 +1,14 @@
+from argparse import ArgumentParser
+import zipfile
 import torch, os, re, io, types
-from train_test import validate_test_process, eval_process
-from eval import compute_mae_rmse
+from train_test import eval_process
 from utils.datasets import Datasets
 from utils.logger import logger
 from utils.args import get_parser, process_args
 import pandas as pd
-from argparse import ArgumentParser, Namespace
 
 from tqdm.auto import tqdm
-from best_results import paths
-# from best_results import paths_flunet as paths
+from best_results import expexted_maes, expexted_maes_flunet
 
 from utils.model_selector import select_model
 from utils.utils import font_green, font_hide, font_underlined, font_red, get_country, get_exp_desc
@@ -90,11 +89,13 @@ def get_args(config_str, **kwargs):
 
     return args, model_args
 
-country_names = {'EN': "England", 'FR': "France", 'IT': 'Italy', 'ES': 'Spain', 'NZ': 'NewZealand', 'JP': 'Japan'}
+country_names = {
+    'EN': "England", 'FR': "France", 'IT': 'Italy', 'ES': 'Spain', 'NZ': 'NewZealand', 'JP': 'Japan',
+    'h1n1': 'h1n1', 'h3n2': 'h3n2', 'BY': 'BY', 'BV': 'BV'
+    }
 
 def test(
         model_path = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/model_EN_best.pth',
-        args_path = 'results/results_test/tmp/dataforgood/dynst_7_3_w7_s0_20241005231704/England/args.txt',
         logger_disable = None,
         device=7,
         extra_args = None
@@ -106,13 +107,20 @@ def test(
     if re.search(r"model_(.*?)_", model_path) is not None:
         country = re.search(r"model_(.*?)_", model_path).groups()[0]
     else:
-        dataset, observed_ratio, y, country, model_name = re.search(r"(.*?)_(.*?)_y(.*?)_(.*?)_(.*?)").groups()
+        dataset, observed_ratio, y, country, model_name = re.search(r"(.*?)_o(.*?)_y(.*?)_(.*?)_(.*).pth", os.path.basename(model_path)).groups()
 
     # region 处理 args
-    if not os.path.exists(args_path): args_path = os.path.join(os.path.dirname(model_path), 'args.txt')
 
-    with open(args_path, encoding='utf-8') as f: args = f.read()
-    args, model_args = get_args(args, device=device)
+    args, unknown = get_parser().parse_known_args()
+    args.model = model_name
+    if model_name == 'mpnn_tl': args.model, args.maml = 'mpnn_lstm', True
+    args.dataset = dataset
+    args.country = country_names[country]
+    args.shift = int(y) - 1
+    args.node_observed_ratio = int(observed_ratio)
+    args.device = device
+    args = process_args(args, record_log=False)
+
     if extra_args is not None:
         for k, v in extra_args.items():
             setattr(args, k, v)
@@ -150,39 +158,63 @@ def test(
 
     return res, meta_data, args
 
-def test_main(paths, k, key, silent=False):
-    model_dir = paths[k].loc[key].path
-    res, meta_data, args = test(model_dir, logger_disable=silent)
+def test_main(model_path, expected_mae_value, observed_ratio, y, country_code, model_name, silent=False, device='cpu'):
 
-    expected_value, actual_value = float(paths[k].loc[key].mae), float(res['mae_test'])
+    res, meta_data, args = test(model_path, logger_disable=silent, device=device)
+
+    expected_mae_value, actual_mae_value = float(expected_mae_value), float(res['mae_test'])
     
-    err_percentage = (actual_value - expected_value) / expected_value
+    err_percentage = (actual_mae_value - expected_mae_value) / expected_mae_value
 
     if abs(err_percentage) < 0.01:
-        msg = f'[{font_green("PASSED")}] {k} {str(key):23}'
+        msg = f'[{font_green("PASSED")}] {observed_ratio} {"{:2} {:4} {:9}".format(y, country_code, model_name)}'
     else:
-        msg = f'[{font_green("FAILED") if err_percentage < 0 else font_red("FAILED")}] {k} {str(key):23} {actual_value:7} ({expected_value:7}) {err_percentage * 100:7.2f}%'
-    return msg, model_dir
+        msg = f'''[{
+            font_green("FAILED") if err_percentage < 0 else font_red("FAILED")
+            }] {observed_ratio} {"{:2} {:4} {:9}".format(y, country_code, model_name)} {actual_mae_value:7} ({expected_mae_value:7}) {err_percentage * 100:7.2f}%'''
+    return msg, model_path
 
 if __name__ == '__main__':
-    # k, key = 'o50', (14, 'ES', 'dynst')
-    k, key = None, None
 
-    # 统计 for k in paths.keys(): for key in paths[k].index: 的和
+    device = 9
+
+    dataset, observed_ratio, y, country_code, model_name = 'dataforgood', 'o50', 14, 'ES', 'dynst'
+    dataset, observed_ratio, y, country_code, model_name = None, None, None, None, None
+
     qbar_enabled = True
 
-    if key is None:
-        if qbar_enabled: qbar = tqdm(total=len(paths) * len(paths['o50'].index), desc="Testing models", unit="model")
-        i = 1
-        for k in paths.keys():
-            for key in paths[k].index:
-                # if not (k == 'o50' and key[:2] == (7, 'ES')): continue
-                msg, model_dir = test_main(paths, k, key, True)
-                msg_print = f"{i:3} {msg} {font_underlined(font_hide(model_dir))}"
+    if dataset is None:
+        pth_zip_filename = "checkpoints.zip"
+        pth_zip_dirname = "checkpoints"
+        if os.path.exists(pth_zip_filename):
+            if not os.path.exists(pth_zip_dirname): zipfile.ZipFile(pth_zip_filename).extractall()
+            
+            if qbar_enabled: qbar = tqdm(
+                total=len(os.listdir(pth_zip_dirname)),
+                desc="Testing models", unit="model")
+            i = 1
+
+            keys = [re.search(r"(.*?)_(.*?)_y(.*?)_(.*?)_(.*).pth", fn).groups() for fn in os.listdir(pth_zip_dirname) if fn.endswith('.pth')]
+            i = 1
+            for dataset, observed_ratio, y, country_code, model_name in keys:
+                paths_dataset = expexted_maes_flunet if dataset == 'flunet' else expexted_maes
+                model_path = os.path.join(pth_zip_dirname, "{}_{}_y{}_{}_{}.pth".format(dataset, observed_ratio, y, country_code, model_name))
+                args_path = os.path.join(pth_zip_dirname, "{}_{}_y{}_{}_{}_args.txt".format(dataset, observed_ratio, y, country_code, model_name))
+                msg, model_path = test_main(
+                    model_path,
+                    paths_dataset[observed_ratio].loc[int(y), country_code, model_name].mae,
+                    observed_ratio, y, country_code, model_name, True, device)
+                msg_print = f"{i:3} {msg} {font_underlined(font_hide(model_path))}"
                 if True or 'FAILED' in msg:
                     if qbar_enabled: qbar.write(msg_print)
                     else: print(msg_print)
                 i += 1
                 if qbar_enabled: qbar.update()
+            print()
+        else:
+            print(f"Please check if checkpoint zip file {pth_zip_filename} exists.")
     else:
-        msg, model_dir = test_main(paths, k, key)
+        paths_dataset = expexted_maes_flunet if dataset == 'flunet' else expexted_maes
+        msg, model_path = test_main(expexted_maes[observed_ratio].loc[y, country_code, model_name].path,
+                                    expexted_maes[observed_ratio].loc[y, country_code, model_name].mae,
+                                    observed_ratio, y, country_code, model_name, False, device)

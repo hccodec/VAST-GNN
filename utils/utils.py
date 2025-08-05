@@ -1,5 +1,4 @@
 import os, torch, numpy as np, random
-from utils.logger import logger
 import traceback, functools
 from tqdm.auto import tqdm
 
@@ -104,26 +103,6 @@ def set_random_seed(seed):
     torch.backends.cudnn.benchmark = False
     torch.use_deterministic_algorithms(True, warn_only=True)
 
-def catch(msg="出现错误，中断训练"):
-    def decorator(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            if os.getenv("DEBUG_MODE") == "true" or os.getenv("DEBUG_MODE") == "1":
-                return f(*args, **kwargs)
-            try:
-                return f(*args, **kwargs)
-            except Exception as e:
-                logger.info(msg)
-                logger.info(str(e))
-                _traceback = traceback.format_exc()
-                for line in _traceback.split("\n"):
-                    logger.info(str(line))
-                return None
-
-        return wrapper
-
-    return decorator
-
 def adjust_lambda(epoch, num_epochs, lambda_0, lambda_n, lambda_epoch_max, method='cos'):
     from utils.args import graph_lambda_methods
     assert method in graph_lambda_methods
@@ -212,9 +191,9 @@ def get_exp_desc(modelstr, xdays, ydays, window, shift, node_observed_ratio, lan
     
     # 生成描述
     if language == 'cn':
-        desc = f"历史 {xdays} 天预测未来{y_desc} 天 ({modelstr}_w{window}){node_observed_ratio_desc}"
+        desc = f"使用模型 {modelstr} 从历史 {xdays} 天预测未来{y_desc} 天 (w{window}){node_observed_ratio_desc}"
     else:
-        desc = f"Predict {y_desc} days using past {xdays} days ({modelstr}_w{window}){node_observed_ratio_desc}"
+        desc = f"Using model {modelstr} to predict day {y_desc} using past {xdays} days (w{window}){node_observed_ratio_desc}"
     
     return desc
 

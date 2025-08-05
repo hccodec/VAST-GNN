@@ -9,3 +9,4 @@ mapfiles
 run.sh
 data_old
 tmp*
+checkpoints/

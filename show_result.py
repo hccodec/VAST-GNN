@@ -239,10 +239,10 @@ def show_result(dir, subdir = "", mode = 0):
         models = []
         for result in results[dataset]: models.append(result['model'])
             
-        models = sorted(set(models), key=lambda x: {"mpnn_lstm": 0, "lstm": 1, "dynst": 2}.get(x, float('inf')))
+        models = sorted(set(models), key=lambda x: {"mpnn_lstm": 0, "lstm": 1, "vast_gnn": 2}.get(x, float('inf')))
 
-        # assert set(models) == {'dynst', 'mpnn_lstm'}, models
-        # models = ['mpnn_lstm', 'dynst']
+        # assert set(models) == {'vast_gnn', 'mpnn_lstm'}, models
+        # models = ['mpnn_lstm', 'vast_gnn']
         msg += "[err_test] {}\n".format(','.join(countries[dataset])) + '\n'
         for i in range(len(models)):
             msg += print_err(results, dataset, models, i, subdir, mode) + '\n'
