@@ -111,7 +111,7 @@ def test(
 
     # region 处理 args
 
-    args = get_parser().parse_args()
+    args, unknown = get_parser().parse_known_args()
     args.model = model_name
     if model_name == 'mpnn_tl': args.model, args.maml = 'mpnn_lstm', True
     args.dataset = dataset

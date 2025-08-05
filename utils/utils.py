@@ -191,9 +191,9 @@ def get_exp_desc(modelstr, xdays, ydays, window, shift, node_observed_ratio, lan
     
     # 生成描述
     if language == 'cn':
-        desc = f"历史 {xdays} 天预测未来{y_desc} 天 ({modelstr}_w{window}){node_observed_ratio_desc}"
+        desc = f"使用模型 {modelstr} 从历史 {xdays} 天预测未来{y_desc} 天 (w{window}){node_observed_ratio_desc}"
     else:
-        desc = f"Predict {y_desc} days using past {xdays} days ({modelstr}_w{window}){node_observed_ratio_desc}"
+        desc = f"Using model {modelstr} to predict day {y_desc} using past {xdays} days (w{window}){node_observed_ratio_desc}"
     
     return desc
 

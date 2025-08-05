@@ -1,4 +1,4 @@
-# Code for Prediction Task on Epidemic Dynamic
+# Code for VAST-GNN
 
 ## Environments Set
 To prepare the environment, the following commands are recommended.
