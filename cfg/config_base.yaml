@@ -1,0 +1,65 @@
+# 配置文件以及各种目录
+data_dir: "data"           # 数据集目录
+dataset: "dataforgood"      # 选择的数据集
+dataset_cache_dir: "dataset"  # 处理后的数据集目录
+# exp: -1                    # 实验编号 -1 表示不编号
+model: "dynst"             # 设置实验所用模型
+# result_dir: "results_test" # 实验结果目录
+
+# 实验设置：随机种子和设备号
+# seed: 5                    # 随机种子
+device: 0                  # GPU号
+
+## 实验设置：历史 xdays 天（以包括自身的前 window 天为当天特征）隔 shift 天预测未来 ydays 天
+#xdays: 7                   # 预测所需历史天数
+#ydays: 3                   # 预测未来天数
+#window: -1                 # 作为特征的历史天数窗口大小，值为-1时和xdays相同
+#shift: 0                   # 大于 0 则启用隔 shift 天预测
+
+# 实验设置：比率
+# node_observed_ratio:  50.0   # 观测到的结点百分点
+case_normalize_ratio: 100.0  # 训练集比例百分点
+train_ratio: 70              # 训练集比例百分点
+val_ratio: 10                # 验证集比例百分点
+
+# 训练参数
+epochs: 500                  # 训练轮数
+batch_size: 8                # 批次大小
+# 实验：图损失相关参数设置
+lambda_graph_loss: {
+  "dataforgood": {
+    "seed_dataset": 5,
+    "country_idx": ["England", "France", "Italy", "Spain", "NewZealand"],
+    "ydays_idx": [3, 7, 14],
+    "arr_50": [[0.7, 0.7, 0.4, 0.3, 0.8], [0.2, 0.9, 0.8, 0.1, 0.3], [0.5, 0.6, 0.2, 0.5, 0.5]],
+    "arr_80": [[0.3, 0.4, 0.8, 0.4, 0.5], [0.3, 0.1, 0.5, 0.5, 0.5], [0.7, 0.3, 0.4, 0.5, 0.2]]
+  },
+  "japan": {
+    "seed_dataset": 2,
+    "country_idx": ["Japan"],
+    "ydays_idx": [3, 7, 14],
+    "arr_50": [[0.8], [0.9], [0.3]],
+    "arr_80": [[0], [0.5], [0.6]]
+  },
+  "flunet": {
+    "seed_dataset": 7,
+    "country_idx": ["h1n1", "h3n2", "BV", "BY"],
+    "ydays_idx": [3],
+    "arr_50": [[0.7, 0.6, 0.0, 0.2]]
+  }
+}
+# graph_lambda_0: 0.5         # 初始图正则化参数
+# graph_lambda_n: 0.5         # 最终图正则化参数
+# graph_lambda_epoch_max: 500 # 图正则化参数达到最大值的轮次
+# graph_lambda_method: "cos"  # 图正则化方法
+# 实验设置：学习率
+lr: 0.001                  # 初始学习率
+lr_min: 0.001              # 最小学习率
+lr_weight_decay: 0.0005     # 权重衰减
+lr_scheduler_stepsize: 10   # 学习率调整步长
+lr_scheduler_gamma: 0.7     # 学习率调整系数
+early_stop_patience: 100    # 提前停止的耐心 epoch 数
+lr_meta: 0.01               # 初始学习率
+
+# 其他实验参数
+# comp_last: true             # 在多天预测的情形下只比对最后一天的结果

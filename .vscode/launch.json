@@ -1,0 +1,242 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "compounds": [
+        // {
+        //     "name": "Compound",
+        //     "configurations": [
+        //         "MAIN(self,3,21-7)",
+        //         "MAIN()"
+        //     ]
+        // }
+    ],
+    "configurations": [
+        {
+            "type": "debugpy",
+            "request": "launch",
+            "name": "可视化",
+            "cwd": "${workspaceFolder}",
+            // "program": "vis.py",
+            "module": "visualization.vis",
+            "args": []
+        },
+        {
+            "type": "bashdb",
+            "request": "launch",
+            "name": "Bash-Debug (hardcoded script name)",
+            "cwd": "${workspaceFolder}",
+            "program": "python main.py --dataset japan --country Japan --shift  2 --result-dir tests_1225 --exp 1_baselines_mpnn_tl_50   --node-observed-ratio 50 --model mpnn_lstm --maml --device 1",
+            "args": []
+        },
+        {
+            "name": "MAIN(lstm)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--device",
+                "7",
+                "--model",
+                "lstm",
+                "--shift",
+                "2",
+                "--ydays",
+                "1"
+            ]
+        },
+        {
+            "name": "MAIN(mpnn_lstm)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--device",
+                "3",
+                "--model",
+                "mpnn_lstm",
+                "--shift",
+                "2",
+                "--ydays",
+                "1",
+                "--node-observed-ratio",
+                "50",
+                "--country",
+                "England"
+            ]
+        },
+        {
+            "name": "MAIN(VAST_GNN)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--country",
+                "Spain",
+                "--device",
+                "5"
+                // "--country", "Japan", "--shift", "2", "--result-dir", "tests_1210", "--exp", "1_baselines_mpnn_tl_50", "--node-observed-ratio", "50", "--dataset", "japan", "--device", "5"
+                // "--dataset", "japan", "--country", "Japan", "--shift", "2", "--result-dir", "tests_1225", "--exp", "1_baselines_mpnn_tl_50", "--node-observed-ratio", "50", "--model", "mpnn_lstm", "--maml", "--device", "1"
+            ]
+        },
+        {
+            "name": "MAIN(VAST_GNN_flunet)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "--dataset", "flunet", "--country", "BY", "--shift", "2", "--node-observed-ratio", "50", "--graph-lambda", "0.6", "--no-graph", "--device", " 7"
+                // ""--dataset""",", "flunet",
+                // "--country", "h1n1",
+                // "--device", "9",
+                // "--shift", "2",
+                // "--ydays", "1",
+                // // "--node-observed-ratio", "50",
+                // // "--graph-gt",
+                // // "--no-virtual-node"
+                // "--graph-lambda", "0.1"
+            ]
+        },
+        {
+            "name": "Transfer learning(VAST_GNN)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main copy.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                // "--device", "2",
+                "--shift",
+                "2",
+                "--ydays",
+                "1",
+                "--country",
+                "Spain",
+                "--node-observed-ratio",
+                "50",
+                "--maml",
+                // "--graph-gt",
+                // "--no-virtual-node"
+                // "--graph-lambda", "0.1"
+            ]
+        },
+        // {
+        //     "name": "Transfer learning(mpnn_lstm)",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "main copy.py",
+        //     "console": "integratedTerminal",
+        //     "env": {
+        //         "DEBUG_MODE": "true"
+        //     },
+        //     "args": [
+        //         // "--device", "2",
+        //         "--model", "mpnn_lstm",
+        //         "--shift", "2",
+        //         "--ydays", "1",
+        //         "--country", "Spain",
+        //         "--node-observed-ratio", "50",
+        //         "--maml",
+        //         // "--graph-gt",
+        //         // "--no-virtual-node"
+        //         // "--graph-lambda", "0.1"
+        //     ]
+        // },
+        {
+            "name": "Transfer learning(VAST_GNN)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main copy.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                // "--device", "2",
+                "--shift",
+                "2",
+                "--ydays",
+                "1",
+                "--country",
+                "Spain",
+                "--node-observed-ratio",
+                "50",
+                "--maml",
+                // "--graph-gt",
+                // "--no-virtual-node"
+                // "--graph-lambda", "0.1"
+            ]
+        },
+        {
+            "name": "Transfer learning(mpnn_lstm)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                // "--device", "2",
+                "--model",
+                "mpnn_lstm",
+                "--shift",
+                "2",
+                "--ydays",
+                "1",
+                "--dataset",
+                "flunet",
+                "--country",
+                "h1n1",
+                "--node-observed-ratio",
+                "50",
+                "--maml",
+                // "--graph-gt",
+                // "--no-virtual-node"
+                // "--graph-lambda", "0.1"
+            ]
+        },
+        {
+            "name": "record results",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "show_result.py",
+            "console": "integratedTerminal",
+            "env": {
+                "DEBUG_MODE": "true"
+            },
+            "args": [
+                "-d",
+                "results/tests_0201_all/exp_1_baselines_lstm_50"
+            ]
+        },
+        {
+            "type": "debugpy",
+            "request": "launch",
+            "name": "测试",
+            "cwd": "${workspaceFolder}",
+            // "program": "vis.py",
+            "module": "utils.test",
+            "args": []
+        },
+    ]
+}

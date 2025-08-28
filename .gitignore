@@ -1,0 +1,13 @@
+__pycache__
+.idea/
+dataset_cache*/
+results*/
+**/*bak
+epilearn/
+history_codes/
+mapfiles
+run.sh
+data_old
+tmp*
+checkpoints/
+.DS_Store
